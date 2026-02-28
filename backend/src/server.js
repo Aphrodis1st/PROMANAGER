@@ -37,6 +37,17 @@ import customerRoutes from './routes/stock/customer.routes.js';
 import customerInvoiceRoutes from './routes/stock/customerInvoice.routes.js';
 import paymentRoutes from './routes/stock/payment.routes.js';
 
+// Hospital Routes
+import appointmentRoutes from './routes/hospital/appointment.routes.js';
+import billingRoutes from './routes/hospital/billing.routes.js';
+import departmentRoutes from './routes/hospital/department.routes.js';
+import doctorRoutes from './routes/hospital/doctor.routes.js';
+import labRoutes from './routes/hospital/lab.routes.js';
+import medicalRecordRoutes from './routes/hospital/medicalRecord.routes.js';
+import patientRoutes from './routes/hospital/patient.routes.js';
+import specializationRoutes from './routes/hospital/specialization.routes.js';
+import wardRoutes from './routes/hospital/ward.routes.js';
+
 dotenv.config();
 
 // Initialize Firebase
@@ -87,6 +98,17 @@ app.use('/api/V1/stock/supplier-invoices', supplierInvoiceRoutes);
 app.use('/api/v1/stock/customer', customerRoutes);
 app.use('/api/v1/stock/invoice', customerInvoiceRoutes);
 app.use('/api/v1/stock/payment', paymentRoutes);
+
+// Hospital routes
+app.use('/api/v1/hospital/appointments', appointmentRoutes);
+app.use('/api/v1/hospital/billing', billingRoutes);
+app.use('/api/v1/hospital/departments', departmentRoutes);
+app.use('/api/v1/hospital/doctors', doctorRoutes);
+app.use('/api/v1/hospital/lab', labRoutes);
+app.use('/api/v1/hospital/medical-records', medicalRecordRoutes);
+app.use('/api/v1/hospital/patients', patientRoutes);
+app.use('/api/v1/hospital/specializations', specializationRoutes);
+app.use('/api/v1/hospital/wards', wardRoutes);
 
 // Start server
 const PORT = process.env.PORT || 5000;
