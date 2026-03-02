@@ -268,3 +268,60 @@ export const specializationService = {
     return res.data;
   },
 };
+
+// Default export with all services
+const hospitalService = {
+  getPatients: patientService.getAll,
+  getPatient: patientService.getById,
+  createPatient: patientService.create,
+  updatePatient: patientService.update,
+  deletePatient: patientService.remove,
+
+  getAppointments: appointmentService.getAll,
+  createAppointment: appointmentService.create,
+  updateAppointment: appointmentService.update,
+  deleteAppointment: appointmentService.remove,
+
+  getBills: billingService.getAll,
+  getBillsByPatient: billingService.getByPatient,
+  createBill: billingService.create,
+  payBill: billingService.markAsPaid,
+  deleteBill: billingService.remove,
+
+  getLabTests: labService.getAll,
+  getLabTestsByPatient: labService.getByPatient,
+  createLabTest: labService.create,
+  updateLabTest: labService.update,
+  deleteLabTest: labService.remove,
+
+  getMedicalRecords: medicalRecordService.getByPatient,
+  createMedicalRecord: medicalRecordService.create,
+  updateMedicalRecord: medicalRecordService.update,
+  deleteMedicalRecord: medicalRecordService.remove,
+
+  getWards: wardService.getAll,
+  createWard: wardService.create,
+  updateWard: wardService.update,
+  deleteWard: wardService.remove,
+  assignBed: wardService.update,
+
+  getDoctors: doctorService.getAll,
+  createDoctor: doctorService.create,
+  updateDoctor: doctorService.update,
+  deleteDoctor: doctorService.remove,
+
+  getDepartments: departmentService.getAll,
+  createDepartment: departmentService.create,
+  updateDepartment: departmentService.update,
+  deleteDepartment: departmentService.remove,
+
+  getSpecializations: specializationService.getAll,
+  createSpecialization: specializationService.create,
+  updateSpecialization: specializationService.update,
+  deleteSpecialization: specializationService.remove,
+
+  getAdmissions: async () => [],
+  getReports: async () => [],
+};
+
+export default hospitalService;

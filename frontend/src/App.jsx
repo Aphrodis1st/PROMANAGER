@@ -52,7 +52,14 @@ import { ExpenseProvider } from './context/ExpenseContext';
 import { ReportsProvider } from './context/ReportsContext.jsx';
 import { FixedAssetProvider } from './context/FixedAssetContext.jsx';
 import { ProductionProvider } from './context/ProductionContext.jsx';
+import HospitalProvider from './context/HospitalProvider.jsx';
 import StockProtectedRoute from './components/stock/StockProtectedRoute.jsx';
+
+// Hospital Pages
+import HospitalLayout from './pages/HospitalLayout.jsx';
+import DashboardOverview from './hospitalPages/dashboard/DashboardOverview.jsx';
+import PatientList from './hospitalPages/patients/pages/PatientList.jsx';
+import AppointmentList from './hospitalPages/Appointment/AppointmentList.jsx';
 
 function AppContent() {
   return (
@@ -194,6 +201,20 @@ function AppContent() {
           </StockProtectedRoute>
         } />
       </Route>
+
+      {/* Hospital Routes */}
+      <Route path='/hospital/*' element={<HospitalLayout />}>
+        <Route path='dashboard' element={<DashboardOverview />} />
+        <Route path='patients' element={<PatientList />} />
+        <Route path='appointments' element={<AppointmentList />} />
+        <Route path='doctors' element={<div>Doctors Page</div>} />
+        <Route path='departments' element={<div>Departments Page</div>} />
+        <Route path='wards' element={<div>Wards Page</div>} />
+        <Route path='lab' element={<div>Lab Tests Page</div>} />
+        <Route path='medical-records' element={<div>Medical Records Page</div>} />
+        <Route path='billing' element={<div>Billing Page</div>} />
+        <Route path='reports' element={<div>Reports Page</div>} />
+      </Route>
     </Routes>
   );
 }
@@ -202,21 +223,23 @@ export default function App() {
   return (
     <AuthProvider>
       <AppProvider>
-         <StockAuthProvider>
-          <StockProvider>
-            <JournalProvider>
-              <ExpenseProvider>
-                <ReportsProvider>
-                  <FixedAssetProvider>
-                    <ProductionProvider> 
-                      <AppContent />
-                     </ProductionProvider>
-                  </FixedAssetProvider>
-                </ReportsProvider>
-              </ExpenseProvider>
-            </JournalProvider>
-          </StockProvider>
-        </StockAuthProvider> 
+        <HospitalProvider>
+          <StockAuthProvider>
+            <StockProvider>
+              <JournalProvider>
+                <ExpenseProvider>
+                  <ReportsProvider>
+                    <FixedAssetProvider>
+                      <ProductionProvider> 
+                        <AppContent />
+                      </ProductionProvider>
+                    </FixedAssetProvider>
+                  </ReportsProvider>
+                </ExpenseProvider>
+              </JournalProvider>
+            </StockProvider>
+          </StockAuthProvider>
+        </HospitalProvider>
       </AppProvider>
     </AuthProvider>
   );

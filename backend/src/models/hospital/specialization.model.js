@@ -10,8 +10,8 @@ export const createSpecialization = async (data) => {
 export const getByDepartment = async (departmentId) => {
   const snap = await coll()
     .where('departmentId', '==', departmentId)
-    .orderBy('createdAt', 'desc')
     .get();
+
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 };
 

@@ -1,0 +1,1 @@
+<DataTable columns={historyColumns} data={patient.history} />
