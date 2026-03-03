@@ -1,38 +1,53 @@
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
-import PageHeader from "../../../components/ui/PageHeader";
-import Card from "../../../components/ui/Card";
-import DataTable from "../../../components/ui/DataTable";
-import Button from "../../../components/ui/Button";
-import Modal from "../../../components/ui/Modal";
-import { usePatients } from "../../../hooks/usePatients";
+import { useParams, useNavigate } from "react-router-dom";
+import PageHeader from "../../../components/hospital/PageHeader";
+import Card from "../../../components/hospital/card";
+import Button from "../../../components/hospital/Button";
+import DataTable from "../../../components/hospital/DataTable";
 
 export default function PatientDocuments() {
   const { id } = useParams();
-  const { documents, uploadDocument } = usePatients();
-  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
-  const docColumns = [
+  const documents = [
+    { id: 1, fileName: "Lab_Report_2024.pdf", uploadedAt: "2024-01-15", type: "Lab Report", size: "2.5 MB" },
+    { id: 2, fileName: "X-Ray_Chest.jpg", uploadedAt: "2024-02-10", type: "X-Ray", size: "1.8 MB" },
+  ];
+
+  const columns = [
     { key: "fileName", label: "Document Name" },
-    { key: "uploadedAt", label: "Uploaded At" },
     { key: "type", label: "Type" },
+    { key: "uploadedAt", label: "Uploaded Date" },
+    { key: "size", label: "Size" },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (row) => (
+        <div className="flex gap-2">
+          <Button size="sm">View</Button>
+          <Button size="sm" variant="danger">Delete</Button>
+        </div>
+      ),
+    },
   ];
 
   return (
     <>
       <PageHeader
         title="Patient Documents"
-        action={<Button onClick={() => setOpen(true)}>Upload Document</Button>}
+        action={
+          <div className="flex gap-2">
+            <Button>Upload Document</Button>
+            <Button variant="secondary" onClick={() => navigate(`/hospital/patients/${id}`)}>
+              Back
+            </Button>
+          </div>
+        }
       />
 
       <Card>
-        <DataTable columns={docColumns} data={documents(id)} />
+        <DataTable columns={columns} data={documents} pageSize={10} />
       </Card>
-
-      <Modal isOpen={open} onClose={() => setOpen(false)} title="Upload Document">
-        <input type="file" />
-        <Button onClick={() => uploadDocument(id)}>Upload</Button>
-      </Modal>
     </>
   );
 }

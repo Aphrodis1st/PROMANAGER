@@ -25,8 +25,10 @@ const DataTable = ({
     if (!sortKey) return filteredData;
 
     return [...filteredData].sort((a, b) => {
-      if (a[sortKey] < b[sortKey]) return direction === "asc" ? -1 : 1;
-      if (a[sortKey] > b[sortKey]) return direction === "asc" ? 1 : -1;
+      const aVal = a[sortKey];
+      const bVal = b[sortKey];
+      if (aVal < bVal) return direction === "asc" ? -1 : 1;
+      if (aVal > bVal) return direction === "asc" ? 1 : -1;
       return 0;
     });
   }, [filteredData, sortKey, direction]);
@@ -59,11 +61,11 @@ const DataTable = ({
           <tr className="text-left text-gray-600 dark:text-gray-300">
             {columns.map((col) => (
               <th
-                key={col.accessor}
+                key={col.key || col.accessor}
                 className="py-3 cursor-pointer"
-                onClick={() => handleSort(col.accessor)}
+                onClick={() => handleSort(col.key || col.accessor)}
               >
-                {col.header}
+                {col.label || col.header}
               </th>
             ))}
           </tr>
@@ -71,12 +73,12 @@ const DataTable = ({
 
         <tbody>
           {paginated.map((row, i) => (
-            <tr key={i} className="border-t dark:border-gray-700">
+            <tr key={row.id || i} className="border-t dark:border-gray-700">
               {columns.map((col) => (
-                <td key={col.accessor} className="py-3">
+                <td key={`${row.id || i}-${col.key || col.accessor}`} className="py-3">
                   {col.render
                     ? col.render(row)
-                    : row[col.accessor]}
+                    : row[col.key || col.accessor]}
                 </td>
               ))}
             </tr>

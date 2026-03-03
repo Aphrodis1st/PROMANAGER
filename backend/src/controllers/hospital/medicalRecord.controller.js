@@ -8,7 +8,7 @@ import {
 export const create = async (req, res) => {
   try {
     const record = await createMedicalRecord({
-      doctorId: req.user.uid,
+      doctorId: req.user?.uid || 'default-doctor',
       ...req.body
     });
 

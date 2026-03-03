@@ -1,6 +1,6 @@
 import React from "react";
 
-const Form = ({ title, children, onSubmit }) => {
+export const Form = ({ title, children, onSubmit }) => {
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
       {title && (
@@ -15,5 +15,43 @@ const Form = ({ title, children, onSubmit }) => {
     </div>
   );
 };
+
+export const Input = ({ label, error, ...props }) => (
+  <div>
+    {label && <label className="block mb-1 text-sm">{label}</label>}
+    <input
+      {...props}
+      className="w-full px-4 py-2 border rounded-xl dark:bg-gray-800"
+    />
+    {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+  </div>
+);
+
+export const Select = ({ label, options = [], ...props }) => (
+  <div>
+    {label && <label className="block mb-1 text-sm">{label}</label>}
+    <select
+      {...props}
+      className="w-full px-4 py-2 border rounded-xl dark:bg-gray-800"
+    >
+      {options.map((opt) => (
+        <option key={opt.value} value={opt.value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  </div>
+);
+
+export const TextArea = ({ label, ...props }) => (
+  <div>
+    {label && <label className="block mb-1 text-sm">{label}</label>}
+    <textarea
+      {...props}
+      className="w-full px-4 py-2 border rounded-xl dark:bg-gray-800"
+      rows={4}
+    />
+  </div>
+);
 
 export default Form;

@@ -12,9 +12,12 @@ export const PatientProvider = ({ children }) => {
     try {
       setLoading(true);
       const res = await hospitalService.getPatients();
-      setPatients(res.data);
+      setPatients(res.data || res || []);
+      setError(null);
     } catch (err) {
+      console.warn('Failed to fetch patients:', err.message);
       setError(err.message);
+      setPatients([]);
     } finally {
       setLoading(false);
     }

@@ -9,7 +9,7 @@ import {
 export const create = async (req, res) => {
   try {
     const payload = {
-      hospitalId: req.user.hospitalId,
+      hospitalId: req.user?.hospitalId || 'default-hospital',
       ...req.body
     };
 

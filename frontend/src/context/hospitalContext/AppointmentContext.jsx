@@ -9,8 +9,13 @@ export const AppointmentProvider = ({ children }) => {
 
   const fetchAppointments = async () => {
     setLoading(true);
-    const res = await hospitalService.getAppointments();
-    setAppointments(res.data);
+    try {
+      const res = await hospitalService.getAppointments();
+      setAppointments(res.data || []);
+    } catch (error) {
+      console.error("Failed to fetch appointments:", error);
+      setAppointments([]);
+    }
     setLoading(false);
   };
 

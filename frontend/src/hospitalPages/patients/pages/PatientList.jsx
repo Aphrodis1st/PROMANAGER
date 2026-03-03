@@ -15,7 +15,18 @@ export default function PatientList() {
     { key: "fullName", label: "Full Name" },
     { key: "gender", label: "Gender" },
     { key: "phone", label: "Phone" },
-    { key: "status", label: "Status" },
+    { 
+      key: "actions", 
+      label: "Actions",
+      render: (row) => (
+        <Button 
+          size="sm" 
+          onClick={() => navigate(`/hospital/patients/${row.id}`)}
+        >
+          View
+        </Button>
+      )
+    },
   ];
 
   return (
@@ -31,13 +42,15 @@ export default function PatientList() {
       />
 
       <Card>
-        <DataTable
-          columns={columns}
-          data={patients}
-          loading={loading}
-          searchable
-          pagination
-        />
+        {loading ? (
+          <div className="text-center py-8">Loading patients...</div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={patients || []}
+            pageSize={10}
+          />
+        )}
       </Card>
     </>
   );

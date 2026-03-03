@@ -9,8 +9,13 @@ export const DoctorProvider = ({ children }) => {
 
   const fetchDoctors = async () => {
     setLoading(true);
-    const res = await hospitalService.getDoctors();
-    setDoctors(res.data);
+    try {
+      const res = await hospitalService.getDoctors();
+      setDoctors(res.data || []);
+    } catch (error) {
+      console.error("Failed to fetch doctors:", error);
+      setDoctors([]);
+    }
     setLoading(false);
   };
 
