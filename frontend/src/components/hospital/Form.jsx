@@ -1,6 +1,22 @@
-import React from "react";
+import React, { useState } from "react";
 
-export const Form = ({ title, children, onSubmit }) => {
+export const Form = ({ title, children, onSubmit, defaultValues = {} }) => {
+  const [formData, setFormData] = useState(defaultValues);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const formElements = e.target.elements;
+    const data = {};
+    
+    for (let element of formElements) {
+      if (element.name) {
+        data[element.name] = element.value;
+      }
+    }
+    
+    onSubmit(data);
+  };
+
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
       {title && (
@@ -9,8 +25,23 @@ export const Form = ({ title, children, onSubmit }) => {
         </h2>
       )}
 
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {children}
+        <div style={{ marginTop: "1.5rem", display: "flex", gap: "1rem" }}>
+          <button
+            type="submit"
+            className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={() => window.history.back()}
+            className="px-6 py-2 bg-gray-300 text-gray-700 rounded-xl hover:bg-gray-400"
+          >
+            Cancel
+          </button>
+        </div>
       </form>
     </div>
   );

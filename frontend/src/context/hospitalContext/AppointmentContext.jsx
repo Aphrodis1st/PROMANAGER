@@ -11,7 +11,31 @@ export const AppointmentProvider = ({ children }) => {
     setLoading(true);
     try {
       const res = await hospitalService.getAppointments();
-      setAppointments(res.data || []);
+      console.log("Fetched appointments:", res);
+      const appointmentsList = res.data || res || [];
+      
+      // Fetch patients and doctors to map names
+      const [patientsRes, doctorsRes] = await Promise.all([
+        hospitalService.getPatients().catch(() => ({ data: [] })),
+        hospitalService.getDoctors().catch(() => ({ data: [] }))
+      ]);
+      
+      const patients = patientsRes.data || patientsRes || [];
+      const doctors = doctorsRes.data || doctorsRes || [];
+      
+      // Enrich appointments with names
+      const enrichedAppointments = appointmentsList.map(apt => {
+        const patient = patients.find(p => p.id === apt.patientId);
+        const doctor = doctors.find(d => d.id === apt.doctorId);
+        
+        return {
+          ...apt,
+          patientName: patient?.fullName || patient?.name || 'Unknown Patient',
+          doctorName: doctor?.fullName || doctor?.name || 'Unknown Doctor'
+        };
+      });
+      
+      setAppointments(enrichedAppointments);
     } catch (error) {
       console.error("Failed to fetch appointments:", error);
       setAppointments([]);
@@ -20,8 +44,14 @@ export const AppointmentProvider = ({ children }) => {
   };
 
   const createAppointment = async (data) => {
-    await hospitalService.createAppointment(data);
-    fetchAppointments();
+    try {
+      const result = await hospitalService.createAppointment(data);
+      await fetchAppointments();
+      return result;
+    } catch (error) {
+      console.error("Failed to create appointment:", error);
+      throw error;
+    }
   };
 
   const updateAppointment = async (id, data) => {

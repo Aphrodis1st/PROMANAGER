@@ -5,17 +5,27 @@ import Card from "../../../components/hospital/card";
 import Button from "../../../components/hospital/Button";
 import Badge from "../../../components/hospital/Badge";
 import { usePatients } from "../../../hooks/usePatients";
+import { useAppointments } from "../../../hooks/useAppointments";
+import { useMedicalRecords } from "../../../hooks/useMedicalRecords";
 
 export default function PatientDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { patients } = usePatients();
+  const { appointments } = useAppointments();
+  const { records, fetchRecords } = useMedicalRecords();
   const [patient, setPatient] = useState(null);
 
   useEffect(() => {
     const found = patients?.find(p => p.id === id);
     setPatient(found);
+    if (found) {
+      fetchRecords(id);
+    }
   }, [id, patients]);
+
+  const patientAppointments = appointments?.filter(a => a.patientId === id) || [];
+  const patientRecords = records || [];
 
   if (!patient) {
     return (
@@ -86,19 +96,55 @@ export default function PatientDetails() {
 
         <Card title="Quick Actions">
           <div className="space-y-2">
+            <Button className="w-full" onClick={() => navigate(`/hospital/appointments/create?patientId=${id}`)}>
+              Book Appointment
+            </Button>
+            <Button className="w-full" onClick={() => navigate(`/hospital/lab/create?patientId=${id}`)}>
+              Order Lab Tests
+            </Button>
+            <Button className="w-full" onClick={() => navigate(`/hospital/medical-records/create?patientId=${id}`)}>
+              Create Medical Record
+            </Button>
             <Button className="w-full" onClick={() => navigate(`/hospital/patients/${id}/history`)}>
               View History
             </Button>
-            <Button className="w-full" onClick={() => navigate(`/hospital/patients/${id}/documents`)}>
-              Documents
-            </Button>
-            <Button className="w-full" onClick={() => navigate(`/hospital/patients/${id}/insurance`)}>
-              Insurance
-            </Button>
-            <Button className="w-full" onClick={() => navigate(`/hospital/patients/${id}/emergency-contacts`)}>
-              Emergency Contacts
-            </Button>
           </div>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        <Card title="Recent Appointments">
+          {patientAppointments.length > 0 ? (
+            <div className="space-y-2">
+              {patientAppointments.slice(0, 3).map(apt => (
+                <div key={apt.id} className="border-b pb-2">
+                  <p className="font-semibold">{apt.doctorName}</p>
+                  <p className="text-sm text-gray-500">{apt.date} at {apt.time}</p>
+                  <Badge>{apt.status || 'Scheduled'}</Badge>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500">No appointments found</p>
+          )}
+        </Card>
+
+        <Card title="Medical Records">
+          {patientRecords.length > 0 ? (
+            <div className="space-y-2">
+              {patientRecords.slice(0, 3).map(record => (
+                <div key={record.id} className="border-b pb-2">
+                  <p className="font-semibold">Record #{record.recordNumber}</p>
+                  <p className="text-sm text-gray-500">{record.primaryDoctor}</p>
+                  <Button size="sm" onClick={() => navigate(`/hospital/medical-records/${record.id}`)}>
+                    View
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500">No medical records found</p>
+          )}
         </Card>
       </div>
     </>

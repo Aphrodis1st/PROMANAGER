@@ -83,6 +83,9 @@ import CreateLabTest from './hospitalPages/lab/pages/CreateLabTest.jsx';
 import LabResultsEntry from './hospitalPages/lab/pages/LabResultsEntry.jsx';
 import LabResultsView from './hospitalPages/lab/pages/LabResultsView.jsx';
 import PendingTests from './hospitalPages/lab/pages/PendingTests.jsx';
+import LabOrderCreate from './hospitalPages/lab/pages/LabOrderCreate.jsx';
+import LabOrderList from './hospitalPages/lab/pages/LabOrderList.jsx';
+import LabResultEntryNew from './hospitalPages/lab/pages/LabResultEntryNew.jsx';
 import BillingDashboard from './hospitalPages/billing/pages/BillingDashboard.jsx';
 import InvoiceList from './hospitalPages/billing/pages/InvoiceList.jsx';
 import CreateInvoice from './hospitalPages/billing/pages/CreateInvoice.jsx';
@@ -106,8 +109,15 @@ import ViewMedicalRecord from './hospitalPages/medical-records/ViewMedicalRecord
 import DiagnosisEntry from './hospitalPages/medical-records/DiagnosisEntry.jsx';
 import PrescriptionEntry from './hospitalPages/medical-records/PrescriptionEntry.jsx';
 import SurgeryRecord from './hospitalPages/medical-records/SurgeryRecord.jsx';
+import VitalSigns from './hospitalPages/medical-records/VitalSigns.jsx';
+import VitalSignsTrends from './hospitalPages/medical-records/VitalSignsTrends.jsx';
 import TreatmentPlan from './hospitalPages/medical-records/TreatmentPlan.jsx';
 import DepartmentList from './hospitalPages/departments/DepartmentList.jsx';
+import DoctorListNew from './hospitalPages/doctors/pages/DoctorList.jsx';
+import CreateDoctor from './hospitalPages/doctors/pages/CreateDoctor.jsx';
+import DoctorProfileNew from './hospitalPages/doctors/pages/DoctorProfile.jsx';
+import EditDoctor from './hospitalPages/doctors/pages/EditDoctor.jsx';
+import DoctorScheduleNew from './hospitalPages/doctors/pages/DoctorSchedule.jsx';
 
 function AppContent() {
   return (
@@ -264,8 +274,12 @@ function AppContent() {
         <Route path='appointments' element={<AppointmentList />} />
         <Route path='appointments/create' element={<AppointmentCreate />} />
         <Route path='appointments/calendar' element={<AppointmentCalendar />} />
-        <Route path='doctors' element={<DoctorList />} />
-        <Route path='doctors/schedule' element={<DoctorSchedule />} />
+        <Route path='doctors' element={<DoctorListNew />} />
+        <Route path='doctors/create' element={<CreateDoctor />} />
+        <Route path='doctors/:id' element={<DoctorProfileNew />} />
+        <Route path='doctors/:id/edit' element={<EditDoctor />} />
+        <Route path='doctors/:id/schedule' element={<DoctorScheduleNew />} />
+        <Route path='doctors/schedule' element={<DoctorScheduleNew />} />
         <Route path='doctors/specialization' element={<DoctorSpecialization />} />
         <Route path='departments' element={<DepartmentList />} />
         <Route path='admissions' element={<AdmissionList />} />
@@ -284,9 +298,14 @@ function AppContent() {
         <Route path='lab/results/entry' element={<LabResultsEntry />} />
         <Route path='lab/results/:id' element={<LabResultsView />} />
         <Route path='lab/pending' element={<PendingTests />} />
+        <Route path='lab/orders' element={<LabOrderList />} />
+        <Route path='lab/orders/create/:patientId' element={<LabOrderCreate />} />
+        <Route path='lab/orders/:orderId/results' element={<LabResultEntryNew />} />
         <Route path='medical-records' element={<MedicalRecordList />} />
         <Route path='medical-records/create' element={<CreateMedicalRecord />} />
         <Route path='medical-records/:id' element={<ViewMedicalRecord />} />
+        <Route path='medical-records/vitals/:id' element={<VitalSigns />} />
+        <Route path='medical-records/vitals-trends/:id' element={<VitalSignsTrends />} />
         <Route path='medical-records/diagnosis/:id' element={<DiagnosisEntry />} />
         <Route path='medical-records/prescription/:id' element={<PrescriptionEntry />} />
         <Route path='medical-records/surgery/:id' element={<SurgeryRecord />} />

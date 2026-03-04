@@ -9,7 +9,7 @@ import Button from "../../components/hospital/Button";
 import { useMedicalRecords } from "../../hooks/useMedicalRecords";
 
 export default function MedicalRecordList() {
-  const { records } = useMedicalRecords();
+  const { records, loading } = useMedicalRecords();
   const navigate = useNavigate();
 
   const columns = [
@@ -39,7 +39,12 @@ export default function MedicalRecordList() {
         }
       />
       <Card>
-        <DataTable columns={columns} data={records} searchable pagination />
+        <div style={{ textAlign: "center", padding: "2rem" }}>
+          <p style={{ marginBottom: "1rem" }}>Medical records are patient-specific. View them from:</p>
+          <Button onClick={() => navigate("/hospital/patients")}>
+            Go to Patients
+          </Button>
+        </div>
       </Card>
     </>
   );

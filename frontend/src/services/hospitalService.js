@@ -123,6 +123,27 @@ export const labService = {
     const res = await axios.delete(`${HOSPITAL_API_URL}/lab/${id}`, getAuthHeader());
     return res.data;
   },
+
+  // Lab Orders
+  getAllOrders: async () => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/lab/orders`, getAuthHeader());
+    return res.data;
+  },
+
+  getOrderById: async (id) => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/lab/orders/${id}`, getAuthHeader());
+    return res.data;
+  },
+
+  createOrder: async (data) => {
+    const res = await axios.post(`${HOSPITAL_API_URL}/lab/orders`, data, getAuthHeader());
+    return res.data;
+  },
+
+  submitResults: async (orderId, data) => {
+    const res = await axios.put(`${HOSPITAL_API_URL}/lab/orders/${orderId}/results`, data, getAuthHeader());
+    return res.data;
+  },
 };
 
 
@@ -294,7 +315,16 @@ const hospitalService = {
   updateLabTest: labService.update,
   deleteLabTest: labService.remove,
 
+  getLabOrders: labService.getAllOrders,
+  getLabOrderById: labService.getOrderById,
+  createLabOrder: labService.createOrder,
+  submitLabResults: labService.submitResults,
+
   getMedicalRecords: medicalRecordService.getByPatient,
+  getAllMedicalRecords: async () => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/medical-records`, getAuthHeader());
+    return res.data;
+  },
   createMedicalRecord: medicalRecordService.create,
   updateMedicalRecord: medicalRecordService.update,
   deleteMedicalRecord: medicalRecordService.remove,

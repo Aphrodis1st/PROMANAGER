@@ -23,6 +23,9 @@ export default function ManagementLinks() {
           <ListItemButton component={Link} to="/hospital/doctors" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
             <ListItemText primary="Doctor List" />
           </ListItemButton>
+          <ListItemButton component={Link} to="/hospital/doctors/create" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+            <ListItemText primary="Add Doctor" />
+          </ListItemButton>
           <ListItemButton component={Link} to="/hospital/doctors/schedule" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
             <ListItemText primary="Doctor Schedule" />
           </ListItemButton>
