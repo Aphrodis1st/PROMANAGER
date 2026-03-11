@@ -52,15 +52,6 @@ export default function ManagementLinks() {
           <ListItemButton component={Link} to="/hospital/departments/create" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
             <ListItemText primary="Create Department" />
           </ListItemButton>
-          <ListItemButton component={Link} to="/hospital/departments/:id" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
-            <ListItemText primary="Department Details" />
-          </ListItemButton>
-          <ListItemButton component={Link} to="/hospital/departments/assign-head/:id" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
-            <ListItemText primary="Assign Head" />
-          </ListItemButton>
-          <ListItemButton component={Link} to="/hospital/departments/statistics/:id" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
-            <ListItemText primary="Statistics" />
-          </ListItemButton>
         </List>
       </Collapse>
     </>

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PageHeader from "../../../components/hospital/PageHeader";
 import Card from "../../../components/hospital/card";
-import { Form, Select, TextArea } from "../../../components/hospital/Form";
 import Button from "../../../components/hospital/Button";
 import { useLab } from "../../../hooks/useLab";
 import { usePatients } from "../../../hooks/usePatients";
@@ -12,8 +11,8 @@ export default function CreateLabTest() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { createLabOrder } = useLab();
-  const { patients } = usePatients();
-  const { doctors } = useDoctors();
+  const { patients, fetchPatients } = usePatients();
+  const { doctors, fetchDoctors } = useDoctors();
   const [loading, setLoading] = useState(false);
   const [selectedTests, setSelectedTests] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState("");
@@ -22,6 +21,8 @@ export default function CreateLabTest() {
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
+    fetchPatients();
+    fetchDoctors();
     const patientId = searchParams.get("patientId");
     if (patientId) setSelectedPatient(patientId);
   }, [searchParams]);
@@ -64,6 +65,7 @@ export default function CreateLabTest() {
     } catch (error) {
       console.error("Error creating lab order:", error);
       alert("Failed to create lab order. Please try again.");
+    } finally {
       setLoading(false);
     }
   };
@@ -117,6 +119,34 @@ export default function CreateLabTest() {
     }
   };
 
+  if (!patients || patients.length === 0 || !doctors || doctors.length === 0) {
+    return (
+      <>
+        <PageHeader title="Order Laboratory Tests" />
+        <Card>
+          <div style={{ textAlign: "center", padding: "2rem" }}>
+            <p style={{ marginBottom: "1rem" }}>
+              {!patients || patients.length === 0 ? "No patients found. " : ""}
+              {!doctors || doctors.length === 0 ? "No doctors found." : ""}
+            </p>
+            <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
+              {(!patients || patients.length === 0) && (
+                <Button onClick={() => navigate("/hospital/patients/create")}>
+                  Add Patient
+                </Button>
+              )}
+              {(!doctors || doctors.length === 0) && (
+                <Button onClick={() => navigate("/hospital/doctors/create")}>
+                  Add Doctor
+                </Button>
+              )}
+            </div>
+          </div>
+        </Card>
+      </>
+    );
+  }
+
   return (
     <>
       <PageHeader 
@@ -133,7 +163,6 @@ export default function CreateLabTest() {
           <div style={{ textAlign: "center", padding: "2rem" }}>Creating lab order...</div>
         ) : (
           <form onSubmit={handleSubmit}>
-            {/* Patient Selection */}
             <div style={{ marginBottom: "1.5rem" }}>
               <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600" }}>
                 Patient *
@@ -153,7 +182,6 @@ export default function CreateLabTest() {
               </select>
             </div>
 
-            {/* Doctor Selection */}
             <div style={{ marginBottom: "1.5rem" }}>
               <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600" }}>
                 Ordering Doctor *
@@ -173,7 +201,6 @@ export default function CreateLabTest() {
               </select>
             </div>
 
-            {/* Test Selection */}
             <div style={{ marginBottom: "1.5rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
                 <label style={{ fontWeight: "600" }}>Select Tests * ({selectedTests.length} selected)</label>
@@ -239,7 +266,6 @@ export default function CreateLabTest() {
               </div>
             </div>
 
-            {/* Priority */}
             <div style={{ marginBottom: "1.5rem" }}>
               <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600" }}>
                 Priority *
@@ -269,7 +295,6 @@ export default function CreateLabTest() {
               </div>
             </div>
 
-            {/* Clinical Notes */}
             <div style={{ marginBottom: "1.5rem" }}>
               <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600" }}>
                 Clinical Notes / Indication
@@ -283,7 +308,6 @@ export default function CreateLabTest() {
               />
             </div>
 
-            {/* Submit Buttons */}
             <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}>
               <Button type="button" variant="secondary" onClick={() => navigate("/hospital/lab/orders")}>
                 Cancel

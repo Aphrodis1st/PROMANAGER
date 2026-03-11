@@ -3,7 +3,11 @@ import {
   getLabTests,
   getLabTestsByPatient,
   updateLabTest,
-  deleteLabTest
+  deleteLabTest,
+  createLabOrder,
+  getLabOrders,
+  getLabOrderById,
+  updateLabOrder
 } from '../../models/hospital/lab.model.js';
 
 export const create = async (req, res) => {
@@ -48,6 +52,49 @@ export const remove = async (req, res) => {
     await deleteLabTest(req.params.id);
     res.json({ success: true });
   } catch {
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getAllOrders = async (req, res) => {
+  try {
+    const orders = await getLabOrders();
+    res.json(orders);
+  } catch (err) {
+    console.error('Get lab orders error:', err.message);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getOrderById = async (req, res) => {
+  try {
+    const order = await getLabOrderById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Lab order not found' });
+    }
+    res.json(order);
+  } catch (err) {
+    console.error('Get lab order error:', err.message);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const createOrder = async (req, res) => {
+  try {
+    const order = await createLabOrder(req.body);
+    res.status(201).json(order);
+  } catch (err) {
+    console.error('Create lab order error:', err.message);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const submitResults = async (req, res) => {
+  try {
+    const updated = await updateLabOrder(req.params.id, req.body);
+    res.json(updated);
+  } catch (err) {
+    console.error('Submit results error:', err.message);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

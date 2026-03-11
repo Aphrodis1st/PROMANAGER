@@ -92,6 +92,7 @@ import CreateInvoice from './hospitalPages/billing/pages/CreateInvoice.jsx';
 import PaymentProcessing from './hospitalPages/billing/pages/PaymentProcessing.jsx';
 import InsuranceClaims from './hospitalPages/billing/pages/InsuranceClaims.jsx';
 import RevenueReports from './hospitalPages/billing/pages/RevenueReports.jsx';
+import BillingSettings from './hospitalPages/billing/pages/BillingSettings.jsx';
 import HospitalReportDashboard from './hospitalPages/reports/pages/HospitalReportDashboard.jsx';
 import AuditLogs from './hospitalPages/reports/pages/AuditLogs.jsx';
 import DepartmentReports from './hospitalPages/reports/pages/DepartmentReports.jsx';
@@ -113,6 +114,10 @@ import VitalSigns from './hospitalPages/medical-records/VitalSigns.jsx';
 import VitalSignsTrends from './hospitalPages/medical-records/VitalSignsTrends.jsx';
 import TreatmentPlan from './hospitalPages/medical-records/TreatmentPlan.jsx';
 import DepartmentList from './hospitalPages/departments/DepartmentList.jsx';
+import DepartmentCreate from './hospitalPages/departments/DepartmentCreate.jsx';
+import DepartmentDetails from './hospitalPages/departments/DepartmentDetails.jsx';
+import AssignHeadOfDepartment from './hospitalPages/departments/AssignHeadOfDepartment.jsx';
+import DepartmentStatistics from './hospitalPages/departments/DepartmentStatistics.jsx';
 import DoctorListNew from './hospitalPages/doctors/pages/DoctorList.jsx';
 import CreateDoctor from './hospitalPages/doctors/pages/CreateDoctor.jsx';
 import DoctorProfileNew from './hospitalPages/doctors/pages/DoctorProfile.jsx';
@@ -282,6 +287,10 @@ function AppContent() {
         <Route path='doctors/schedule' element={<DoctorScheduleNew />} />
         <Route path='doctors/specialization' element={<DoctorSpecialization />} />
         <Route path='departments' element={<DepartmentList />} />
+        <Route path='departments/create' element={<DepartmentCreate />} />
+        <Route path='departments/:id' element={<DepartmentDetails />} />
+        <Route path='departments/assign-head/:id' element={<AssignHeadOfDepartment />} />
+        <Route path='departments/statistics/:id' element={<DepartmentStatistics />} />
         <Route path='admissions' element={<AdmissionList />} />
         <Route path='admissions/admit' element={<AdmitPatient />} />
         <Route path='admissions/:id' element={<AdmissionDetails />} />
@@ -316,6 +325,7 @@ function AppContent() {
         <Route path='billing/payment' element={<PaymentProcessing />} />
         <Route path='billing/insurance' element={<InsuranceClaims />} />
         <Route path='billing/reports' element={<RevenueReports />} />
+        <Route path='billing/settings' element={<BillingSettings />} />
         <Route path='reports' element={<HospitalReportDashboard />} />
         <Route path='reports/audit' element={<AuditLogs />} />
         <Route path='reports/department' element={<DepartmentReports />} />
