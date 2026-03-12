@@ -15,22 +15,55 @@ export default function MedicalRecordList() {
   const [allRecords, setAllRecords] = useState([]);
   const [filter, setFilter] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const refreshRecords = async () => {
+    setLoading(true);
+    console.log('Refreshing records for patients:', patients);
+    
+    try {
+      const combined = [];
+      
+      // Fetch records for each patient and collect them directly
+      for (const patient of patients) {
+        try {
+          console.log(`Fetching records for patient: ${patient.fullName} (${patient.id})`);
+          const patientRecords = await fetchRecords(patient.id);
+          
+          console.log(`Received ${patientRecords.length} records for ${patient.fullName}`);
+          
+          // Add patient info to each record
+          const recordsWithPatientInfo = patientRecords.map(r => ({
+            ...r,
+            patientName: patient.fullName,
+            patientId: patient.id
+          }));
+          
+          combined.push(...recordsWithPatientInfo);
+        } catch (error) {
+          console.error(`Error fetching records for patient ${patient.fullName}:`, error);
+        }
+      }
+      
+      // Remove duplicates
+      const uniqueRecords = combined.filter((record, index, self) => 
+        index === self.findIndex(r => r.id === record.id)
+      );
+      
+      console.log('Combined unique records:', uniqueRecords);
+      setAllRecords(uniqueRecords);
+    } catch (error) {
+      console.error('Error refreshing records:', error);
+      setAllRecords([]);
+    }
+    
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const loadRecords = async () => {
-      const combined = [];
-      for (const patient of patients) {
-        await fetchRecords(patient.id);
-        const patientRecords = records.map(r => ({
-          ...r,
-          patientName: patient.fullName,
-          patientId: patient.id
-        }));
-        combined.push(...patientRecords);
-      }
-      setAllRecords(combined);
-    };
-    if (patients.length > 0) loadRecords();
+    if (patients.length > 0) {
+      refreshRecords();
+    }
   }, [patients]);
 
   const getDoctorName = (doctorId) => {
@@ -77,18 +110,35 @@ export default function MedicalRecordList() {
         <div style={{ padding: "1.5rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
             <h3 style={{ fontSize: "1.125rem", fontWeight: "600" }}>Medical Records</h3>
-            <input
-              type="text"
-              placeholder="Search by patient or record number..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                padding: "0.5rem 1rem",
-                border: "1px solid #e5e7eb",
-                borderRadius: "0.375rem",
-                width: "300px"
-              }}
-            />
+            <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+              <input
+                type="text"
+                placeholder="Search by patient or record number..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  padding: "0.5rem 1rem",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "0.375rem",
+                  width: "300px"
+                }}
+              />
+              <Button 
+                variant="secondary" 
+                onClick={refreshRecords}
+                disabled={loading}
+              >
+                {loading ? "Refreshing..." : "Refresh"}
+              </Button>
+            </div>
+          </div>
+
+          {/* Debug Info */}
+          <div style={{ marginBottom: "1rem", padding: "1rem", backgroundColor: "#f3f4f6", borderRadius: "0.375rem", fontSize: "0.875rem" }}>
+            <strong>Debug Info:</strong><br/>
+            Patients: {patients.length} | Records in Context: {records.length} | All Records: {allRecords.length}<br/>
+            Patient IDs: {patients.map(p => p.id).join(', ')}<br/>
+            Record Patient IDs: {allRecords.map(r => r.patientId).join(', ')}
           </div>
 
           {filteredRecords.length === 0 ? (

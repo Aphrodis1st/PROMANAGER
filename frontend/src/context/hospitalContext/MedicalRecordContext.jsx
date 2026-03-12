@@ -11,17 +11,23 @@ export const MedicalRecordProvider = ({ children }) => {
   const fetchRecords = async (patientId = null) => {
     if (!patientId) {
       setRecords([]);
-      return;
+      return [];
     }
     setLoading(true);
     try {
+      console.log('MedicalRecordContext: Fetching records for patient:', patientId);
       const res = await hospitalService.getMedicalRecords(patientId);
-      setRecords(res.data || []);
+      const recordsData = res.data || res || [];
+      console.log('MedicalRecordContext: Received records:', recordsData);
+      setRecords(recordsData);
+      setLoading(false);
+      return recordsData;
     } catch (error) {
       console.error("Failed to fetch medical records:", error);
       setRecords([]);
+      setLoading(false);
+      return [];
     }
-    setLoading(false);
   };
 
   const fetchAllRecords = async () => {
@@ -42,8 +48,10 @@ export const MedicalRecordProvider = ({ children }) => {
   const createRecord = async (data) => {
     try {
       const result = await hospitalService.createMedicalRecord(data);
-      // Don't fetch records after creation to avoid 500 error
-      // if (data.patientId) await fetchRecords(data.patientId);
+      // Refetch records after successful creation
+      if (data.patientId) {
+        await fetchRecords(data.patientId);
+      }
       return result;
     } catch (error) {
       console.error("Failed to create record:", error);

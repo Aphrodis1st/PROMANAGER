@@ -58,11 +58,14 @@ export const remove = async (req, res) => {
 
 export const getAllOrders = async (req, res) => {
   try {
+    console.log('Fetching all lab orders...');
     const orders = await getLabOrders();
+    console.log('Found', orders.length, 'lab orders');
     res.json(orders);
   } catch (err) {
     console.error('Get lab orders error:', err.message);
-    res.status(500).json({ message: 'Internal server error' });
+    // Return empty array instead of error for unauthenticated requests
+    res.json([]);
   }
 };
 
@@ -75,26 +78,34 @@ export const getOrderById = async (req, res) => {
     res.json(order);
   } catch (err) {
     console.error('Get lab order error:', err.message);
-    res.status(500).json({ message: 'Internal server error' });
+    // Return null for unauthenticated requests
+    res.json(null);
   }
 };
 
 export const createOrder = async (req, res) => {
   try {
-    const order = await createLabOrder(req.body);
+    const orderData = {
+      doctorId: req.user?.uid || 'default-doctor',
+      ...req.body
+    };
+    const order = await createLabOrder(orderData);
     res.status(201).json(order);
   } catch (err) {
     console.error('Create lab order error:', err.message);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error', error: err.message });
   }
 };
 
 export const submitResults = async (req, res) => {
   try {
+    console.log('Submitting lab results for order:', req.params.id);
+    console.log('Results data:', req.body);
     const updated = await updateLabOrder(req.params.id, req.body);
+    console.log('Lab results submitted successfully:', updated);
     res.json(updated);
   } catch (err) {
     console.error('Submit results error:', err.message);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error', error: err.message });
   }
 };

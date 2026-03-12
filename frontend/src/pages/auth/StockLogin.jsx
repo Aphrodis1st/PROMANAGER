@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useStockAuth } from '../../context/StockAuthContext.jsx';
 import { 
   Box, 
   Container, 
@@ -9,25 +10,33 @@ import {
   TextField,
   Button,
   Avatar,
-  Alert
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import { Inventory as StockIcon } from '@mui/icons-material';
 
 export default function StockLogin() {
   const navigate = useNavigate();
+  const { login, loading } = useStockAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add authentication logic here
-    if (formData.email && formData.password) {
+    setError('');
+    setIsLoading(true);
+    
+    try {
+      await login(formData.email, formData.password);
       navigate('/stock/dashboard');
-    } else {
-      setError('Please enter both email and password');
+    } catch (err) {
+      setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -95,6 +104,7 @@ export default function StockLogin() {
                 fullWidth
                 variant="contained"
                 size="large"
+                disabled={isLoading}
                 sx={{ 
                   mt: 3, 
                   mb: 2,
@@ -103,7 +113,14 @@ export default function StockLogin() {
                   fontSize: '1.1rem'
                 }}
               >
-                Sign In
+                {isLoading ? (
+                  <>
+                    <CircularProgress size={20} sx={{ mr: 1, color: 'white' }} />
+                    Signing In...
+                  </>
+                ) : (
+                  'Sign In'
+                )}
               </Button>
             </form>
 

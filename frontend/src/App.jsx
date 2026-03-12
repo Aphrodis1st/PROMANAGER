@@ -84,6 +84,7 @@ import LabResultsView from './hospitalPages/lab/pages/LabResultsView.jsx';
 import PendingTests from './hospitalPages/lab/pages/PendingTests.jsx';
 import LabOrderCreate from './hospitalPages/lab/pages/LabOrderCreate.jsx';
 import LabOrderList from './hospitalPages/lab/pages/LabOrderList.jsx';
+import LabOrderResultsView from './hospitalPages/lab/pages/LabOrderResultsView.jsx';
 import LabResultEntryNew from './hospitalPages/lab/pages/LabResultEntryNew.jsx';
 import BillingDashboard from './hospitalPages/billing/pages/BillingDashboard.jsx';
 import InvoiceList from './hospitalPages/billing/pages/InvoiceList.jsx';
@@ -319,7 +320,8 @@ function AppContent() {
         <Route path='lab/pending' element={<PendingTests />} />
         <Route path='lab/orders' element={<LabOrderList />} />
         <Route path='lab/orders/create/:patientId' element={<LabOrderCreate />} />
-        <Route path='lab/orders/:orderId/results' element={<LabResultEntryNew />} />
+        <Route path='lab/orders/:orderId/results' element={<LabOrderResultsView />} />
+        <Route path='lab/orders/:orderId/results/entry' element={<LabResultEntryNew />} />
         <Route path='medical-records' element={<MedicalRecordList />} />
         <Route path='medical-records/create' element={<CreateMedicalRecord />} />
         <Route path='medical-records/:id' element={<ViewMedicalRecord />} />
