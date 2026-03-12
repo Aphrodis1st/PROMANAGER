@@ -5,18 +5,12 @@ export default function Navbar() {
   return (
     <nav style={styles.nav}>
       <Link to='/' style={styles.link}>Home</Link>
-      <Link to='/pharmacies' style={styles.link}>Doctor: Pharmacies</Link>
-       <Link to='/prescription' style={styles.link}>Prescription</Link>
-    <Link to='/quotes' style={styles.link}>Quotes</Link>
-      <Link to='/orders' style={styles.link}>Orders</Link>
-      <Link to='/clinics' style={styles.link}>Clinics</Link> 
-      <Link to='/branding' style={styles.link}>Branding</Link>
-      <Link to='/payments' style={styles.link}>Payments</Link>  
-       <Link to='/admin' style={styles.link}>Admin</Link> 
+      <Link to='/stock/inventory' style={styles.link}>Stock Management</Link>
+      <Link to='/hospital/dashboard' style={styles.link}>Hospital Services</Link>
+      <Link to='/pharmacy/dashboard' style={styles.link}>Pharmacy Services</Link>
+      <Link to='/admin' style={styles.link}>Admin</Link> 
       <Link to='/register' style={styles.link}>Register</Link>
       <Link to='/login' style={{ ...styles.link, marginLeft: 'auto' }}>Login</Link>
-      <Link to='/pharmacy-rx' style={styles.link}>Pharmacy Dashboard</Link>
-      <Link to='/callcenter' style={styles.link}>Call Center</Link>
     </nav>
   );
 }

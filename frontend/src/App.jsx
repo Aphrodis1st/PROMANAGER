@@ -1,4 +1,3 @@
-// frontend/src/App.jsx
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar.jsx';
@@ -124,31 +123,43 @@ import DoctorProfileNew from './hospitalPages/doctors/pages/DoctorProfile.jsx';
 import EditDoctor from './hospitalPages/doctors/pages/EditDoctor.jsx';
 import DoctorScheduleNew from './hospitalPages/doctors/pages/DoctorSchedule.jsx';
 
+// Pharmacy Pages
+import PharmacyLayout from './pharmacy/components/PharmacyLayout.jsx';
+import PharmacyDashboard from './pharmacy/pages/dashboard/PharmacyDashboard.jsx';
+import PharmaciesPage from './pharmacy/pages/doctors/Pharmacies.jsx';
+import PrescriptionList from './pharmacy/pages/prescriptions/PrescriptionList.jsx';
+import QuoteList from './pharmacy/pages/quotes/QuoteList.jsx';
+import OrderList from './pharmacy/pages/orders/OrderList.jsx';
+import CallCenter from './pharmacy/pages/callcenter/CallCenter.jsx';
+
+// Service Selection and Dashboards
+import ServiceSelection from './pages/ServiceSelection.jsx';
+import StockDashboard from './pages/StockDashboard.jsx';
+import HospitalDashboard from './pages/HospitalDashboard.jsx';
+import PharmacyServicesDashboard from './pages/PharmacyServicesDashboard.jsx';
+
+// Auth Pages
+import StockLogin from './pages/auth/StockLogin.jsx';
+import HospitalLogin from './pages/auth/HospitalLogin.jsx';
+import PharmacyLogin from './pages/auth/PharmacyLogin.jsx';
+import StockRegister from './pages/auth/StockRegister.jsx';
+
 function AppContent() {
   return (
     <Routes>
-      {/* Public / top-level pages */}
-      <Route path='/' element={
-        <>
-          <Navbar />
-          <main className="pt-16 pb-16 min-h-screen bg-gray-100">
-            <Home />
-          </main>
-          <Footer />
-        </>
-      } />
-      <Route path='/login' element={<UnifiedLogin />} />
-      <Route path='/register' element={<UnifiedRegister />} />
-      <Route path='/pharmacies' element={<Pharmacies />} />
-      <Route path='/prescription' element={<Prescription />} />
-      <Route path='/quotes' element={<Quotes />} />
-      <Route path='/orders' element={<Orders />} />
-      <Route path='/clinics' element={<Clinics />} />
-      <Route path='/branding' element={<Branding />} />
-      <Route path='/payments' element={<Payments />} />
-      <Route path='/admin' element={<AdminDashboard />} />
-      <Route path='/pharmacy-rx' element={<PharmacyRx />} />
-      <Route path='/callcenter' element={<CallCenterDashboard />} />
+      {/* Service Selection - Main Entry Point */}
+      <Route path='/' element={<ServiceSelection />} />
+      
+      {/* Independent Service Dashboards */}
+      <Route path='/stock/dashboard' element={<StockDashboard />} />
+      <Route path='/hospital/dashboard' element={<HospitalDashboard />} />
+      <Route path='/pharmacy/dashboard' element={<PharmacyServicesDashboard />} />
+      
+      {/* Authentication Routes for Each Service */}
+      <Route path='/stock/login' element={<StockLogin />} />
+      <Route path='/hospital/login' element={<HospitalLogin />} />
+      <Route path='/pharmacy/login' element={<PharmacyLogin />} />
+      <Route path='/stock/register' element={<StockRegister />} />
 
       {/* Stock Dashboard pages */}
       <Route path='/stock/*' element={<AppLayout />}>
@@ -267,7 +278,6 @@ function AppContent() {
 
       {/* Hospital Routes */}
       <Route path='/hospital/*' element={<HospitalLayout />}>
-        <Route path='dashboard' element={<DashboardOverview />} />
         <Route path='patients' element={<PatientList />} />
         <Route path='patients/create' element={<PatientCreate />} />
         <Route path='patients/:id' element={<PatientDetails />} />
@@ -332,6 +342,26 @@ function AppContent() {
         <Route path='reports/financial' element={<FinancialReports />} />
         <Route path='reports/lab' element={<LabReports />} />
         <Route path='reports/patient' element={<PatientReports />} />
+      </Route>
+
+      {/* Pharmacy Services Routes */}
+      <Route path='/pharmacy/*' element={<PharmacyLayout />}>
+        <Route path='doctors' element={<PharmaciesPage />} />
+        <Route path='prescriptions' element={<PrescriptionList />} />
+        <Route path='prescriptions/create' element={<PrescriptionList />} />
+        <Route path='prescriptions/verify' element={<PrescriptionList />} />
+        <Route path='quotes' element={<QuoteList />} />
+        <Route path='quotes/create' element={<QuoteList />} />
+        <Route path='quotes/pending' element={<QuoteList />} />
+        <Route path='orders' element={<OrderList />} />
+        <Route path='orders/create' element={<OrderList />} />
+        <Route path='orders/tracking' element={<OrderList />} />
+        <Route path='branding' element={<PharmacyDashboard />} />
+        <Route path='branding/campaigns' element={<PharmacyDashboard />} />
+        <Route path='payments' element={<PharmacyDashboard />} />
+        <Route path='payments/process' element={<PharmacyDashboard />} />
+        <Route path='payments/reports' element={<PharmacyDashboard />} />
+        <Route path='callcenter' element={<CallCenter />} />
       </Route>
     </Routes>
   );
