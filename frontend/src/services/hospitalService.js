@@ -22,8 +22,13 @@ export const patientService = {
   },
 
   create: async (data) => {
-    const res = await axios.post(`${HOSPITAL_API_URL}/patients`, data, getAuthHeader());
-    return res.data;
+    try {
+      const res = await axios.post(`${HOSPITAL_API_URL}/patients`, data, getAuthHeader());
+      return res.data;
+    } catch (error) {
+      console.error('Patient service create error:', error.response?.data || error.message);
+      throw error;
+    }
   },
 
   update: async (id, data) => {
@@ -266,6 +271,32 @@ export const departmentService = {
 
 
 // =======================================================
+// 🏥 INSURANCE PROVIDER SERVICE
+// =======================================================
+export const insuranceProviderService = {
+  getAll: async () => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/insurance-providers`, getAuthHeader());
+    return res.data;
+  },
+
+  create: async (data) => {
+    const res = await axios.post(`${HOSPITAL_API_URL}/insurance-providers`, data, getAuthHeader());
+    return res.data;
+  },
+
+  update: async (id, data) => {
+    const res = await axios.put(`${HOSPITAL_API_URL}/insurance-providers/${id}`, data, getAuthHeader());
+    return res.data;
+  },
+
+  remove: async (id) => {
+    const res = await axios.delete(`${HOSPITAL_API_URL}/insurance-providers/${id}`, getAuthHeader());
+    return res.data;
+  },
+};
+
+
+// =======================================================
 // 🧬 SPECIALIZATION SERVICE
 // =======================================================
 export const specializationService = {
@@ -349,6 +380,11 @@ const hospitalService = {
   createSpecialization: specializationService.create,
   updateSpecialization: specializationService.update,
   deleteSpecialization: specializationService.remove,
+
+  getInsuranceProviders: insuranceProviderService.getAll,
+  createInsuranceProvider: insuranceProviderService.create,
+  updateInsuranceProvider: insuranceProviderService.update,
+  deleteInsuranceProvider: insuranceProviderService.remove,
 
   getAdmissions: async () => [],
   getReports: async () => [],

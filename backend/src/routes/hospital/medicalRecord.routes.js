@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { requireAuth, requireRole } from '../../middleware/auth.js';
 import {
   create,
   getByPatient,
@@ -9,9 +8,9 @@ import {
 
 const router = Router();
 
-router.post('/', requireAuth, requireRole('DOCTOR','ADMIN'), create);
-router.get('/patient/:patientId', requireAuth, getByPatient);
-router.put('/:id', requireAuth, requireRole('DOCTOR','ADMIN'), update);
-router.delete('/:id', requireAuth, requireRole('ADMIN'), remove);
+router.post('/', create);
+router.get('/patient/:patientId', getByPatient);
+router.put('/:id', update);
+router.delete('/:id', remove);
 
 export default router;

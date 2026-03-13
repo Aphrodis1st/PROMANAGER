@@ -4,10 +4,13 @@ import PageHeader from "../../components/hospital/PageHeader";
 import Card from "../../components/hospital/card";
 import Button from "../../components/hospital/Button";
 import Badge from "../../components/hospital/Badge";
+import { usePatients } from "../../hooks/usePatients";
 
 export default function VitalSigns() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { patients } = usePatients();
+  const [patient, setPatient] = useState(null);
   const [vitals, setVitals] = useState({
     temperature: "",
     tempUnit: "C",
@@ -23,6 +26,14 @@ export default function VitalSigns() {
   });
   const [calculated, setCalculated] = useState({});
   const [alerts, setAlerts] = useState([]);
+
+  useEffect(() => {
+    // Find the patient
+    if (patients && id) {
+      const foundPatient = patients.find(p => p.id === id);
+      setPatient(foundPatient);
+    }
+  }, [patients, id]);
 
   useEffect(() => {
     calculateMetrics();
@@ -123,15 +134,56 @@ export default function VitalSigns() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const data = { ...vitals, calculated, alerts, recordedAt: new Date().toISOString() };
-    console.log("Saving vitals:", data);
-    alert("Vital signs recorded successfully!");
-    navigate(`/hospital/medical-records/${id}`);
+    const data = { 
+      ...vitals, 
+      calculated, 
+      alerts, 
+      patientId: id,
+      patientName: patient?.fullName,
+      recordedAt: new Date().toISOString(),
+      recordedBy: "Current User" // In real app, get from auth
+    };
+    console.log("Saving vitals for patient:", id, data);
+    alert(`Vital signs recorded successfully for ${patient?.fullName || 'patient'}!`);
+    navigate(`/hospital/patients/${id}`);
   };
 
   return (
     <>
-      <PageHeader title="Record Vital Signs" />
+      <PageHeader 
+        title={`Record Vital Signs - ${patient?.fullName || 'Patient'}`}
+        subtitle={patient ? `Patient ID: ${patient.patientId || patient.id} • ${patient.gender} • ${patient.age || 'N/A'} years` : 'Loading patient information...'}
+        action={
+          <Button variant="secondary" onClick={() => navigate(`/hospital/patients/${id}`)}>
+            Back to Patient
+          </Button>
+        }
+      />
+
+      {patient && (
+        <Card style={{ marginBottom: "1rem", backgroundColor: "#f0f9ff", border: "1px solid #3b82f6" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem", padding: "1rem" }}>
+            <div>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Patient</div>
+              <div style={{ fontWeight: "600" }}>{patient.fullName}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Age</div>
+              <div style={{ fontWeight: "600" }}>
+                {patient.dateOfBirth ? new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear() : patient.age || 'N/A'} years
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Gender</div>
+              <div style={{ fontWeight: "600" }}>{patient.gender}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>MRN</div>
+              <div style={{ fontWeight: "600" }}>{patient.patientId || patient.id}</div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {alerts.length > 0 && (
         <Card style={{ marginBottom: "1rem", backgroundColor: "#fef2f2", borderLeft: "4px solid #ef4444" }}>
@@ -237,7 +289,7 @@ export default function VitalSigns() {
         </div>
 
         <div style={{ marginTop: "1.5rem", display: "flex", gap: "1rem", justifyContent: "flex-end" }}>
-          <Button type="button" variant="secondary" onClick={() => navigate(`/hospital/medical-records/${id}`)}>Cancel</Button>
+          <Button type="button" variant="secondary" onClick={() => navigate(`/hospital/patients/${id}`)}>Cancel</Button>
           <Button type="submit">Save Vital Signs</Button>
         </div>
       </form>

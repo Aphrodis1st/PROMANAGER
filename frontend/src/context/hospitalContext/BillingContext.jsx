@@ -20,9 +20,23 @@ const MOCK_INSURANCE_CLAIMS = [
 export const BillingProvider = ({ children }) => {
   const [invoices, setInvoices] = useState(MOCK_INVOICES);
   const [insuranceClaims, setInsuranceClaims] = useState(MOCK_INSURANCE_CLAIMS);
-  const [insuranceProviders, setInsuranceProviders] = useState(INSURANCE_PROVIDERS);
+  const [insuranceProviders, setInsuranceProviders] = useState([]);
   const [paymentMethods, setPaymentMethods] = useState(PAYMENT_METHODS.map(m => ({ ...m, status: "Active" })));
   const [loading, setLoading] = useState(false);
+
+  const fetchInsuranceProviders = async () => {
+    try {
+      const res = await hospitalService.getInsuranceProviders();
+      if (res.data && res.data.length > 0) {
+        setInsuranceProviders(res.data);
+      } else {
+        setInsuranceProviders(INSURANCE_PROVIDERS);
+      }
+    } catch (error) {
+      console.error("Failed to fetch insurance providers:", error);
+      setInsuranceProviders(INSURANCE_PROVIDERS);
+    }
+  };
 
   const fetchInvoices = async () => {
     setLoading(true);
@@ -154,23 +168,58 @@ export const BillingProvider = ({ children }) => {
     }
   };
 
-  const addInsuranceProvider = (provider) => {
-    const newProvider = {
-      id: insuranceProviders.length + 1,
-      ...provider,
-      status: "Active"
-    };
-    setInsuranceProviders([...insuranceProviders, newProvider]);
+  const addInsuranceProvider = async (provider) => {
+    try {
+      const res = await hospitalService.createInsuranceProvider(provider);
+      if (res.data) {
+        setInsuranceProviders([...insuranceProviders, res.data]);
+      } else {
+        const newProvider = {
+          id: insuranceProviders.length + 1,
+          ...provider,
+          status: "Active"
+        };
+        setInsuranceProviders([...insuranceProviders, newProvider]);
+      }
+    } catch (error) {
+      console.error("Failed to add insurance provider:", error);
+      const newProvider = {
+        id: insuranceProviders.length + 1,
+        ...provider,
+        status: "Active"
+      };
+      setInsuranceProviders([...insuranceProviders, newProvider]);
+    }
   };
 
-  const updateInsuranceProvider = (id, updates) => {
-    setInsuranceProviders(insuranceProviders.map(p => 
-      p.id === id ? { ...p, ...updates } : p
-    ));
+  const updateInsuranceProvider = async (id, updates) => {
+    try {
+      const res = await hospitalService.updateInsuranceProvider(id, updates);
+      if (res.data) {
+        setInsuranceProviders(insuranceProviders.map(p => 
+          p.id === id ? res.data : p
+        ));
+      } else {
+        setInsuranceProviders(insuranceProviders.map(p => 
+          p.id === id ? { ...p, ...updates } : p
+        ));
+      }
+    } catch (error) {
+      console.error("Failed to update insurance provider:", error);
+      setInsuranceProviders(insuranceProviders.map(p => 
+        p.id === id ? { ...p, ...updates } : p
+      ));
+    }
   };
 
-  const deleteInsuranceProvider = (id) => {
-    setInsuranceProviders(insuranceProviders.filter(p => p.id !== id));
+  const deleteInsuranceProvider = async (id) => {
+    try {
+      await hospitalService.deleteInsuranceProvider(id);
+      setInsuranceProviders(insuranceProviders.filter(p => p.id !== id));
+    } catch (error) {
+      console.error("Failed to delete insurance provider:", error);
+      setInsuranceProviders(insuranceProviders.filter(p => p.id !== id));
+    }
   };
 
   const updatePaymentMethod = (idOrData, updates) => {
@@ -191,6 +240,7 @@ export const BillingProvider = ({ children }) => {
 
   useEffect(() => {
     fetchInvoices();
+    fetchInsuranceProviders();
   }, []);
 
   return (

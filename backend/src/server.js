@@ -47,6 +47,7 @@ import medicalRecordRoutes from './routes/hospital/medicalRecord.routes.js';
 import patientRoutes from './routes/hospital/patient.routes.js';
 import specializationRoutes from './routes/hospital/specialization.routes.js';
 import wardRoutes from './routes/hospital/ward.routes.js';
+import insuranceProviderRoutes from './routes/hospital/insuranceProvider.routes.js';
 
 dotenv.config();
 
@@ -109,6 +110,7 @@ app.use('/api/v1/hospital/medical-records', medicalRecordRoutes);
 app.use('/api/v1/hospital/patients', patientRoutes);
 app.use('/api/v1/hospital/specializations', specializationRoutes);
 app.use('/api/v1/hospital/wards', wardRoutes);
+app.use('/api/v1/hospital/insurance-providers', insuranceProviderRoutes);
 
 // Start server
 const PORT = process.env.PORT || 5000;

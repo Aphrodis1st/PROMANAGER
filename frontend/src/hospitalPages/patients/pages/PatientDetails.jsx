@@ -5,6 +5,7 @@ import Card from "../../../components/hospital/card";
 import Button from "../../../components/hospital/Button";
 import Badge from "../../../components/hospital/Badge";
 import { usePatients } from "../../../hooks/usePatients";
+import { useBilling } from "../../../hooks/useBilling";
 import { useAppointments } from "../../../hooks/useAppointments";
 import { useMedicalRecords } from "../../../hooks/useMedicalRecords";
 
@@ -12,6 +13,7 @@ export default function PatientDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { patients } = usePatients();
+  const { insuranceProviders } = useBilling();
   const { appointments } = useAppointments();
   const { records, fetchRecords } = useMedicalRecords();
   const [patient, setPatient] = useState(null);
@@ -27,9 +29,15 @@ export default function PatientDetails() {
   const patientAppointments = appointments?.filter(a => a.patientId === id) || [];
   const patientRecords = records || [];
 
+  const getInsuranceProviderName = (providerId) => {
+    if (!providerId) return "No Insurance";
+    const provider = insuranceProviders.find(p => p.id === providerId);
+    return provider ? provider.name : "Unknown Provider";
+  };
+
   if (!patient) {
     return (
-      <div className="text-center py-8">
+      <div style={{ textAlign: "center", padding: "2rem" }}>
         <p>Loading patient details...</p>
       </div>
     );
@@ -38,112 +46,294 @@ export default function PatientDetails() {
   return (
     <>
       <PageHeader 
-        title="Patient Details"
+        title={`Patient Details - ${patient.fullName}`}
+        subtitle={`Patient ID: ${patient.patientId || patient.id}`}
         action={
-          <div className="flex gap-2">
+          <div style={{ display: "flex", gap: "0.5rem" }}>
             <Button onClick={() => navigate(`/hospital/patients/${id}/edit`)}>
-              Edit
+              Edit Patient
             </Button>
             <Button variant="secondary" onClick={() => navigate("/hospital/patients")}>
-              Back
+              Back to List
             </Button>
           </div>
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card title="Personal Information">
-          <div className="space-y-3">
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem", marginBottom: "1.5rem" }}>
+        {/* Personal Information */}
+        <Card>
+          <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem", color: "#1f2937" }}>
+            Personal Information
+          </h3>
+          <div style={{ display: "grid", gap: "0.75rem" }}>
             <div>
-              <p className="text-sm text-gray-500">Full Name</p>
-              <p className="font-semibold">{patient.fullName || 'N/A'}</p>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Full Name</div>
+              <div style={{ fontWeight: "600" }}>{patient.fullName || 'N/A'}</div>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Patient ID</p>
-              <p className="font-semibold">{patient.patientId || patient.id}</p>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Gender</div>
+              <div style={{ fontWeight: "600" }}>{patient.gender || 'N/A'}</div>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Gender</p>
-              <p className="font-semibold">{patient.gender || 'N/A'}</p>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Date of Birth</div>
+              <div style={{ fontWeight: "600" }}>{patient.dateOfBirth || 'N/A'}</div>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Date of Birth</p>
-              <p className="font-semibold">{patient.dateOfBirth || 'N/A'}</p>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Age</div>
+              <div style={{ fontWeight: "600" }}>
+                {patient.dateOfBirth ? new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear() : patient.age || 'N/A'} years
+              </div>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Blood Group</p>
-              <p className="font-semibold">{patient.bloodGroup || 'N/A'}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card title="Contact Information">
-          <div className="space-y-3">
-            <div>
-              <p className="text-sm text-gray-500">Phone</p>
-              <p className="font-semibold">{patient.phone || 'N/A'}</p>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Blood Group</div>
+              <div style={{ fontWeight: "600" }}>{patient.bloodGroup || 'N/A'}</div>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Email</p>
-              <p className="font-semibold">{patient.email || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Address</p>
-              <p className="font-semibold">{patient.address || 'N/A'}</p>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Marital Status</div>
+              <div style={{ fontWeight: "600" }}>{patient.maritalStatus || 'N/A'}</div>
             </div>
           </div>
         </Card>
 
-        <Card title="Quick Actions">
-          <div className="space-y-2">
-            <Button className="w-full" onClick={() => navigate(`/hospital/appointments/create?patientId=${id}`)}>
-              Book Appointment
-            </Button>
-            <Button className="w-full" onClick={() => navigate(`/hospital/lab/create?patientId=${id}`)}>
-              Order Lab Tests
-            </Button>
-            <Button className="w-full" onClick={() => navigate(`/hospital/medical-records/create?patientId=${id}`)}>
-              Create Medical Record
-            </Button>
-            <Button className="w-full" onClick={() => navigate(`/hospital/patients/${id}/history`)}>
-              View History
-            </Button>
+        {/* Contact Information */}
+        <Card>
+          <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem", color: "#1f2937" }}>
+            Contact Information
+          </h3>
+          <div style={{ display: "grid", gap: "0.75rem" }}>
+            <div>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Primary Phone</div>
+              <div style={{ fontWeight: "600" }}>{patient.phone || 'N/A'}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Alternate Phone</div>
+              <div style={{ fontWeight: "600" }}>{patient.alternatePhone || 'N/A'}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Email</div>
+              <div style={{ fontWeight: "600" }}>{patient.email || 'N/A'}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Address</div>
+              <div style={{ fontWeight: "600" }}>{patient.address || 'N/A'}</div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Insurance Information */}
+        <Card>
+          <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem", color: "#1f2937" }}>
+            Insurance Information
+          </h3>
+          <div style={{ display: "grid", gap: "0.75rem" }}>
+            <div>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Provider</div>
+              <div style={{ fontWeight: "600" }}>
+                {getInsuranceProviderName(patient.insuranceInfo?.providerId)}
+              </div>
+            </div>
+            {patient.insuranceInfo?.providerId && (
+              <>
+                <div>
+                  <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Policy Number</div>
+                  <div style={{ fontWeight: "600" }}>{patient.insuranceInfo.policyNumber || 'N/A'}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Group Number</div>
+                  <div style={{ fontWeight: "600" }}>{patient.insuranceInfo.groupNumber || 'N/A'}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Copay</div>
+                  <div style={{ fontWeight: "600" }}>${patient.insuranceInfo.copayAmount || '0.00'}</div>
+                </div>
+              </>
+            )}
+          </div>
+        </Card>
+
+        {/* Emergency Contact */}
+        <Card>
+          <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem", color: "#1f2937" }}>
+            Emergency Contact
+          </h3>
+          <div style={{ display: "grid", gap: "0.75rem" }}>
+            <div>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Name</div>
+              <div style={{ fontWeight: "600" }}>{patient.emergencyContact?.name || 'N/A'}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Phone</div>
+              <div style={{ fontWeight: "600" }}>{patient.emergencyContact?.phone || 'N/A'}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Relationship</div>
+              <div style={{ fontWeight: "600" }}>{patient.emergencyContact?.relationship || 'N/A'}</div>
+            </div>
           </div>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <Card title="Recent Appointments">
+      {/* Quick Actions */}
+      <Card style={{ marginBottom: "1.5rem" }}>
+        <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem", color: "#1f2937" }}>
+          Quick Actions
+        </h3>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+          <Button 
+            onClick={() => navigate(`/hospital/patients/${id}/vital-signs`)}
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "1rem" }}
+          >
+            <span style={{ fontSize: "1.25rem" }}>🩺</span>
+            Record Vital Signs
+          </Button>
+          
+          <Button 
+            onClick={() => navigate(`/hospital/appointments/create?patientId=${id}`)}
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "1rem" }}
+          >
+            <span style={{ fontSize: "1.25rem" }}>📅</span>
+            Book Appointment
+          </Button>
+          
+          <Button 
+            onClick={() => navigate(`/hospital/lab/create?patientId=${id}`)}
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "1rem" }}
+          >
+            <span style={{ fontSize: "1.25rem" }}>🧪</span>
+            Order Lab Tests
+          </Button>
+          
+          <Button 
+            onClick={() => navigate(`/hospital/medical-records/create?patientId=${id}`)}
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "1rem" }}
+          >
+            <span style={{ fontSize: "1.25rem" }}>📋</span>
+            Create Medical Record
+          </Button>
+          
+          <Button 
+            onClick={() => navigate(`/hospital/patients/${id}/history`)}
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "1rem" }}
+          >
+            <span style={{ fontSize: "1.25rem" }}>📊</span>
+            View History
+          </Button>
+          
+          <Button 
+            variant="secondary"
+            onClick={() => navigate(`/hospital/billing/create?patientId=${id}`)}
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "1rem" }}
+          >
+            <span style={{ fontSize: "1.25rem" }}>💰</span>
+            Create Invoice
+          </Button>
+        </div>
+      </Card>
+
+      {/* Medical Information */}
+      <Card style={{ marginBottom: "1.5rem" }}>
+        <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem", color: "#1f2937" }}>
+          Medical Information
+        </h3>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1rem" }}>
+          <div>
+            <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Allergies</div>
+            <div style={{ fontWeight: "600" }}>{patient.medicalInfo?.allergies || 'None reported'}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Current Medications</div>
+            <div style={{ fontWeight: "600" }}>{patient.medicalInfo?.currentMedications || 'None reported'}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Medical Conditions</div>
+            <div style={{ fontWeight: "600" }}>{patient.medicalInfo?.medicalConditions || 'None reported'}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Primary Physician</div>
+            <div style={{ fontWeight: "600" }}>{patient.medicalInfo?.primaryPhysician || 'Not assigned'}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Patient Type</div>
+            <Badge variant={patient.medicalInfo?.patientType === "Emergency" ? "danger" : "info"}>
+              {patient.medicalInfo?.patientType || 'Outpatient'}
+            </Badge>
+          </div>
+          <div>
+            <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Preferred Language</div>
+            <div style={{ fontWeight: "600" }}>{patient.medicalInfo?.preferredLanguage || 'English'}</div>
+          </div>
+        </div>
+      </Card>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "1.5rem" }}>
+        {/* Recent Appointments */}
+        <Card>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <h3 style={{ fontSize: "1.125rem", fontWeight: "600", color: "#1f2937" }}>
+              Recent Appointments
+            </h3>
+            <Button size="sm" onClick={() => navigate(`/hospital/appointments/create?patientId=${id}`)}>
+              + New
+            </Button>
+          </div>
           {patientAppointments.length > 0 ? (
-            <div className="space-y-2">
+            <div style={{ display: "grid", gap: "0.75rem" }}>
               {patientAppointments.slice(0, 3).map(apt => (
-                <div key={apt.id} className="border-b pb-2">
-                  <p className="font-semibold">{apt.doctorName}</p>
-                  <p className="text-sm text-gray-500">{apt.date} at {apt.time}</p>
-                  <Badge>{apt.status || 'Scheduled'}</Badge>
+                <div key={apt.id} style={{ padding: "0.75rem", border: "1px solid #e5e7eb", borderRadius: "0.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div style={{ fontWeight: "600" }}>{apt.doctorName || 'Dr. TBD'}</div>
+                      <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                        {apt.date} at {apt.time}
+                      </div>
+                    </div>
+                    <Badge variant={apt.status === 'Completed' ? 'success' : 'info'}>
+                      {apt.status || 'Scheduled'}
+                    </Badge>
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500">No appointments found</p>
+            <div style={{ textAlign: "center", padding: "2rem", color: "#6b7280" }}>
+              No appointments found
+            </div>
           )}
         </Card>
 
-        <Card title="Medical Records">
+        {/* Medical Records */}
+        <Card>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <h3 style={{ fontSize: "1.125rem", fontWeight: "600", color: "#1f2937" }}>
+              Medical Records
+            </h3>
+            <Button size="sm" onClick={() => navigate(`/hospital/medical-records/create?patientId=${id}`)}>
+              + New
+            </Button>
+          </div>
           {patientRecords.length > 0 ? (
-            <div className="space-y-2">
+            <div style={{ display: "grid", gap: "0.75rem" }}>
               {patientRecords.slice(0, 3).map(record => (
-                <div key={record.id} className="border-b pb-2">
-                  <p className="font-semibold">Record #{record.recordNumber}</p>
-                  <p className="text-sm text-gray-500">{record.primaryDoctor}</p>
-                  <Button size="sm" onClick={() => navigate(`/hospital/medical-records/${record.id}`)}>
-                    View
-                  </Button>
+                <div key={record.id} style={{ padding: "0.75rem", border: "1px solid #e5e7eb", borderRadius: "0.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div style={{ fontWeight: "600" }}>Record #{record.recordNumber || record.id}</div>
+                      <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                        {record.primaryDoctor || 'Dr. TBD'}
+                      </div>
+                    </div>
+                    <Button size="sm" onClick={() => navigate(`/hospital/medical-records/${record.id}`)}>
+                      View
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500">No medical records found</p>
+            <div style={{ textAlign: "center", padding: "2rem", color: "#6b7280" }}>
+              No medical records found
+            </div>
           )}
         </Card>
       </div>

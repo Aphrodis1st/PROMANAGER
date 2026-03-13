@@ -24,7 +24,10 @@ export default function CreateLabTest() {
     fetchPatients();
     fetchDoctors();
     const patientId = searchParams.get("patientId");
-    if (patientId) setSelectedPatient(patientId);
+    if (patientId) {
+      setSelectedPatient(patientId);
+      console.log('Pre-selected patient:', patientId);
+    }
   }, [searchParams]);
 
   const handleSubmit = async (e) => {
@@ -61,7 +64,12 @@ export default function CreateLabTest() {
       });
       
       alert(`Lab order created successfully! ${selectedTests.length} test(s) ordered.`);
-      navigate("/hospital/lab/orders");
+      const patientId = searchParams.get("patientId");
+      if (patientId) {
+        navigate(`/hospital/patients/${patientId}`);
+      } else {
+        navigate("/hospital/lab/orders");
+      }
     } catch (error) {
       console.error("Error creating lab order:", error);
       alert("Failed to create lab order. Please try again.");
@@ -151,14 +159,69 @@ export default function CreateLabTest() {
     <>
       <PageHeader 
         title="Order Laboratory Tests" 
+        subtitle={selectedPatient && patients ? 
+          `Patient: ${patients.find(p => p.id === selectedPatient)?.fullName || 'Loading...'} • Professional lab test ordering` : 
+          'Select patient and tests for laboratory analysis'
+        }
         action={
-          <Button variant="secondary" onClick={() => navigate("/hospital/lab/orders")}>
-            Cancel
+          <Button 
+            variant="secondary" 
+            onClick={() => {
+              const patientId = searchParams.get("patientId");
+              if (patientId) {
+                navigate(`/hospital/patients/${patientId}`);
+              } else {
+                navigate("/hospital/lab/orders");
+              }
+            }}
+          >
+            {searchParams.get("patientId") ? "Back to Patient" : "Cancel"}
           </Button>
         }
       />
       
       <Card>
+        {selectedPatient && patients && (
+          <div style={{ 
+            marginBottom: '1.5rem', 
+            padding: '1rem', 
+            backgroundColor: '#f0f9ff', 
+            border: '1px solid #3b82f6', 
+            borderRadius: '0.5rem' 
+          }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1f2937' }}>
+              Patient Information
+            </h3>
+            {(() => {
+              const patient = patients.find(p => p.id === selectedPatient);
+              return patient ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Patient</div>
+                    <div style={{ fontWeight: '600' }}>{patient.fullName}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Age</div>
+                    <div style={{ fontWeight: '600' }}>
+                      {patient.dateOfBirth ? new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear() : patient.age || 'N/A'} years
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Gender</div>
+                    <div style={{ fontWeight: '600' }}>{patient.gender}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>MRN</div>
+                    <div style={{ fontWeight: '600' }}>{patient.patientId || patient.id}</div>
+                  </div>
+                </div>
+              ) : (
+                <div>Loading patient information...</div>
+              );
+            })()} 
+          </div>
+        )}
+        
         {loading ? (
           <div style={{ textAlign: "center", padding: "2rem" }}>Creating lab order...</div>
         ) : (
@@ -309,7 +372,18 @@ export default function CreateLabTest() {
             </div>
 
             <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}>
-              <Button type="button" variant="secondary" onClick={() => navigate("/hospital/lab/orders")}>
+              <Button 
+                type="button" 
+                variant="secondary" 
+                onClick={() => {
+                  const patientId = searchParams.get("patientId");
+                  if (patientId) {
+                    navigate(`/hospital/patients/${patientId}`);
+                  } else {
+                    navigate("/hospital/lab/orders");
+                  }
+                }}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={loading || selectedTests.length === 0}>

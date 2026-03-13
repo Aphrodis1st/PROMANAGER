@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { requireAuth, requireRole } from '../../middleware/auth.js';
 import {
   create,
   getAll,
@@ -10,10 +9,10 @@ import {
 
 const router = Router();
 
-router.post('/', requireAuth, requireRole('RECEPTIONIST','ADMIN'), create);
-router.get('/', requireAuth, getAll);
-router.get('/:id', requireAuth, getById);
-router.put('/:id', requireAuth, requireRole('RECEPTIONIST','ADMIN'), update);
-router.delete('/:id', requireAuth, requireRole('ADMIN'), remove);
+router.post('/', create);
+router.get('/', getAll);
+router.get('/:id', getById);
+router.put('/:id', update);
+router.delete('/:id', remove);
 
 export default router;

@@ -9,16 +9,23 @@ import {
 // CREATE
 export const create = async (req, res) => {
   try {
+    console.log('Creating patient with data:', req.body);
+    
     const payload = {
       hospitalId: req.user?.hospitalId || 'default-hospital',
       ...req.body
     };
 
     const patient = await createPatient(payload);
-    res.status(201).json(patient);
+    console.log('Patient created successfully:', patient);
+    res.status(201).json({ success: true, data: patient });
   } catch (err) {
-    console.error('Create patient error:', err.message);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('Create patient error:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: err.message || 'Internal server error',
+      error: err.toString()
+    });
   }
 };
 

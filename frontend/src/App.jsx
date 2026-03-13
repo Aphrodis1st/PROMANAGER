@@ -82,7 +82,7 @@ import CreateLabTest from './hospitalPages/lab/pages/CreateLabTest.jsx';
 import LabResultsEntry from './hospitalPages/lab/pages/LabResultsEntry.jsx';
 import LabResultsView from './hospitalPages/lab/pages/LabResultsView.jsx';
 import PendingTests from './hospitalPages/lab/pages/PendingTests.jsx';
-import LabOrderCreate from './hospitalPages/lab/pages/LabOrderCreate.jsx';
+import LabOrderCreateTest from './hospitalPages/lab/pages/LabOrderCreateTest.jsx';
 import LabOrderList from './hospitalPages/lab/pages/LabOrderList.jsx';
 import LabOrderResultsView from './hospitalPages/lab/pages/LabOrderResultsView.jsx';
 import LabResultEntryNew from './hospitalPages/lab/pages/LabResultEntryNew.jsx';
@@ -284,6 +284,8 @@ function AppContent() {
         <Route path='patients/:id' element={<PatientDetails />} />
         <Route path='patients/:id/edit' element={<PatientEdit />} />
         <Route path='patients/:id/history' element={<PatientHistory />} />
+        <Route path='patients/:id/vital-signs' element={<VitalSigns />} />
+        <Route path='medical-records/vitals/:id' element={<VitalSigns />} />
         <Route path='patients/:id/documents' element={<PatientDocuments />} />
         <Route path='patients/:id/insurance' element={<PatientInsurance />} />
         <Route path='patients/:id/emergency-contacts' element={<PatientEmergencyContacts />} />
@@ -319,7 +321,7 @@ function AppContent() {
         <Route path='lab/results/:id' element={<LabResultsView />} />
         <Route path='lab/pending' element={<PendingTests />} />
         <Route path='lab/orders' element={<LabOrderList />} />
-        <Route path='lab/orders/create/:patientId' element={<LabOrderCreate />} />
+        <Route path='lab/orders/create' element={<LabOrderCreateTest />} />
         <Route path='lab/orders/:orderId/results' element={<LabOrderResultsView />} />
         <Route path='lab/orders/:orderId/results/entry' element={<LabResultEntryNew />} />
         <Route path='medical-records' element={<MedicalRecordList />} />

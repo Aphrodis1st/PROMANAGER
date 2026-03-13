@@ -53,8 +53,51 @@ export const PatientProvider = ({ children }) => {
   };
 
   const createPatient = async (data) => {
-    await hospitalService.createPatient(data);
-    fetchPatients();
+    try {
+      // Process insurance provider data
+      const processedData = {
+        ...data,
+        insuranceInfo: data.insuranceProvider ? {
+          providerId: data.insuranceProvider,
+          policyNumber: data.policyNumber,
+          groupNumber: data.groupNumber,
+          subscriberName: data.subscriberName,
+          relationshipToSubscriber: data.relationshipToSubscriber,
+          copayAmount: data.copayAmount,
+          deductibleAmount: data.deductibleAmount,
+          effectiveDate: data.insuranceEffectiveDate
+        } : null,
+        emergencyContact: {
+          name: data.emergencyContactName,
+          phone: data.emergencyContactPhone,
+          relationship: data.emergencyContactRelationship,
+          address: data.emergencyContactAddress
+        },
+        medicalInfo: {
+          allergies: data.allergies,
+          currentMedications: data.currentMedications,
+          medicalConditions: data.medicalConditions,
+          preferredLanguage: data.preferredLanguage,
+          primaryPhysician: data.primaryPhysician,
+          referringPhysician: data.referringPhysician,
+          patientType: data.patientType,
+          admissionType: data.admissionType
+        }
+      };
+      
+      await hospitalService.createPatient(processedData);
+      await fetchPatients();
+    } catch (error) {
+      console.error('Error creating patient:', error);
+      // Try with simpler data structure if the complex one fails
+      try {
+        await hospitalService.createPatient(data);
+        await fetchPatients();
+      } catch (simpleError) {
+        console.error('Error creating patient with simple data:', simpleError);
+        throw simpleError;
+      }
+    }
   };
 
   const updatePatient = async (id, data) => {
