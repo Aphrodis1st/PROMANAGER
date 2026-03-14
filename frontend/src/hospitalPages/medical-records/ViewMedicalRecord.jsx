@@ -15,18 +15,64 @@ export default function ViewMedicalRecord() {
   const { patients } = usePatients();
   const { doctors } = useDoctors();
   const [record, setRecord] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (records.length > 0) {
-      const found = records.find(r => r.id === id);
-      setRecord(found);
+    const loadRecord = async () => {
+      setLoading(true);
+      console.log('Loading record with ID:', id);
+      
+      // First try to find in existing records
+      let foundRecord = records.find(r => r.id === id);
+      
+      if (foundRecord) {
+        console.log('Found record in existing records:', foundRecord);
+        setRecord(foundRecord);
+        setLoading(false);
+        return;
+      }
+      
+      // If not found, try to fetch records for all patients and find the record
+      console.log('Record not found in existing records, searching through all patients...');
+      
+      for (const patient of patients) {
+        try {
+          const patientRecords = await fetchRecords(patient.id);
+          foundRecord = patientRecords.find(r => r.id === id);
+          
+          if (foundRecord) {
+            console.log('Found record for patient:', patient.fullName, foundRecord);
+            setRecord({ ...foundRecord, patientName: patient.fullName, patientId: patient.id });
+            setLoading(false);
+            return;
+          }
+        } catch (error) {
+          console.error(`Error fetching records for patient ${patient.fullName}:`, error);
+        }
+      }
+      
+      console.log('Record not found anywhere');
+      setLoading(false);
+    };
+    
+    if (id && patients.length > 0) {
+      loadRecord();
     }
-  }, [id, records]);
+  }, [id, patients, records, fetchRecords]);
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", padding: "2rem" }}>
+        <p>Loading medical record...</p>
+        <Button onClick={() => navigate("/hospital/medical-records")}>Back to Records</Button>
+      </div>
+    );
+  }
 
   if (!record) {
     return (
       <div style={{ textAlign: "center", padding: "2rem" }}>
-        <p>Loading medical record...</p>
+        <p>Medical record not found.</p>
         <Button onClick={() => navigate("/hospital/medical-records")}>Back to Records</Button>
       </div>
     );

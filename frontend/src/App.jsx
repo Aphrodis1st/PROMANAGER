@@ -66,6 +66,7 @@ import PatientDocuments from './hospitalPages/patients/pages/PatientDocuments.js
 import PatientInsurance from './hospitalPages/patients/pages/PatientInsurance.jsx';
 import PatientEmergencyContacts from './hospitalPages/patients/pages/PatientEmergencyContacts.jsx';
 import AppointmentList from './hospitalPages/Appointment/AppointmentList.jsx';
+import AppointmentDetails from './hospitalPages/Appointment/AppointmentDetails.jsx';
 import AppointmentCreate from './hospitalPages/Appointment/AppointmentCreate.jsx';
 import AppointmentCalendar from './hospitalPages/Appointment/AppointmentCalendar.jsx';
 import DoctorList from './hospitalPages/Dactors/DoctorList.jsx';
@@ -290,6 +291,7 @@ function AppContent() {
         <Route path='patients/:id/insurance' element={<PatientInsurance />} />
         <Route path='patients/:id/emergency-contacts' element={<PatientEmergencyContacts />} />
         <Route path='appointments' element={<AppointmentList />} />
+        <Route path='appointments/:id' element={<AppointmentDetails />} />
         <Route path='appointments/create' element={<AppointmentCreate />} />
         <Route path='appointments/calendar' element={<AppointmentCalendar />} />
         <Route path='doctors' element={<DoctorListNew />} />
@@ -326,12 +328,13 @@ function AppContent() {
         <Route path='lab/orders/:orderId/results/entry' element={<LabResultEntryNew />} />
         <Route path='medical-records' element={<MedicalRecordList />} />
         <Route path='medical-records/create' element={<CreateMedicalRecord />} />
+        <Route path='medical-records/view/:id' element={<ViewMedicalRecord />} />
         <Route path='medical-records/:id' element={<ViewMedicalRecord />} />
         <Route path='medical-records/vitals/:id' element={<VitalSigns />} />
         <Route path='medical-records/vitals-trends/:id' element={<VitalSignsTrends />} />
         <Route path='medical-records/diagnosis/:id' element={<DiagnosisEntry />} />
         <Route path='medical-records/prescription/:id' element={<PrescriptionEntry />} />
-        <Route path='medical-records/surgery/:id' element={<SurgeryRecord />} />
+        <Route path='medical-records/surgery/:patientId' element={<SurgeryRecord />} />
         <Route path='medical-records/treatment/:id' element={<TreatmentPlan />} />
         <Route path='billing' element={<BillingDashboard />} />
         <Route path='billing/invoices' element={<InvoiceList />} />

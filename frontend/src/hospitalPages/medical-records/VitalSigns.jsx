@@ -196,6 +196,93 @@ export default function VitalSigns() {
         </Card>
       )}
 
+      {/* Medical History & Preferences */}
+      <Card style={{ marginBottom: "1rem", backgroundColor: "#f0f9ff", border: "2px solid #3b82f6" }}>
+        <h3 style={{ fontWeight: "600", marginBottom: "1rem", color: "#1f2937", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          📋 Medical History & Preferences
+        </h3>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem" }}>
+          <div>
+            <label style={{ display: "block", fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Known Allergies</label>
+            <input
+              type="text"
+              placeholder="List any known allergies"
+              defaultValue={patient?.allergies || ""}
+              style={{ width: "100%", padding: "0.5rem", border: "1px solid #d1d5db", borderRadius: "0.5rem" }}
+            />
+          </div>
+          <div>
+            <label style={{ display: "block", fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Current Medications</label>
+            <input
+              type="text"
+              placeholder="List current medications"
+              defaultValue={patient?.currentMedications || ""}
+              style={{ width: "100%", padding: "0.5rem", border: "1px solid #d1d5db", borderRadius: "0.5rem" }}
+            />
+          </div>
+          <div>
+            <label style={{ display: "block", fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Medical Conditions</label>
+            <input
+              type="text"
+              placeholder="List existing conditions"
+              defaultValue={patient?.medicalConditions || ""}
+              style={{ width: "100%", padding: "0.5rem", border: "1px solid #d1d5db", borderRadius: "0.5rem" }}
+            />
+          </div>
+          <div>
+            <label style={{ display: "block", fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Preferred Language</label>
+            <input
+              type="text"
+              placeholder="English, Spanish, etc."
+              defaultValue={patient?.preferredLanguage || ""}
+              style={{ width: "100%", padding: "0.5rem", border: "1px solid #d1d5db", borderRadius: "0.5rem" }}
+            />
+          </div>
+          <div>
+            <label style={{ display: "block", fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Primary Care Physician</label>
+            <input
+              type="text"
+              placeholder="Doctor's name"
+              defaultValue={patient?.primaryPhysician || ""}
+              style={{ width: "100%", padding: "0.5rem", border: "1px solid #d1d5db", borderRadius: "0.5rem" }}
+            />
+          </div>
+          <div>
+            <label style={{ display: "block", fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Referring Physician</label>
+            <input
+              type="text"
+              placeholder="Doctor who referred patient"
+              defaultValue={patient?.referringPhysician || ""}
+              style={{ width: "100%", padding: "0.5rem", border: "1px solid #d1d5db", borderRadius: "0.5rem" }}
+            />
+          </div>
+          <div>
+            <label style={{ display: "block", fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Patient Type</label>
+            <select
+              defaultValue={patient?.patientType || "Outpatient"}
+              style={{ width: "100%", padding: "0.5rem", border: "1px solid #d1d5db", borderRadius: "0.5rem" }}
+            >
+              <option value="Outpatient">Outpatient</option>
+              <option value="Inpatient">Inpatient</option>
+              <option value="Emergency">Emergency</option>
+              <option value="Observation">Observation</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ display: "block", fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.25rem" }}>Admission Type</label>
+            <select
+              defaultValue={patient?.admissionType || "Elective"}
+              style={{ width: "100%", padding: "0.5rem", border: "1px solid #d1d5db", borderRadius: "0.5rem" }}
+            >
+              <option value="Elective">Elective</option>
+              <option value="Emergency">Emergency</option>
+              <option value="Urgent">Urgent</option>
+              <option value="Routine">Routine</option>
+            </select>
+          </div>
+        </div>
+      </Card>
+
       <form onSubmit={handleSubmit}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem" }}>
           

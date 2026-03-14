@@ -240,6 +240,113 @@ export default function VitalSigns() {
         </div>
       </Card>
 
+      {/* Medical History & Preferences */}
+      <Card style={{ marginBottom: "1.5rem", border: "2px solid #3b82f6" }}>
+        <div style={{ padding: "1.5rem" }}>
+          <h3 style={{ 
+            fontSize: "1.125rem", 
+            fontWeight: "600", 
+            marginBottom: "1.5rem",
+            color: "#1f2937",
+            backgroundColor: "#eff6ff",
+            padding: "0.5rem",
+            borderRadius: "0.375rem"
+          }}>
+            📋 Medical History & Preferences
+          </h3>
+          
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem", marginBottom: "1rem" }}>
+            <div>
+              <label style={labelStyle}>Known Allergies</label>
+              <input
+                type="text"
+                style={inputStyle}
+                placeholder="List any known allergies"
+                defaultValue={patient.allergies || ""}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Current Medications</label>
+              <input
+                type="text"
+                style={inputStyle}
+                placeholder="List current medications"
+                defaultValue={patient.currentMedications || ""}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Medical Conditions</label>
+              <input
+                type="text"
+                style={inputStyle}
+                placeholder="List existing conditions"
+                defaultValue={patient.medicalConditions || ""}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Preferred Language</label>
+              <input
+                type="text"
+                style={inputStyle}
+                placeholder="English, Spanish, etc."
+                defaultValue={patient.preferredLanguage || ""}
+              />
+            </div>
+          </div>
+          
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem" }}>
+            <div>
+              <label style={labelStyle}>Primary Care Physician</label>
+              <input
+                type="text"
+                style={inputStyle}
+                placeholder="Doctor's name"
+                defaultValue={patient.primaryPhysician || ""}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Referring Physician</label>
+              <input
+                type="text"
+                style={inputStyle}
+                placeholder="Doctor who referred patient"
+                defaultValue={patient.referringPhysician || ""}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Patient Type</label>
+              <select
+                style={inputStyle}
+                defaultValue={patient.patientType || "Outpatient"}
+              >
+                <option value="Outpatient">Outpatient</option>
+                <option value="Inpatient">Inpatient</option>
+                <option value="Emergency">Emergency</option>
+                <option value="Observation">Observation</option>
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Admission Type</label>
+              <select
+                style={inputStyle}
+                defaultValue={patient.admissionType || "Elective"}
+              >
+                <option value="Elective">Elective</option>
+                <option value="Emergency">Emergency</option>
+                <option value="Urgent">Urgent</option>
+                <option value="Routine">Routine</option>
+              </select>
+            </div>
+          </div>
+          
+          <div style={{ marginTop: "1rem", display: "flex", justifyContent: "flex-end" }}>
+            <Button variant="secondary" size="sm">
+              Update Medical History
+            </Button>
+          </div>
+        </div>
+      </Card>
+
       {/* Record New Vitals */}
       <Card style={{ marginBottom: "1.5rem" }}>
         <div style={{ padding: "1.5rem" }}>

@@ -56,3 +56,26 @@ export const remove = async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
+
+export const addSurgeryRecord = async (req, res) => {
+  try {
+    console.log('Adding surgery record for patient:', req.params.patientId);
+    console.log('Surgery data:', req.body);
+    
+    const surgeryData = {
+      patientId: req.params.patientId,
+      type: 'surgery',
+      doctorId: req.user?.uid || 'default-doctor',
+      ...req.body,
+      createdAt: new Date()
+    };
+    
+    const record = await createMedicalRecord(surgeryData);
+    console.log('Surgery record created:', record);
+    
+    res.status(201).json(record);
+  } catch (error) {
+    console.error('Error adding surgery record:', error);
+    res.status(500).json({ message: 'Failed to add surgery record', error: error.message });
+  }
+};

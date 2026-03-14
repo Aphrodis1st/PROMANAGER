@@ -173,7 +173,7 @@ export default function MedicalRecordList() {
                       </td>
                       <td style={{ padding: "1rem", textAlign: "center" }}>
                         <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
-                          <Button size="sm" onClick={() => navigate(`/hospital/patients/${record.patientId}`)}>View</Button>
+                          <Button size="sm" onClick={() => navigate(`view/${record.id}`)}>View</Button>
                           <Button size="sm" variant="secondary" onClick={() => navigate(`diagnosis/${record.id}`)}>Add Diagnosis</Button>
                         </div>
                       </td>

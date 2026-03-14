@@ -189,6 +189,15 @@ export const medicalRecordService = {
     );
     return res.data;
   },
+
+  addSurgeryRecord: async (patientId, data) => {
+    const res = await axios.post(
+      `${HOSPITAL_API_URL}/medical-records/surgery/${patientId}`,
+      data,
+      getAuthHeader()
+    );
+    return res.data;
+  },
 };
 
 
@@ -359,6 +368,7 @@ const hospitalService = {
   createMedicalRecord: medicalRecordService.create,
   updateMedicalRecord: medicalRecordService.update,
   deleteMedicalRecord: medicalRecordService.remove,
+  addSurgeryRecord: medicalRecordService.addSurgeryRecord,
 
   getWards: wardService.getAll,
   createWard: wardService.create,

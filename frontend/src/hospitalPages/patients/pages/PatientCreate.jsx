@@ -252,43 +252,7 @@ export default function PatientCreate() {
               </div>
             </Card>
 
-            {/* Medical History */}
-            <Card>
-              <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem", color: "#1f2937" }}>
-                Medical History & Preferences
-              </h3>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem" }}>
-                <Input name="allergies" label="Known Allergies" placeholder="List any known allergies" />
-                <Input name="currentMedications" label="Current Medications" placeholder="List current medications" />
-                <Input name="medicalConditions" label="Medical Conditions" placeholder="List existing conditions" />
-                <Input name="preferredLanguage" label="Preferred Language" placeholder="English, Spanish, etc." />
-              </div>
-              
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem", marginTop: "1rem" }}>
-                <Input name="primaryPhysician" label="Primary Care Physician" placeholder="Doctor's name" />
-                <Input name="referringPhysician" label="Referring Physician" placeholder="Doctor who referred patient" />
-                <Select
-                  name="patientType"
-                  label="Patient Type"
-                  options={[
-                    { label: "Outpatient", value: "Outpatient" },
-                    { label: "Inpatient", value: "Inpatient" },
-                    { label: "Emergency", value: "Emergency" },
-                    { label: "Observation", value: "Observation" },
-                  ]}
-                />
-                <Select
-                  name="admissionType"
-                  label="Admission Type"
-                  options={[
-                    { label: "Elective", value: "Elective" },
-                    { label: "Emergency", value: "Emergency" },
-                    { label: "Urgent", value: "Urgent" },
-                    { label: "Routine", value: "Routine" },
-                  ]}
-                />
-              </div>
-            </Card>
+
           </Form>
         )}
       </div>

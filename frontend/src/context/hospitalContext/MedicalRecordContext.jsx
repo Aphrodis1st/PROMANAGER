@@ -67,8 +67,17 @@ export const MedicalRecordProvider = ({ children }) => {
     return { success: true };
   };
 
-  const addSurgeryRecord = async (id, data) => {
-    return { success: true };
+  const addSurgeryRecord = async (patientId, data) => {
+    try {
+      console.log('Adding surgery record for patient:', patientId, 'with data:', data);
+      const result = await hospitalService.addSurgeryRecord(patientId, data);
+      // Refetch records after successful creation
+      await fetchRecords(patientId);
+      return result;
+    } catch (error) {
+      console.error("Failed to add surgery record:", error);
+      throw error;
+    }
   };
 
   const addTreatmentPlan = async (id, data) => {

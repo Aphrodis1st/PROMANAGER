@@ -8,7 +8,7 @@ import { usePatients } from "../../hooks/usePatients";
 import { useDoctors } from "../../hooks/useDoctors";
 
 export default function SurgeryRecord() {
-  const { id } = useParams();
+  const { patientId } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { addSurgeryRecord } = useMedicalRecords();
@@ -31,29 +31,41 @@ export default function SurgeryRecord() {
     complications: "",
     bloodLoss: "",
     postOpPlan: "",
-    recoveryRoom: ""
+    recoveryRoom: "",
+    // Professional Hospital Fields
+    hospitalName: "",
+    hospitalLicense: "",
+    accreditation: "",
+    surgicalSuite: "",
+    equipmentUsed: "",
+    nursingStaff: "",
+    technicalStaff: "",
+    qualityAssurance: "",
+    infectionControl: "",
+    professionalNotes: ""
   });
   const [loading, setLoading] = useState(false);
   const [patientInfo, setPatientInfo] = useState(null);
 
   useEffect(() => {
-    const patientId = searchParams.get("patientId");
-    if (patientId) {
-      const patient = patients.find(p => p.id === patientId);
+    const patientIdFromParams = patientId || searchParams.get("patientId");
+    if (patientIdFromParams) {
+      const patient = patients.find(p => p.id === patientIdFromParams);
       setPatientInfo(patient);
     }
-  }, [searchParams, patients]);
+  }, [patientId, searchParams, patients]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.procedureName || !formData.surgeon || !formData.surgeryDate) {
-      alert("Please fill in required fields");
+    if (!formData.procedureName || !formData.surgeon || !formData.surgeryDate || !formData.hospitalName) {
+      alert("Please fill in required fields (Procedure Name, Surgeon, Surgery Date, Hospital Name)");
       return;
     }
     
     setLoading(true);
     try {
-      await addSurgeryRecord(id, formData);
+      const currentPatientId = patientId || searchParams.get("patientId");
+      await addSurgeryRecord(currentPatientId, formData);
       alert("Surgery record added successfully!");
       navigate(-1);
     } catch (error) {
@@ -320,6 +332,127 @@ export default function SurgeryRecord() {
                   placeholder="e.g., Recovery Room 3"
                 />
               </div>
+            </div>
+
+            <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "1rem", paddingBottom: "0.5rem", borderBottom: "2px solid #e5e7eb" }}>Professional Hospital Information</h3>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1.5rem", marginBottom: "1.5rem" }}>
+              <div>
+                <label style={labelStyle}>Hospital Name *</label>
+                <input
+                  style={inputStyle}
+                  value={formData.hospitalName}
+                  onChange={(e) => setFormData({ ...formData, hospitalName: e.target.value })}
+                  placeholder="Enter hospital name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Hospital License Number</label>
+                <input
+                  style={inputStyle}
+                  value={formData.hospitalLicense}
+                  onChange={(e) => setFormData({ ...formData, hospitalLicense: e.target.value })}
+                  placeholder="Hospital license/registration number"
+                />
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1.5rem", marginBottom: "1.5rem" }}>
+              <div>
+                <label style={labelStyle}>Accreditation Status</label>
+                <select
+                  style={inputStyle}
+                  value={formData.accreditation}
+                  onChange={(e) => setFormData({ ...formData, accreditation: e.target.value })}
+                >
+                  <option value="">Select Accreditation</option>
+                  <option value="JCI">Joint Commission International (JCI)</option>
+                  <option value="NABH">National Accreditation Board for Hospitals (NABH)</option>
+                  <option value="ISO">ISO 9001:2015</option>
+                  <option value="AAAHC">Accreditation Association for Ambulatory Health Care</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Surgical Suite/OR Number</label>
+                <input
+                  style={inputStyle}
+                  value={formData.surgicalSuite}
+                  onChange={(e) => setFormData({ ...formData, surgicalSuite: e.target.value })}
+                  placeholder="e.g., OR-3, Suite A"
+                />
+              </div>
+            </div>
+
+            <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "1rem", paddingBottom: "0.5rem", borderBottom: "2px solid #e5e7eb" }}>Professional Staff & Equipment</h3>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1.5rem", marginBottom: "1.5rem" }}>
+              <div>
+                <label style={labelStyle}>Nursing Staff Present</label>
+                <textarea
+                  style={{ ...inputStyle, minHeight: "80px" }}
+                  value={formData.nursingStaff}
+                  onChange={(e) => setFormData({ ...formData, nursingStaff: e.target.value })}
+                  placeholder="List nursing staff involved (names, roles)..."
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Technical Staff</label>
+                <textarea
+                  style={{ ...inputStyle, minHeight: "80px" }}
+                  value={formData.technicalStaff}
+                  onChange={(e) => setFormData({ ...formData, technicalStaff: e.target.value })}
+                  placeholder="Technicians, perfusionists, etc..."
+                />
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "1.5rem" }}>
+              <label style={labelStyle}>Equipment & Technology Used</label>
+              <textarea
+                style={{ ...inputStyle, minHeight: "100px" }}
+                value={formData.equipmentUsed}
+                onChange={(e) => setFormData({ ...formData, equipmentUsed: e.target.value })}
+                placeholder="List surgical equipment, monitors, specialized technology used..."
+              />
+            </div>
+
+            <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "1rem", paddingBottom: "0.5rem", borderBottom: "2px solid #e5e7eb" }}>Quality & Safety Protocols</h3>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1.5rem", marginBottom: "1.5rem" }}>
+              <div>
+                <label style={labelStyle}>Quality Assurance Measures</label>
+                <textarea
+                  style={{ ...inputStyle, minHeight: "100px" }}
+                  value={formData.qualityAssurance}
+                  onChange={(e) => setFormData({ ...formData, qualityAssurance: e.target.value })}
+                  placeholder="Safety checklists, verification protocols, quality measures taken..."
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Infection Control Protocols</label>
+                <textarea
+                  style={{ ...inputStyle, minHeight: "100px" }}
+                  value={formData.infectionControl}
+                  onChange={(e) => setFormData({ ...formData, infectionControl: e.target.value })}
+                  placeholder="Sterilization procedures, infection prevention measures..."
+                />
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "1.5rem" }}>
+              <label style={labelStyle}>Professional Notes & Observations</label>
+              <textarea
+                style={{ ...inputStyle, minHeight: "120px" }}
+                value={formData.professionalNotes}
+                onChange={(e) => setFormData({ ...formData, professionalNotes: e.target.value })}
+                placeholder="Additional professional observations, recommendations, or notes for hospital administration..."
+              />
             </div>
 
             <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end", paddingTop: "1rem", borderTop: "1px solid #e5e7eb" }}>

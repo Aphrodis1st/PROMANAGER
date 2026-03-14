@@ -16,16 +16,28 @@ export default function PrescriptionEntry() {
   const { doctors } = useDoctors();
   const [prescriptions, setPrescriptions] = useState([{
     medicationName: "",
+    genericName: "",
     dosage: "",
+    strength: "",
     frequency: "",
     duration: "",
     route: "Oral",
+    quantity: "",
+    refills: "0",
     instructions: ""
   }]);
   const [formData, setFormData] = useState({
     prescribedBy: "",
     prescriptionDate: new Date().toISOString().split('T')[0],
-    pharmacyNotes: ""
+    diagnosis: "",
+    icd10Code: "",
+    patientWeight: "",
+    patientHeight: "",
+    bloodPressure: "",
+    temperature: "",
+    pharmacyNotes: "",
+    substitutionAllowed: true,
+    urgency: "Routine"
   });
   const [loading, setLoading] = useState(false);
   const [patientInfo, setPatientInfo] = useState(null);
@@ -41,10 +53,14 @@ export default function PrescriptionEntry() {
   const addMedication = () => {
     setPrescriptions([...prescriptions, {
       medicationName: "",
+      genericName: "",
       dosage: "",
+      strength: "",
       frequency: "",
       duration: "",
       route: "Oral",
+      quantity: "",
+      refills: "0",
       instructions: ""
     }]);
   };
@@ -61,9 +77,13 @@ export default function PrescriptionEntry() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const hasEmpty = prescriptions.some(p => !p.medicationName || !p.dosage || !p.frequency || !p.duration);
+    const hasEmpty = prescriptions.some(p => !p.medicationName || !p.dosage || !p.frequency || !p.duration || !p.quantity);
     if (hasEmpty) {
       alert("Please fill in all required medication fields");
+      return;
+    }
+    if (!formData.diagnosis) {
+      alert("Please enter diagnosis");
       return;
     }
     
@@ -116,153 +136,177 @@ export default function PrescriptionEntry() {
       <Card>
         <div style={{ padding: "1.5rem" }}>
           <form onSubmit={handleSubmit}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1.5rem", marginBottom: "1.5rem" }}>
-              <div>
-                <label style={labelStyle}>Prescribed By *</label>
-                <select
-                  style={inputStyle}
-                  value={formData.prescribedBy}
-                  onChange={(e) => setFormData({ ...formData, prescribedBy: e.target.value })}
-                  required
-                >
-                  <option value="">Select Doctor</option>
-                  {doctors.map(d => (
-                    <option key={d.id} value={d.id}>Dr. {d.fullName || d.name}</option>
-                  ))}
-                </select>
+            <div style={{ marginBottom: "1.5rem", paddingBottom: "1.5rem", borderBottom: "2px solid #e5e7eb" }}>
+              <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem", color: "#1f2937" }}>Prescriber Information</h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }}>
+                <div>
+                  <label style={labelStyle}>Prescribed By *</label>
+                  <select style={inputStyle} value={formData.prescribedBy} onChange={(e) => setFormData({ ...formData, prescribedBy: e.target.value })} required>
+                    <option value="">Select Doctor</option>
+                    {doctors.map(d => (<option key={d.id} value={d.id}>Dr. {d.fullName || d.name}</option>))}
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Prescription Date *</label>
+                  <input type="date" style={inputStyle} value={formData.prescriptionDate} onChange={(e) => setFormData({ ...formData, prescriptionDate: e.target.value })} required />
+                </div>
+                <div>
+                  <label style={labelStyle}>Urgency *</label>
+                  <select style={inputStyle} value={formData.urgency} onChange={(e) => setFormData({ ...formData, urgency: e.target.value })} required>
+                    <option value="Routine">Routine</option>
+                    <option value="Urgent">Urgent</option>
+                    <option value="Emergency">Emergency</option>
+                  </select>
+                </div>
               </div>
+            </div>
 
-              <div>
-                <label style={labelStyle}>Prescription Date *</label>
-                <input
-                  type="date"
-                  style={inputStyle}
-                  value={formData.prescriptionDate}
-                  onChange={(e) => setFormData({ ...formData, prescriptionDate: e.target.value })}
-                  required
-                />
+            <div style={{ marginBottom: "1.5rem", paddingBottom: "1.5rem", borderBottom: "2px solid #e5e7eb" }}>
+              <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem", color: "#1f2937" }}>Clinical Information</h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1rem", marginBottom: "1rem" }}>
+                <div>
+                  <label style={labelStyle}>Diagnosis *</label>
+                  <input style={inputStyle} value={formData.diagnosis} onChange={(e) => setFormData({ ...formData, diagnosis: e.target.value })} placeholder="Primary diagnosis" required />
+                </div>
+                <div>
+                  <label style={labelStyle}>ICD-10 Code</label>
+                  <input style={inputStyle} value={formData.icd10Code} onChange={(e) => setFormData({ ...formData, icd10Code: e.target.value })} placeholder="e.g., J06.9" />
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem" }}>
+                <div>
+                  <label style={labelStyle}>Weight (kg)</label>
+                  <input type="number" step="0.1" style={inputStyle} value={formData.patientWeight} onChange={(e) => setFormData({ ...formData, patientWeight: e.target.value })} placeholder="70" />
+                </div>
+                <div>
+                  <label style={labelStyle}>Height (cm)</label>
+                  <input type="number" style={inputStyle} value={formData.patientHeight} onChange={(e) => setFormData({ ...formData, patientHeight: e.target.value })} placeholder="170" />
+                </div>
+                <div>
+                  <label style={labelStyle}>Blood Pressure</label>
+                  <input style={inputStyle} value={formData.bloodPressure} onChange={(e) => setFormData({ ...formData, bloodPressure: e.target.value })} placeholder="120/80" />
+                </div>
+                <div>
+                  <label style={labelStyle}>Temperature (°C)</label>
+                  <input type="number" step="0.1" style={inputStyle} value={formData.temperature} onChange={(e) => setFormData({ ...formData, temperature: e.target.value })} placeholder="37.0" />
+                </div>
               </div>
             </div>
 
             <div style={{ marginBottom: "1.5rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                <h3 style={{ fontSize: "1rem", fontWeight: "600" }}>Medications</h3>
+                <h3 style={{ fontSize: "1.125rem", fontWeight: "600", color: "#1f2937" }}>Medications</h3>
                 <Button type="button" size="sm" onClick={addMedication}>+ Add Medication</Button>
               </div>
 
               {prescriptions.map((med, index) => (
-                <div key={index} style={{ padding: "1rem", border: "1px solid #e5e7eb", borderRadius: "0.5rem", marginBottom: "1rem", backgroundColor: "#f9fafb" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                    <span style={{ fontWeight: "600", fontSize: "0.875rem" }}>Medication #{index + 1}</span>
+                <div key={index} style={{ padding: "1.25rem", border: "2px solid #d1d5db", borderRadius: "0.5rem", marginBottom: "1rem", backgroundColor: "#ffffff", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", paddingBottom: "0.75rem", borderBottom: "1px solid #e5e7eb" }}>
+                    <span style={{ fontWeight: "600", fontSize: "1rem", color: "#1f2937" }}>Medication #{index + 1}</span>
                     {prescriptions.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeMedication(index)}
-                        style={{ color: "#ef4444", fontSize: "0.875rem", background: "none", border: "none", cursor: "pointer" }}
-                      >
-                        Remove
-                      </button>
+                      <button type="button" onClick={() => removeMedication(index)} style={{ color: "#ef4444", fontSize: "0.875rem", background: "none", border: "none", cursor: "pointer", fontWeight: "500" }}>✕ Remove</button>
                     )}
                   </div>
 
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1rem", marginBottom: "1rem" }}>
                     <div>
-                      <label style={labelStyle}>Medication Name *</label>
-                      <input
-                        list={`medications-${index}`}
-                        style={inputStyle}
-                        value={med.medicationName}
-                        onChange={(e) => updateMedication(index, "medicationName", e.target.value)}
-                        placeholder="Enter or select medication"
-                        required
-                      />
+                      <label style={labelStyle}>Brand/Trade Name *</label>
+                      <input list={`medications-${index}`} style={inputStyle} value={med.medicationName} onChange={(e) => updateMedication(index, "medicationName", e.target.value)} placeholder="e.g., Augmentin" required />
                       <datalist id={`medications-${index}`}>
                         {commonMedications.map(m => <option key={m} value={m} />)}
                       </datalist>
                     </div>
+                    <div>
+                      <label style={labelStyle}>Generic Name</label>
+                      <input style={inputStyle} value={med.genericName} onChange={(e) => updateMedication(index, "genericName", e.target.value)} placeholder="e.g., Amoxicillin-Clavulanate" />
+                    </div>
+                  </div>
 
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem", marginBottom: "1rem" }}>
+                    <div>
+                      <label style={labelStyle}>Strength *</label>
+                      <input style={inputStyle} value={med.strength} onChange={(e) => updateMedication(index, "strength", e.target.value)} placeholder="500mg" required />
+                    </div>
                     <div>
                       <label style={labelStyle}>Dosage *</label>
-                      <input
-                        style={inputStyle}
-                        value={med.dosage}
-                        onChange={(e) => updateMedication(index, "dosage", e.target.value)}
-                        placeholder="e.g., 500mg"
-                        required
-                      />
+                      <input style={inputStyle} value={med.dosage} onChange={(e) => updateMedication(index, "dosage", e.target.value)} placeholder="1 tablet" required />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Route *</label>
+                      <select style={inputStyle} value={med.route} onChange={(e) => updateMedication(index, "route", e.target.value)} required>
+                        <option value="Oral">Oral</option>
+                        <option value="IV">Intravenous (IV)</option>
+                        <option value="IM">Intramuscular (IM)</option>
+                        <option value="SC">Subcutaneous (SC)</option>
+                        <option value="Topical">Topical</option>
+                        <option value="Sublingual">Sublingual</option>
+                        <option value="Inhalation">Inhalation</option>
+                        <option value="Rectal">Rectal</option>
+                        <option value="Ophthalmic">Ophthalmic</option>
+                        <option value="Otic">Otic</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Frequency *</label>
+                      <select style={inputStyle} value={med.frequency} onChange={(e) => updateMedication(index, "frequency", e.target.value)} required>
+                        <option value="">Select</option>
+                        <option value="QD">Once daily (QD)</option>
+                        <option value="BID">Twice daily (BID)</option>
+                        <option value="TID">Three times daily (TID)</option>
+                        <option value="QID">Four times daily (QID)</option>
+                        <option value="Q4H">Every 4 hours (Q4H)</option>
+                        <option value="Q6H">Every 6 hours (Q6H)</option>
+                        <option value="Q8H">Every 8 hours (Q8H)</option>
+                        <option value="Q12H">Every 12 hours (Q12H)</option>
+                        <option value="PRN">As needed (PRN)</option>
+                        <option value="STAT">Immediately (STAT)</option>
+                      </select>
                     </div>
                   </div>
 
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginBottom: "1rem" }}>
                     <div>
-                      <label style={labelStyle}>Frequency *</label>
-                      <select
-                        style={inputStyle}
-                        value={med.frequency}
-                        onChange={(e) => updateMedication(index, "frequency", e.target.value)}
-                        required
-                      >
-                        <option value="">Select</option>
-                        <option value="Once daily">Once daily</option>
-                        <option value="Twice daily">Twice daily</option>
-                        <option value="Three times daily">Three times daily</option>
-                        <option value="Four times daily">Four times daily</option>
-                        <option value="Every 4 hours">Every 4 hours</option>
-                        <option value="Every 6 hours">Every 6 hours</option>
-                        <option value="As needed">As needed</option>
-                      </select>
-                    </div>
-
-                    <div>
                       <label style={labelStyle}>Duration *</label>
-                      <input
-                        style={inputStyle}
-                        value={med.duration}
-                        onChange={(e) => updateMedication(index, "duration", e.target.value)}
-                        placeholder="e.g., 7 days"
-                        required
-                      />
+                      <input style={inputStyle} value={med.duration} onChange={(e) => updateMedication(index, "duration", e.target.value)} placeholder="7 days" required />
                     </div>
-
                     <div>
-                      <label style={labelStyle}>Route *</label>
-                      <select
-                        style={inputStyle}
-                        value={med.route}
-                        onChange={(e) => updateMedication(index, "route", e.target.value)}
-                        required
-                      >
-                        <option value="Oral">Oral</option>
-                        <option value="IV">IV</option>
-                        <option value="IM">IM</option>
-                        <option value="Topical">Topical</option>
-                        <option value="Sublingual">Sublingual</option>
-                        <option value="Rectal">Rectal</option>
+                      <label style={labelStyle}>Quantity *</label>
+                      <input type="number" style={inputStyle} value={med.quantity} onChange={(e) => updateMedication(index, "quantity", e.target.value)} placeholder="30" required />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Refills</label>
+                      <select style={inputStyle} value={med.refills} onChange={(e) => updateMedication(index, "refills", e.target.value)}>
+                        <option value="0">No refills</option>
+                        <option value="1">1 refill</option>
+                        <option value="2">2 refills</option>
+                        <option value="3">3 refills</option>
+                        <option value="4">4 refills</option>
+                        <option value="5">5 refills</option>
+                        <option value="PRN">PRN (as needed)</option>
                       </select>
                     </div>
                   </div>
 
                   <div>
                     <label style={labelStyle}>Special Instructions</label>
-                    <textarea
-                      style={{ ...inputStyle, minHeight: "60px" }}
-                      value={med.instructions}
-                      onChange={(e) => updateMedication(index, "instructions", e.target.value)}
-                      placeholder="Take with food, avoid alcohol, etc."
-                    />
+                    <textarea style={{ ...inputStyle, minHeight: "70px" }} value={med.instructions} onChange={(e) => updateMedication(index, "instructions", e.target.value)} placeholder="Take with food, avoid alcohol, take at bedtime, etc." />
                   </div>
                 </div>
               ))}
             </div>
 
-            <div style={{ marginBottom: "1.5rem" }}>
-              <label style={labelStyle}>Pharmacy Notes</label>
-              <textarea
-                style={{ ...inputStyle, minHeight: "80px" }}
-                value={formData.pharmacyNotes}
-                onChange={(e) => setFormData({ ...formData, pharmacyNotes: e.target.value })}
-                placeholder="Additional notes for pharmacist..."
-              />
+            <div style={{ marginBottom: "1.5rem", paddingTop: "1.5rem", borderTop: "2px solid #e5e7eb" }}>
+              <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem", color: "#1f2937" }}>Additional Information</h3>
+              <div style={{ marginBottom: "1rem" }}>
+                <label style={{ ...labelStyle, display: "flex", alignItems: "center", cursor: "pointer" }}>
+                  <input type="checkbox" checked={formData.substitutionAllowed} onChange={(e) => setFormData({ ...formData, substitutionAllowed: e.target.checked })} style={{ marginRight: "0.5rem" }} />
+                  Generic substitution allowed
+                </label>
+              </div>
+              <div>
+                <label style={labelStyle}>Pharmacy Notes</label>
+                <textarea style={{ ...inputStyle, minHeight: "80px" }} value={formData.pharmacyNotes} onChange={(e) => setFormData({ ...formData, pharmacyNotes: e.target.value })} placeholder="Additional notes for pharmacist..." />
+              </div>
             </div>
 
             <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end", paddingTop: "1rem", borderTop: "1px solid #e5e7eb" }}>
