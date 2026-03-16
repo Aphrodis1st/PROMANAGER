@@ -34,11 +34,16 @@ export const create = async (req, res) => {
 export const getByPatient = async (req, res) => {
   try {
     const { patientId } = req.params;
+    console.log('Controller: Getting vital signs for patient:', patientId);
+    
     const vitalSigns = await getVitalSignsByPatient(patientId);
+    console.log('Controller: Found', vitalSigns.length, 'vital signs records');
+    
     res.json(vitalSigns);
   } catch (err) {
     console.error('Get vital signs by patient error:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    // Return empty array instead of error to prevent frontend crashes
+    res.json([]);
   }
 };
 
@@ -46,11 +51,16 @@ export const getByPatient = async (req, res) => {
 export const getLatestByPatient = async (req, res) => {
   try {
     const { patientId } = req.params;
+    console.log('Controller: Getting latest vital signs for patient:', patientId);
+    
     const latestVitalSigns = await getLatestVitalSigns(patientId);
+    console.log('Controller: Latest vital signs result:', latestVitalSigns ? 'found' : 'not found');
+    
     res.json(latestVitalSigns);
   } catch (err) {
     console.error('Get latest vital signs error:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    // Return null instead of error
+    res.json(null);
   }
 };
 

@@ -89,12 +89,18 @@ export default function PrescriptionEntry() {
     
     setLoading(true);
     try {
-      await addPrescription(id, { ...formData, medications: prescriptions });
-      alert("Prescription added successfully!");
+      console.log('🏥 Submitting prescription for medical record:', id);
+      console.log('📋 Form data:', formData);
+      console.log('💊 Medications:', prescriptions);
+      
+      const result = await addPrescription(id, { ...formData, medications: prescriptions });
+      console.log('✅ Prescription submission result:', result);
+      
+      alert("Prescription added successfully! Check the console for details.");
       navigate(-1);
     } catch (error) {
-      console.error("Error adding prescription:", error);
-      alert("Failed to add prescription");
+      console.error("❌ Error adding prescription:", error);
+      alert("Failed to add prescription: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -316,6 +322,18 @@ export default function PrescriptionEntry() {
               <Button type="submit" disabled={loading}>
                 {loading ? "Saving..." : "Save Prescription"}
               </Button>
+            </div>
+            
+            {/* Debug Panel */}
+            <div style={{ marginTop: "2rem", padding: "1rem", backgroundColor: "#f8f9fa", borderRadius: "0.5rem", border: "1px solid #e9ecef" }}>
+              <h4 style={{ fontSize: "0.875rem", fontWeight: "600", marginBottom: "0.5rem", color: "#495057" }}>🔍 Debug Info</h4>
+              <div style={{ fontSize: "0.75rem", color: "#6c757d" }}>
+                <p><strong>Medical Record ID:</strong> {id}</p>
+                <p><strong>Patient Info:</strong> {patientInfo ? `${patientInfo.fullName} (${patientInfo.id})` : 'Not loaded'}</p>
+                <p><strong>Medications Count:</strong> {prescriptions.length}</p>
+                <p><strong>API Endpoint:</strong> /api/v1/hospital/prescriptions</p>
+                <p><strong>Data Flow:</strong> PrescriptionEntry → MedicalRecordContext.addPrescription → hospitalService.createPrescription → Backend</p>
+              </div>
             </div>
           </form>
         </div>

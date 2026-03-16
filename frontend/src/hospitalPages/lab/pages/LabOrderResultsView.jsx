@@ -319,6 +319,32 @@ export default function LabOrderResultsView() {
             <Button variant="secondary" onClick={() => navigate("/hospital/lab/orders")}>
               Back to Orders
             </Button>
+            <Button 
+              variant="secondary" 
+              onClick={() => {
+                console.log('🔄 Manual reload triggered');
+                console.log('Current order state:', order);
+                console.log('Order ID from params:', orderId);
+                loadOrder();
+              }}
+            >
+              Reload Order
+            </Button>
+            <Button 
+              variant="secondary" 
+              onClick={() => {
+                console.log('🧪 Debug Info:');
+                console.log('- Order ID:', orderId);
+                console.log('- Current Order:', order);
+                console.log('- Order Status:', order?.status);
+                console.log('- Order Results:', order?.results);
+                console.log('- Has Results:', !!order?.results);
+                console.log('- Results Keys:', order?.results ? Object.keys(order.results) : 'No results');
+                alert('Check console for debug information');
+              }}
+            >
+              Debug Info
+            </Button>
           </div>
         }
       />

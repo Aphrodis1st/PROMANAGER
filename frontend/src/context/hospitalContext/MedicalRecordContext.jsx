@@ -64,7 +64,19 @@ export const MedicalRecordProvider = ({ children }) => {
   };
 
   const addPrescription = async (id, data) => {
-    return { success: true };
+    try {
+      console.log('Adding prescription for medical record:', id, 'with data:', data);
+      const result = await hospitalService.createPrescription({
+        medicalRecordId: id,
+        ...data,
+        createdAt: new Date().toISOString()
+      });
+      console.log('Prescription added successfully:', result);
+      return result;
+    } catch (error) {
+      console.error("Failed to add prescription:", error);
+      throw error;
+    }
   };
 
   const addSurgeryRecord = async (patientId, data) => {
@@ -81,7 +93,14 @@ export const MedicalRecordProvider = ({ children }) => {
   };
 
   const addTreatmentPlan = async (id, data) => {
-    return { success: true };
+    try {
+      console.log('Adding treatment plan for medical record:', id, 'with data:', data);
+      // For now, return success - can be implemented later
+      return { success: true };
+    } catch (error) {
+      console.error("Failed to add treatment plan:", error);
+      throw error;
+    }
   };
 
   // Don't fetch on mount

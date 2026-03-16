@@ -306,6 +306,36 @@ export const insuranceProviderService = {
 
 
 // =======================================================
+// 💊 PRESCRIPTION SERVICE
+// =======================================================
+export const prescriptionService = {
+  getAll: async () => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/prescriptions`, getAuthHeader());
+    return res.data;
+  },
+
+  getByPatient: async (patientId) => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/prescriptions/patient/${patientId}`, getAuthHeader());
+    return res.data;
+  },
+
+  create: async (data) => {
+    const res = await axios.post(`${HOSPITAL_API_URL}/prescriptions`, data, getAuthHeader());
+    return res.data;
+  },
+
+  update: async (id, data) => {
+    const res = await axios.put(`${HOSPITAL_API_URL}/prescriptions/${id}`, data, getAuthHeader());
+    return res.data;
+  },
+
+  remove: async (id) => {
+    const res = await axios.delete(`${HOSPITAL_API_URL}/prescriptions/${id}`, getAuthHeader());
+    return res.data;
+  },
+};
+
+// =======================================================
 // 🧬 SPECIALIZATION SERVICE
 // =======================================================
 export const specializationService = {
@@ -395,6 +425,12 @@ const hospitalService = {
   createInsuranceProvider: insuranceProviderService.create,
   updateInsuranceProvider: insuranceProviderService.update,
   deleteInsuranceProvider: insuranceProviderService.remove,
+
+  getPrescriptions: prescriptionService.getAll,
+  getPrescriptionsByPatient: prescriptionService.getByPatient,
+  createPrescription: prescriptionService.create,
+  updatePrescription: prescriptionService.update,
+  deletePrescription: prescriptionService.remove,
 
   getAdmissions: async () => [],
   getReports: async () => [],
