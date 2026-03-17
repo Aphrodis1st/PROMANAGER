@@ -6,6 +6,7 @@ import Button from "../../components/hospital/Button";
 import { useMedicalRecords } from "../../hooks/useMedicalRecords";
 import { usePatients } from "../../hooks/usePatients";
 import { useDoctors } from "../../hooks/useDoctors";
+import hospitalService from "../../services/hospitalService";
 
 export default function PrescriptionEntry() {
   const { id } = useParams();
@@ -44,11 +45,17 @@ export default function PrescriptionEntry() {
 
   useEffect(() => {
     const patientId = searchParams.get("patientId");
+    console.log('PrescriptionEntry - Record ID:', id);
+    console.log('PrescriptionEntry - Patient ID from URL:', patientId);
+    console.log('PrescriptionEntry - Available patients:', patients.length);
+    console.log('PrescriptionEntry - Available doctors:', doctors.length);
+    
     if (patientId) {
       const patient = patients.find(p => p.id === patientId);
+      console.log('PrescriptionEntry - Found patient:', patient);
       setPatientInfo(patient);
     }
-  }, [searchParams, patients]);
+  }, [searchParams, patients, doctors, id]);
 
   const addMedication = () => {
     setPrescriptions([...prescriptions, {
@@ -86,6 +93,10 @@ export default function PrescriptionEntry() {
       alert("Please enter diagnosis");
       return;
     }
+    if (!formData.prescribedBy) {
+      alert("Please select the prescribing doctor");
+      return;
+    }
     
     setLoading(true);
     try {
@@ -93,14 +104,58 @@ export default function PrescriptionEntry() {
       console.log('📋 Form data:', formData);
       console.log('💊 Medications:', prescriptions);
       
-      const result = await addPrescription(id, { ...formData, medications: prescriptions });
-      console.log('✅ Prescription submission result:', result);
+      // Prepare prescription data with patient information
+      const prescriptionData = {
+        medicalRecordId: id,
+        patientId: patientInfo?.id || searchParams.get("patientId"),
+        patientName: patientInfo?.fullName || 'Unknown Patient',
+        doctorId: formData.prescribedBy,
+        doctorName: doctors.find(d => d.id === formData.prescribedBy)?.fullName || 'Unknown Doctor',
+        prescriptionDate: formData.prescriptionDate,
+        diagnosis: formData.diagnosis,
+        icd10Code: formData.icd10Code,
+        medications: prescriptions.map(med => ({
+          ...med,
+          // Ensure all required fields are present
+          medicationName: med.medicationName,
+          strength: med.strength,
+          dosage: med.dosage,
+          frequency: med.frequency,
+          duration: med.duration,
+          quantity: parseInt(med.quantity) || 0,
+          route: med.route || 'Oral',
+          refills: med.refills || '0',
+          instructions: med.instructions || ''
+        })),
+        urgency: formData.urgency,
+        pharmacyNotes: formData.pharmacyNotes,
+        substitutionAllowed: formData.substitutionAllowed,
+        patientWeight: formData.patientWeight,
+        patientHeight: formData.patientHeight,
+        bloodPressure: formData.bloodPressure,
+        temperature: formData.temperature,
+        status: 'PENDING',
+        createdBy: formData.prescribedBy,
+        createdAt: new Date().toISOString()
+      };
       
-      alert("Prescription added successfully! Check the console for details.");
+      console.log('📦 Sending prescription data:', prescriptionData);
+      
+      // Use hospital service to create prescription
+      const result = await hospitalService.createPrescription(prescriptionData);
+      console.log('✅ Prescription created successfully:', result);
+      
+      alert(`Prescription created successfully for ${patientInfo?.fullName || 'patient'}!`);
       navigate(-1);
     } catch (error) {
       console.error("❌ Error adding prescription:", error);
-      alert("Failed to add prescription: " + error.message);
+      let errorMessage = "Failed to add prescription";
+      if (error.response?.data?.message) {
+        errorMessage += ": " + error.response.data.message;
+      } else if (error.message) {
+        errorMessage += ": " + error.message;
+      }
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -130,11 +185,77 @@ export default function PrescriptionEntry() {
     <>
       <PageHeader title="Prescription Entry" />
       
+      {/* Debug Information */}
+      <Card>
+        <div style={{ padding: "1rem", backgroundColor: "#f3f4f6", borderRadius: "0.375rem", fontSize: "0.875rem" }}>
+          <strong>Debug Info:</strong><br/>
+          Medical Record ID: {id}<br/>
+          Patient ID from URL: {searchParams.get("patientId")}<br/>
+          Patients loaded: {patients.length}<br/>
+          Doctors loaded: {doctors.length}<br/>
+          Patient found: {patientInfo ? `${patientInfo.fullName} (${patientInfo.id})` : 'No'}
+        </div>
+      </Card>
+      
+      {/* Patient Selection */}
+      {!patientInfo && patients.length > 0 && (
+        <Card>
+          <div style={{ padding: "1rem" }}>
+            <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem" }}>Select Patient</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
+              {patients.map(patient => (
+                <div 
+                  key={patient.id}
+                  onClick={() => setPatientInfo(patient)}
+                  style={{
+                    padding: "1rem",
+                    border: "2px solid #e5e7eb",
+                    borderRadius: "0.5rem",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    backgroundColor: "#ffffff"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.borderColor = "#3b82f6";
+                    e.target.style.backgroundColor = "#f0f9ff";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.borderColor = "#e5e7eb";
+                    e.target.style.backgroundColor = "#ffffff";
+                  }}
+                >
+                  <div style={{ fontWeight: "600", marginBottom: "0.25rem" }}>{patient.fullName}</div>
+                  <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                    MRN: {patient.id} | Age: {patient.age} | Gender: {patient.gender}
+                  </div>
+                  {patient.allergies && (
+                    <div style={{ fontSize: "0.75rem", color: "#ef4444", marginTop: "0.25rem" }}>
+                      ⚠️ Allergies: {patient.allergies}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+      )}
+      
       {patientInfo && (
         <Card>
           <div style={{ padding: "1rem", backgroundColor: "#f0fdf4", borderLeft: "4px solid #10b981" }}>
-            <div style={{ fontWeight: "600", marginBottom: "0.25rem" }}>Patient: {patientInfo.fullName}</div>
-            <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>MRN: {patientInfo.id} | Age: {patientInfo.age} | Allergies: {patientInfo.allergies || "None"}</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontWeight: "600", marginBottom: "0.25rem" }}>Patient: {patientInfo.fullName}</div>
+                <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>MRN: {patientInfo.id} | Age: {patientInfo.age} | Allergies: {patientInfo.allergies || "None"}</div>
+              </div>
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={() => setPatientInfo(null)}
+              >
+                Change Patient
+              </Button>
+            </div>
           </div>
         </Card>
       )}

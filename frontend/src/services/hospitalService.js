@@ -360,6 +360,37 @@ export const specializationService = {
   },
 };
 
+
+// =======================================================
+// 🩺 VITAL SIGNS SERVICE
+// =======================================================
+export const vitalSignsService = {
+  getByPatient: async (patientId) => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/vital-signs/patient/${patientId}`, getAuthHeader());
+    return res.data;
+  },
+
+  getLatestByPatient: async (patientId) => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/vital-signs/patient/${patientId}/latest`, getAuthHeader());
+    return res.data;
+  },
+
+  create: async (data) => {
+    const res = await axios.post(`${HOSPITAL_API_URL}/vital-signs`, data, getAuthHeader());
+    return res.data;
+  },
+
+  update: async (id, data) => {
+    const res = await axios.put(`${HOSPITAL_API_URL}/vital-signs/${id}`, data, getAuthHeader());
+    return res.data;
+  },
+
+  remove: async (id) => {
+    const res = await axios.delete(`${HOSPITAL_API_URL}/vital-signs/${id}`, getAuthHeader());
+    return res.data;
+  },
+};
+
 // Default export with all services
 const hospitalService = {
   getPatients: patientService.getAll,
@@ -393,6 +424,10 @@ const hospitalService = {
   getMedicalRecords: medicalRecordService.getByPatient,
   getAllMedicalRecords: async () => {
     const res = await axios.get(`${HOSPITAL_API_URL}/medical-records`, getAuthHeader());
+    return res.data;
+  },
+  getMedicalRecordById: async (id) => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/medical-records/${id}`, getAuthHeader());
     return res.data;
   },
   createMedicalRecord: medicalRecordService.create,
@@ -431,6 +466,64 @@ const hospitalService = {
   createPrescription: prescriptionService.create,
   updatePrescription: prescriptionService.update,
   deletePrescription: prescriptionService.remove,
+
+  getVitalSigns: vitalSignsService.getByPatient,
+  getLatestVitalSigns: vitalSignsService.getLatestByPatient,
+  createVitalSigns: vitalSignsService.create,
+  updateVitalSigns: vitalSignsService.update,
+  deleteVitalSigns: vitalSignsService.remove,
+
+  // Surgery Records
+  getSurgeryRecords: async () => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/surgery-records`, getAuthHeader());
+    return res.data;
+  },
+  getSurgeryRecordById: async (id) => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/surgery-records/${id}`, getAuthHeader());
+    return res.data;
+  },
+  getSurgeryRecordsByPatient: async (patientId) => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/surgery-records/patient/${patientId}`, getAuthHeader());
+    return res.data;
+  },
+  createSurgeryRecord: async (data) => {
+    const res = await axios.post(`${HOSPITAL_API_URL}/surgery-records`, data, getAuthHeader());
+    return res.data;
+  },
+  updateSurgeryRecord: async (id, data) => {
+    const res = await axios.put(`${HOSPITAL_API_URL}/surgery-records/${id}`, data, getAuthHeader());
+    return res.data;
+  },
+  deleteSurgeryRecord: async (id) => {
+    const res = await axios.delete(`${HOSPITAL_API_URL}/surgery-records/${id}`, getAuthHeader());
+    return res.data;
+  },
+
+  // Treatment Plans
+  getTreatmentPlans: async () => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/treatment-plans`, getAuthHeader());
+    return res.data;
+  },
+  getTreatmentPlanById: async (id) => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/treatment-plans/${id}`, getAuthHeader());
+    return res.data;
+  },
+  getTreatmentPlansByPatient: async (patientId) => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/treatment-plans/patient/${patientId}`, getAuthHeader());
+    return res.data;
+  },
+  createTreatmentPlan: async (data) => {
+    const res = await axios.post(`${HOSPITAL_API_URL}/treatment-plans`, data, getAuthHeader());
+    return res.data;
+  },
+  updateTreatmentPlan: async (id, data) => {
+    const res = await axios.put(`${HOSPITAL_API_URL}/treatment-plans/${id}`, data, getAuthHeader());
+    return res.data;
+  },
+  deleteTreatmentPlan: async (id) => {
+    const res = await axios.delete(`${HOSPITAL_API_URL}/treatment-plans/${id}`, getAuthHeader());
+    return res.data;
+  },
 
   getAdmissions: async () => [],
   getReports: async () => [],

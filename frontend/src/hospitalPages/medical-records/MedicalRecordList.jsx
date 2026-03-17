@@ -10,12 +10,14 @@ import { useDoctors } from "../../hooks/useDoctors";
 export default function MedicalRecordList() {
   const navigate = useNavigate();
   const { patients } = usePatients();
-  const { records, fetchRecords } = useMedicalRecords();
+  const { records, fetchRecords, deleteRecord } = useMedicalRecords();
   const { doctors } = useDoctors();
   const [allRecords, setAllRecords] = useState([]);
   const [filter, setFilter] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const refreshRecords = async () => {
     setLoading(true);
@@ -69,6 +71,33 @@ export default function MedicalRecordList() {
   const getDoctorName = (doctorId) => {
     const doctor = doctors.find(d => d.id === doctorId);
     return doctor ? `Dr. ${doctor.fullName || doctor.name}` : "N/A";
+  };
+
+  const handleDeleteRecord = async (record) => {
+    setDeleting(true);
+    try {
+      console.log('Deleting medical record:', record.id);
+      await deleteRecord(record.id);
+      
+      // Remove from local state
+      setAllRecords(prev => prev.filter(r => r.id !== record.id));
+      
+      alert('Medical record deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting medical record:', error);
+      alert('Failed to delete medical record. Please try again.');
+    } finally {
+      setDeleting(false);
+      setDeleteConfirm(null);
+    }
+  };
+
+  const confirmDelete = (record) => {
+    setDeleteConfirm(record);
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirm(null);
   };
 
   const filteredRecords = allRecords.filter(r => {
@@ -175,6 +204,14 @@ export default function MedicalRecordList() {
                         <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
                           <Button size="sm" onClick={() => navigate(`view/${record.id}`)}>View</Button>
                           <Button size="sm" variant="secondary" onClick={() => navigate(`diagnosis/${record.id}`)}>Add Diagnosis</Button>
+                          <Button 
+                            size="sm" 
+                            variant="danger" 
+                            onClick={() => confirmDelete(record)}
+                            disabled={deleting}
+                          >
+                            Delete
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -185,6 +222,78 @@ export default function MedicalRecordList() {
           )}
         </div>
       </Card>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '2rem',
+            borderRadius: '0.5rem',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+            maxWidth: '500px',
+            width: '90%'
+          }}>
+            <h3 style={{ 
+              fontSize: '1.25rem', 
+              fontWeight: '600', 
+              marginBottom: '1rem',
+              color: '#dc2626'
+            }}>
+              ⚠️ Confirm Delete Medical Record
+            </h3>
+            <p style={{ marginBottom: '1.5rem', color: '#374151' }}>
+              Are you sure you want to delete the medical record for <strong>{deleteConfirm.patientName}</strong>?
+            </p>
+            <div style={{
+              padding: '1rem',
+              backgroundColor: '#fef2f2',
+              border: '1px solid #fecaca',
+              borderRadius: '0.375rem',
+              marginBottom: '1.5rem'
+            }}>
+              <p style={{ fontSize: '0.875rem', color: '#991b1b' }}>
+                <strong>Record Details:</strong>
+              </p>
+              <ul style={{ fontSize: '0.875rem', color: '#991b1b', marginTop: '0.5rem', paddingLeft: '1rem' }}>
+                <li>• Record #: {deleteConfirm.recordNumber}</li>
+                <li>• Patient: {deleteConfirm.patientName}</li>
+                <li>• Created: {deleteConfirm.createdAt ? new Date(deleteConfirm.createdAt).toLocaleDateString() : 'N/A'}</li>
+              </ul>
+              <p style={{ fontSize: '0.875rem', color: '#991b1b', marginTop: '0.5rem' }}>
+                <strong>This action cannot be undone!</strong>
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <Button 
+                variant="secondary" 
+                onClick={cancelDelete}
+                disabled={deleting}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="danger" 
+                onClick={() => handleDeleteRecord(deleteConfirm)}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting...' : 'Delete Record'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

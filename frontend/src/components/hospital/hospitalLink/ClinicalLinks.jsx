@@ -76,6 +76,12 @@ export default function ClinicalLinks() {
           <ListItemButton component={Link} to="/hospital/medical-records/prescriptions/all" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
             <ListItemText primary="💊 Prescription List" />
           </ListItemButton>
+          <ListItemButton component={Link} to="/hospital/medical-records/surgery-list" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+            <ListItemText primary="🏥 Surgery List" />
+          </ListItemButton>
+          <ListItemButton component={Link} to="/hospital/medical-records/treatment-plan-list" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+            <ListItemText primary="📋 Treatment Plans" />
+          </ListItemButton>
           <ListItemButton component={Link} to="/hospital/medical-records/diagnosis/:id" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
             <ListItemText primary="Diagnosis Entry" />
           </ListItemButton>

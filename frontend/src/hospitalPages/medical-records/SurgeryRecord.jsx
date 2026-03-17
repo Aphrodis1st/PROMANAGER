@@ -6,6 +6,7 @@ import Button from "../../components/hospital/Button";
 import { useMedicalRecords } from "../../hooks/useMedicalRecords";
 import { usePatients } from "../../hooks/usePatients";
 import { useDoctors } from "../../hooks/useDoctors";
+import hospitalService from "../../services/hospitalService";
 
 export default function SurgeryRecord() {
   const { patientId } = useParams();
@@ -33,44 +34,100 @@ export default function SurgeryRecord() {
     postOpPlan: "",
     recoveryRoom: "",
     // Professional Hospital Fields
-    hospitalName: "",
-    hospitalLicense: "",
-    accreditation: "",
+    hospitalName: "E-Hospital System",
+    hospitalLicense: "HL-2024-001",
+    accreditation: "JCI",
     surgicalSuite: "",
     equipmentUsed: "",
     nursingStaff: "",
     technicalStaff: "",
-    qualityAssurance: "",
-    infectionControl: "",
-    professionalNotes: ""
+    qualityAssurance: "WHO Surgical Safety Checklist completed",
+    infectionControl: "Standard sterile technique, prophylactic antibiotics administered",
+    professionalNotes: "",
+    // Additional professional fields
+    surgicalApproach: "",
+    implantDetails: "",
+    pathologySpecimens: "",
+    imagingUsed: "",
+    monitoringDevices: "",
+    patientPosition: "",
+    skinPreparation: "",
+    drapingTechnique: ""
   });
   const [loading, setLoading] = useState(false);
   const [patientInfo, setPatientInfo] = useState(null);
+  const [selectedPatient, setSelectedPatient] = useState(null);
 
   useEffect(() => {
     const patientIdFromParams = patientId || searchParams.get("patientId");
+    console.log('🏥 Surgery Record - Patient ID:', patientIdFromParams);
+    console.log('🏥 Surgery Record - Available patients:', patients.length);
+    console.log('🏥 Surgery Record - Available doctors:', doctors.length);
+    
     if (patientIdFromParams) {
       const patient = patients.find(p => p.id === patientIdFromParams);
+      console.log('🏥 Surgery Record - Found patient:', patient);
       setPatientInfo(patient);
+      setSelectedPatient(patient);
     }
-  }, [patientId, searchParams, patients]);
+  }, [patientId, searchParams, patients, doctors]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.procedureName || !formData.surgeon || !formData.surgeryDate || !formData.hospitalName) {
-      alert("Please fill in required fields (Procedure Name, Surgeon, Surgery Date, Hospital Name)");
+    
+    // Validation
+    if (!selectedPatient) {
+      alert("Please select a patient for this surgery record");
+      return;
+    }
+    if (!formData.procedureName || !formData.surgeon || !formData.surgeryDate) {
+      alert("Please fill in required fields (Procedure Name, Surgeon, Surgery Date)");
       return;
     }
     
     setLoading(true);
     try {
-      const currentPatientId = patientId || searchParams.get("patientId");
-      await addSurgeryRecord(currentPatientId, formData);
-      alert("Surgery record added successfully!");
-      navigate(-1);
+      console.log('🏥 Submitting surgery record for patient:', selectedPatient.fullName);
+      
+      // Prepare surgery record data
+      const surgeryData = {
+        patientId: selectedPatient.id,
+        patientName: selectedPatient.fullName,
+        patientAge: selectedPatient.age,
+        patientGender: selectedPatient.gender,
+        patientBloodType: selectedPatient.bloodType,
+        patientAllergies: selectedPatient.allergies,
+        ...formData,
+        // Add surgeon and staff names
+        surgeonName: doctors.find(d => d.id === formData.surgeon)?.fullName || 'Unknown',
+        assistantName: formData.assistant ? doctors.find(d => d.id === formData.assistant)?.fullName || 'Unknown' : '',
+        anesthesiologistName: formData.anesthesiologist ? doctors.find(d => d.id === formData.anesthesiologist)?.fullName || 'Unknown' : '',
+        // Professional metadata
+        recordType: 'SURGERY',
+        status: 'COMPLETED',
+        createdBy: formData.surgeon,
+        createdAt: new Date().toISOString(),
+        hospitalId: 'HOSP001',
+        medicalRecordNumber: selectedPatient.id
+      };
+      
+      console.log('📋 Surgery data to submit:', surgeryData);
+      
+      // Use hospital service to create surgery record
+      const result = await hospitalService.createSurgeryRecord(surgeryData);
+      console.log('✅ Surgery record created successfully:', result);
+      
+      alert(`Surgery record created successfully for ${selectedPatient.fullName}!`);
+      navigate('/hospital/medical-records/surgery-list');
     } catch (error) {
-      console.error("Error adding surgery record:", error);
-      alert("Failed to add surgery record");
+      console.error("❌ Error adding surgery record:", error);
+      let errorMessage = "Failed to add surgery record";
+      if (error.response?.data?.message) {
+        errorMessage += ": " + error.response.data.message;
+      } else if (error.message) {
+        errorMessage += ": " + error.message;
+      }
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -104,20 +161,186 @@ export default function SurgeryRecord() {
 
   return (
     <>
-      <PageHeader title="Surgery Documentation" />
+      <PageHeader title="Professional Surgery Documentation" />
       
-      {patientInfo && (
+      {/* Debug Information */}
+      <Card>
+        <div style={{ padding: "1rem", backgroundColor: "#f3f4f6", borderRadius: "0.375rem", fontSize: "0.875rem" }}>
+          <strong>🔍 Debug Info:</strong><br/>
+          Patient ID from URL: {patientId || searchParams.get("patientId")}<br/>
+          Patients loaded: {patients.length}<br/>
+          Doctors loaded: {doctors.length}<br/>
+          Selected patient: {selectedPatient ? `${selectedPatient.fullName} (${selectedPatient.id})` : 'None'}
+        </div>
+      </Card>
+      
+      {/* Patient Selection */}
+      {!selectedPatient && patients.length > 0 && (
         <Card>
-          <div style={{ padding: "1rem", backgroundColor: "#fef3c7", borderLeft: "4px solid #f59e0b" }}>
-            <div style={{ fontWeight: "600", marginBottom: "0.25rem" }}>Patient: {patientInfo.fullName}</div>
-            <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>MRN: {patientInfo.id} | Age: {patientInfo.age} | Blood Type: {patientInfo.bloodType || "N/A"}</div>
+          <div style={{ padding: "1.5rem" }}>
+            <h3 style={{ fontSize: "1.25rem", fontWeight: "600", marginBottom: "1rem", color: "#1f2937" }}>
+              👥 Select Patient for Surgery
+            </h3>
+            <p style={{ fontSize: "0.875rem", color: "#6b7280", marginBottom: "1.5rem" }}>
+              Choose the registered patient who will undergo the surgical procedure. All surgery documentation will be linked to this patient's medical record.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))", gap: "1rem" }}>
+              {patients.map(patient => (
+                <div 
+                  key={patient.id}
+                  onClick={() => {
+                    setSelectedPatient(patient);
+                    setPatientInfo(patient);
+                  }}
+                  style={{
+                    padding: "1.25rem",
+                    border: "2px solid #e5e7eb",
+                    borderRadius: "0.75rem",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    backgroundColor: "#ffffff",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "#3b82f6";
+                    e.currentTarget.style.backgroundColor = "#f0f9ff";
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "#e5e7eb";
+                    e.currentTarget.style.backgroundColor = "#ffffff";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", marginBottom: "0.75rem" }}>
+                    <div style={{ 
+                      width: "40px", 
+                      height: "40px", 
+                      borderRadius: "50%", 
+                      backgroundColor: "#3b82f6", 
+                      color: "white", 
+                      display: "flex", 
+                      alignItems: "center", 
+                      justifyContent: "center", 
+                      fontWeight: "600",
+                      marginRight: "0.75rem"
+                    }}>
+                      {patient.fullName.charAt(0)}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: "600", fontSize: "1rem", color: "#1f2937" }}>{patient.fullName}</div>
+                      <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>MRN: {patient.id}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.5rem", fontSize: "0.875rem" }}>
+                    <div><strong>Age:</strong> {patient.age}</div>
+                    <div><strong>Gender:</strong> {patient.gender}</div>
+                    <div><strong>Blood Type:</strong> {patient.bloodType || 'Unknown'}</div>
+                    <div><strong>Phone:</strong> {patient.phone}</div>
+                  </div>
+                  {patient.allergies && (
+                    <div style={{ 
+                      fontSize: "0.75rem", 
+                      color: "#ef4444", 
+                      marginTop: "0.5rem", 
+                      padding: "0.5rem", 
+                      backgroundColor: "#fef2f2", 
+                      borderRadius: "0.375rem",
+                      border: "1px solid #fecaca"
+                    }}>
+                      ⚠️ <strong>Allergies:</strong> {patient.allergies}
+                    </div>
+                  )}
+                  <div style={{ 
+                    marginTop: "0.75rem", 
+                    padding: "0.5rem", 
+                    backgroundColor: "#f0f9ff", 
+                    borderRadius: "0.375rem", 
+                    textAlign: "center", 
+                    fontSize: "0.875rem", 
+                    fontWeight: "500", 
+                    color: "#1d4ed8" 
+                  }}>
+                    Click to Select for Surgery
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+      )}
+      
+      {/* Selected Patient Display */}
+      {selectedPatient && (
+        <Card>
+          <div style={{ padding: "1.5rem", backgroundColor: "#f0fdf4", borderLeft: "4px solid #10b981" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", marginBottom: "0.5rem" }}>
+                  <div style={{ 
+                    width: "50px", 
+                    height: "50px", 
+                    borderRadius: "50%", 
+                    backgroundColor: "#10b981", 
+                    color: "white", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center", 
+                    fontWeight: "600",
+                    fontSize: "1.25rem",
+                    marginRight: "1rem"
+                  }}>
+                    {selectedPatient.fullName.charAt(0)}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: "600", fontSize: "1.125rem", color: "#1f2937" }}>
+                      🏥 Surgery Patient: {selectedPatient.fullName}
+                    </div>
+                    <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                      MRN: {selectedPatient.id} | Age: {selectedPatient.age} | Gender: {selectedPatient.gender} | Blood Type: {selectedPatient.bloodType || "Unknown"}
+                    </div>
+                  </div>
+                </div>
+                {selectedPatient.allergies && (
+                  <div style={{ 
+                    fontSize: "0.875rem", 
+                    color: "#ef4444", 
+                    padding: "0.5rem", 
+                    backgroundColor: "#fef2f2", 
+                    borderRadius: "0.375rem", 
+                    border: "1px solid #fecaca",
+                    marginTop: "0.5rem"
+                  }}>
+                    ⚠️ <strong>CRITICAL ALLERGIES:</strong> {selectedPatient.allergies}
+                  </div>
+                )}
+              </div>
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={() => {
+                  setSelectedPatient(null);
+                  setPatientInfo(null);
+                }}
+              >
+                Change Patient
+              </Button>
+            </div>
           </div>
         </Card>
       )}
 
-      <Card>
-        <div style={{ padding: "1.5rem" }}>
-          <form onSubmit={handleSubmit}>
+      {selectedPatient && (
+        <Card>
+          <div style={{ padding: "1.5rem" }}>
+            <form onSubmit={handleSubmit}>
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "1.5rem", padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "0.5rem", border: "1px solid #e2e8f0" }}>
+                <div style={{ fontSize: "1.5rem", marginRight: "1rem" }}>🏥</div>
+                <div>
+                  <h2 style={{ fontSize: "1.25rem", fontWeight: "600", margin: 0, color: "#1f2937" }}>Professional Surgery Documentation</h2>
+                  <p style={{ fontSize: "0.875rem", color: "#6b7280", margin: "0.25rem 0 0 0" }}>Complete surgical record for {selectedPatient.fullName}</p>
+                </div>
+              </div>
             <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "1rem", paddingBottom: "0.5rem", borderBottom: "2px solid #e5e7eb" }}>Procedure Information</h3>
             
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1.5rem", marginBottom: "1.5rem" }}>
@@ -462,10 +685,11 @@ export default function SurgeryRecord() {
               <Button type="submit" disabled={loading}>
                 {loading ? "Saving..." : "Save Surgery Record"}
               </Button>
-            </div>
-          </form>
-        </div>
-      </Card>
+              </div>
+            </form>
+          </div>
+        </Card>
+      )}
     </>
   );
 }

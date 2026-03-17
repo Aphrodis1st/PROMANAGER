@@ -112,6 +112,8 @@ import DiagnosisEntry from './hospitalPages/medical-records/DiagnosisEntry.jsx';
 import PrescriptionEntry from './hospitalPages/medical-records/PrescriptionEntry.jsx';
 import PrescriptionListMedical from './hospitalPages/medical-records/PrescriptionList.jsx';
 import SurgeryRecord from './hospitalPages/medical-records/SurgeryRecord.jsx';
+import SurgeryList from './hospitalPages/medical-records/SurgeryList.jsx';
+import TreatmentPlanList from './hospitalPages/medical-records/TreatmentPlanList.jsx';
 import VitalSigns from './hospitalPages/medical-records/VitalSigns.jsx';
 import VitalSignsTrends from './hospitalPages/medical-records/VitalSignsTrends.jsx';
 import TreatmentPlan from './hospitalPages/medical-records/TreatmentPlan.jsx';
@@ -338,8 +340,12 @@ function AppContent() {
         <Route path='medical-records/prescription-entry/:id' element={<PrescriptionEntry />} />
         <Route path='medical-records/prescriptions/:id' element={<PrescriptionListMedical />} />
         <Route path='medical-records/prescriptions/all' element={<PrescriptionListMedical />} />
+        <Route path='medical-records/surgery-record' element={<SurgeryRecord />} />
+        <Route path='medical-records/surgery-list' element={<SurgeryList />} />
         <Route path='medical-records/surgery/:patientId' element={<SurgeryRecord />} />
         <Route path='medical-records/treatment/:id' element={<TreatmentPlan />} />
+        <Route path='medical-records/treatment-plan' element={<TreatmentPlan />} />
+        <Route path='medical-records/treatment-plan-list' element={<TreatmentPlanList />} />
         <Route path='billing' element={<BillingDashboard />} />
         <Route path='billing/invoices' element={<InvoiceList />} />
         <Route path='billing/create' element={<CreateInvoice />} />

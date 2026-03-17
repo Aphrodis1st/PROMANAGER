@@ -40,27 +40,53 @@ export default function DiagnosisEntry() {
 
   useEffect(() => {
     const patientId = searchParams.get("patientId");
+    console.log('DiagnosisEntry - Record ID:', id);
+    console.log('DiagnosisEntry - Patient ID from URL:', patientId);
+    console.log('DiagnosisEntry - Available patients:', patients.length);
+    
     if (patientId) {
       const patient = patients.find(p => p.id === patientId);
+      console.log('DiagnosisEntry - Found patient:', patient);
       setPatientInfo(patient);
     }
-  }, [searchParams, patients]);
+  }, [searchParams, patients, id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validation
     if (!formData.code || !formData.description) {
-      alert("Please fill in required fields");
+      alert("Please fill in required fields: ICD Code and Description");
+      return;
+    }
+    
+    if (!formData.diagnosedBy) {
+      alert("Please select the diagnosing doctor");
       return;
     }
     
     setLoading(true);
     try {
+      console.log('Submitting diagnosis for record ID:', id);
+      console.log('Diagnosis data:', formData);
+      
       await addDiagnosis(id, formData);
       alert("Diagnosis added successfully!");
       navigate(-1);
     } catch (error) {
       console.error("Error adding diagnosis:", error);
-      alert("Failed to add diagnosis");
+      
+      // More specific error messages
+      let errorMessage = "Failed to add diagnosis";
+      if (error.message.includes('not found')) {
+        errorMessage = "Medical record not found. Please try refreshing the page.";
+      } else if (error.message.includes('network') || error.message.includes('fetch')) {
+        errorMessage = "Network error. Please check your connection and try again.";
+      } else if (error.response?.data?.message) {
+        errorMessage = `Error: ${error.response.data.message}`;
+      }
+      
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -123,6 +149,18 @@ export default function DiagnosisEntry() {
   return (
     <>
       <PageHeader title="Add Diagnosis (ICD-10 Based)" />
+      
+      {/* Debug Information */}
+      <Card>
+        <div style={{ padding: "1rem", backgroundColor: "#f3f4f6", borderRadius: "0.375rem", fontSize: "0.875rem" }}>
+          <strong>Debug Info:</strong><br/>
+          Record ID: {id}<br/>
+          Patient ID from URL: {searchParams.get("patientId")}<br/>
+          Patients loaded: {patients.length}<br/>
+          Doctors loaded: {doctors.length}<br/>
+          Patient found: {patientInfo ? 'Yes' : 'No'}
+        </div>
+      </Card>
       
       {patientInfo && (
         <Card>

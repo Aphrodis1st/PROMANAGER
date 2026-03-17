@@ -18,6 +18,9 @@ export default function PrescriptionList() {
   const [loading, setLoading] = useState(true);
   const [patientInfo, setPatientInfo] = useState(null);
   const [viewMode, setViewMode] = useState('patient'); // 'patient' or 'all'
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [urgencyFilter, setUrgencyFilter] = useState('all');
 
   useEffect(() => {
     // Determine view mode based on route
@@ -105,7 +108,7 @@ export default function PrescriptionList() {
       // Enrich prescription data with patient and doctor names
       const enrichedPrescriptions = prescriptionData.map(prescription => {
         const patient = patients.find(p => p.id === prescription.patientId);
-        const doctor = doctors.find(d => d.id === prescription.prescribedBy);
+        const doctor = doctors.find(d => d.id === prescription.prescribedBy || d.id === prescription.doctorId);
         
         return {
           ...prescription,
@@ -117,13 +120,14 @@ export default function PrescriptionList() {
       setPrescriptions(enrichedPrescriptions || []);
     } catch (error) {
       console.error('❌ Error fetching all prescriptions:', error);
-      // Show sample data for demonstration
+      // Show sample data for demonstration if API fails
       setPrescriptions([
         {
           id: 'px001',
           patientId: 'patient1',
           patientName: 'Bony',
           prescribedBy: 'doc1',
+          doctorId: 'doc1',
           doctorName: 'Dr. Smith',
           prescriptionDate: '2024-01-15',
           diagnosis: 'Upper Respiratory Infection',
@@ -148,6 +152,7 @@ export default function PrescriptionList() {
           patientId: 'patient2',
           patientName: 'John Doe',
           prescribedBy: 'doc2',
+          doctorId: 'doc2',
           doctorName: 'Dr. Johnson',
           prescriptionDate: '2024-01-14',
           diagnosis: 'Hypertension',
@@ -205,6 +210,213 @@ export default function PrescriptionList() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  // Filter prescriptions based on search and filter criteria
+  const filteredPrescriptions = prescriptions.filter(prescription => {
+    // Search filter
+    const searchMatch = !searchTerm || 
+      prescription.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      prescription.doctorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      prescription.diagnosis?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      prescription.medications?.some(med => 
+        med.medicationName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        med.genericName?.toLowerCase().includes(searchTerm.toLowerCase())
+      ) ||
+      prescription.id?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Status filter
+    const statusMatch = statusFilter === 'all' || prescription.status === statusFilter;
+    
+    // Urgency filter
+    const urgencyMatch = urgencyFilter === 'all' || prescription.urgency === urgencyFilter;
+    
+    return searchMatch && statusMatch && urgencyMatch;
+  });
+
+  const updatePrescriptionStatus = async (prescriptionId, newStatus) => {
+    try {
+      console.log(`🔄 Updating prescription ${prescriptionId} status to ${newStatus}`);
+      
+      // Find the prescription
+      const prescription = prescriptions.find(p => p.id === prescriptionId);
+      if (!prescription) {
+        throw new Error('Prescription not found');
+      }
+      
+      // Update the prescription
+      const updatedData = {
+        ...prescription,
+        status: newStatus,
+        updatedAt: new Date().toISOString()
+      };
+      
+      // Call API to update
+      await hospitalService.updatePrescription(prescriptionId, updatedData);
+      
+      // Update local state
+      setPrescriptions(prev => 
+        prev.map(p => p.id === prescriptionId ? { ...p, status: newStatus, updatedAt: new Date().toISOString() } : p)
+      );
+      
+      console.log(`✅ Prescription status updated successfully`);
+      alert(`Prescription status updated to ${newStatus}`);
+    } catch (error) {
+      console.error('❌ Error updating prescription status:', error);
+      alert('Failed to update prescription status');
+    }
+  };
+
+  const viewPrescriptionDetails = (prescription) => {
+    // Create a detailed modal or navigate to detailed view
+    const detailsWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
+    const patientName = prescription.patientName || 'Unknown Patient';
+    const doctorName = prescription.doctorName || getDoctorName(prescription.prescribedBy || prescription.doctorId);
+    
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Prescription Details - ${patientName}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; color: #333; line-height: 1.6; }
+          .header { text-align: center; border-bottom: 3px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
+          .hospital-name { font-size: 28px; font-weight: bold; color: #2563eb; margin-bottom: 5px; }
+          .section { margin-bottom: 25px; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px; }
+          .section-title { font-size: 18px; font-weight: bold; color: #1f2937; margin-bottom: 15px; border-bottom: 2px solid #3b82f6; padding-bottom: 5px; }
+          .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 15px; }
+          .info-item { padding: 10px; background: #f9fafb; border-radius: 4px; }
+          .info-label { font-weight: bold; color: #374151; display: block; margin-bottom: 5px; }
+          .medication { background: #f0f9ff; padding: 15px; margin: 10px 0; border-radius: 6px; border-left: 4px solid #3b82f6; }
+          .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+          .status-active { background: #dcfce7; color: #166534; }
+          .status-pending { background: #fef3c7; color: #92400e; }
+          .urgency-routine { background: #f0fdf4; color: #166534; }
+          .urgency-urgent { background: #fef3c7; color: #92400e; }
+          .urgency-emergency { background: #fef2f2; color: #991b1b; }
+          .print-btn { background: #2563eb; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 10px 5px; }
+          .close-btn { background: #6b7280; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 10px 5px; }
+          @media print { .no-print { display: none; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="hospital-name">E-Hospital System</div>
+          <div>Prescription Details</div>
+          <div style="font-size: 14px; color: #666;">Generated: ${new Date().toLocaleString()}</div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Prescription Information</div>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Prescription ID:</span>
+              ${prescription.id}
+            </div>
+            <div class="info-item">
+              <span class="info-label">Date:</span>
+              ${formatDate(prescription.prescriptionDate || prescription.createdAt)}
+            </div>
+            <div class="info-item">
+              <span class="info-label">Status:</span>
+              <span class="status-badge status-${prescription.status?.toLowerCase() || 'active'}">${prescription.status || 'Active'}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Urgency:</span>
+              <span class="status-badge urgency-${prescription.urgency?.toLowerCase() || 'routine'}">${prescription.urgency || 'Routine'}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Patient Information</div>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Patient Name:</span>
+              ${patientName}
+            </div>
+            <div class="info-item">
+              <span class="info-label">Patient ID:</span>
+              ${prescription.patientId}
+            </div>
+            <div class="info-item">
+              <span class="info-label">Prescribed by:</span>
+              ${doctorName}
+            </div>
+            <div class="info-item">
+              <span class="info-label">Doctor ID:</span>
+              ${prescription.prescribedBy || prescription.doctorId || 'N/A'}
+            </div>
+          </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Clinical Information</div>
+          <div class="info-item">
+            <span class="info-label">Diagnosis:</span>
+            ${prescription.diagnosis || 'No diagnosis provided'}
+          </div>
+          ${prescription.icd10Code ? `
+            <div class="info-item" style="margin-top: 10px;">
+              <span class="info-label">ICD-10 Code:</span>
+              ${prescription.icd10Code}
+            </div>
+          ` : ''}
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Prescribed Medications (${prescription.medications?.length || 0})</div>
+          ${prescription.medications?.map((med, index) => `
+            <div class="medication">
+              <h4 style="margin: 0 0 10px 0; color: #1f2937;">${index + 1}. ${med.medicationName}</h4>
+              ${med.genericName ? `<p style="margin: 5px 0; color: #6b7280;"><strong>Generic:</strong> ${med.genericName}</p>` : ''}
+              <div class="info-grid">
+                <div><strong>Strength:</strong> ${med.strength}</div>
+                <div><strong>Dosage:</strong> ${med.dosage}</div>
+                <div><strong>Frequency:</strong> ${med.frequency}</div>
+                <div><strong>Duration:</strong> ${med.duration}</div>
+                <div><strong>Route:</strong> ${med.route || 'Oral'}</div>
+                <div><strong>Quantity:</strong> ${med.quantity}</div>
+              </div>
+              ${med.instructions ? `<div style="margin-top: 10px; padding: 10px; background: #fef3c7; border-radius: 4px;"><strong>Instructions:</strong> ${med.instructions}</div>` : ''}
+            </div>
+          `).join('') || '<p>No medications prescribed</p>'}
+        </div>
+        
+        ${prescription.pharmacyNotes ? `
+          <div class="section">
+            <div class="section-title">Pharmacy Notes</div>
+            <div class="info-item">
+              ${prescription.pharmacyNotes}
+            </div>
+          </div>
+        ` : ''}
+        
+        <div class="section">
+          <div class="section-title">Additional Information</div>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Generic Substitution:</span>
+              ${prescription.substitutionAllowed !== false ? 'Allowed' : 'Not Allowed'}
+            </div>
+            <div class="info-item">
+              <span class="info-label">Created:</span>
+              ${formatDate(prescription.createdAt)}
+            </div>
+          </div>
+        </div>
+        
+        <div class="no-print" style="text-align: center; margin-top: 30px;">
+          <button class="print-btn" onclick="window.print()">🖨️ Print Details</button>
+          <button class="close-btn" onclick="window.close()">✕ Close</button>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    detailsWindow.document.write(htmlContent);
+    detailsWindow.document.close();
+    detailsWindow.focus();
   };
 
   const generatePrescriptionPDF = (prescription) => {
@@ -469,7 +681,8 @@ export default function PrescriptionList() {
               {viewMode === 'all' ? 'All Prescription Records' : 'Prescription Records'}
             </h3>
             <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '0.25rem 0 0 0' }}>
-              {loading ? 'Loading...' : `${prescriptions.length} prescription(s) found`}
+              {loading ? 'Loading...' : `${filteredPrescriptions.length} prescription(s) found`}
+              {prescriptions.length !== filteredPrescriptions.length && ` (${prescriptions.length} total)`}
               {viewMode === 'all' && ' across all patients'}
             </p>
           </div>
@@ -487,6 +700,12 @@ export default function PrescriptionList() {
               onClick={printAllPrescriptions}
             >
               🖨️ Print All
+            </Button>
+            <Button 
+              size="sm" 
+              onClick={() => navigate('/hospital/medical-records/create-prescription')}
+            >
+              + New Prescription
             </Button>
             {viewMode === 'patient' && (
               <Button 
@@ -508,19 +727,99 @@ export default function PrescriptionList() {
         </div>
       </Card>
 
-      {prescriptions.length > 0 && (
+      {/* Search and Filter Bar */}
+      <Card>
+        <div style={{ padding: '1rem', backgroundColor: '#f8fafc', borderBottom: '1px solid #e5e7eb' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', alignItems: 'end' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem', color: '#374151' }}>Search Prescriptions</label>
+              <input
+                type="text"
+                placeholder="Search by patient name, medication, or diagnosis..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.875rem'
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem', color: '#374151' }}>Status Filter</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.875rem',
+                  backgroundColor: 'white'
+                }}
+              >
+                <option value="all">All Status</option>
+                <option value="PENDING">Pending</option>
+                <option value="Active">Active</option>
+                <option value="DISPENSED">Dispensed</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem', color: '#374151' }}>Urgency Filter</label>
+              <select
+                value={urgencyFilter}
+                onChange={(e) => setUrgencyFilter(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.875rem',
+                  backgroundColor: 'white'
+                }}
+              >
+                <option value="all">All Urgency</option>
+                <option value="Routine">Routine</option>
+                <option value="Urgent">Urgent</option>
+                <option value="Emergency">Emergency</option>
+              </select>
+            </div>
+            <div>
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={() => {
+                  setSearchTerm('');
+                  setStatusFilter('all');
+                  setUrgencyFilter('all');
+                }}
+              >
+                🔄 Clear Filters
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {filteredPrescriptions.length > 0 && (
         <Card>
           <div style={{ padding: '1rem', backgroundColor: '#f8fafc', borderBottom: '1px solid #e5e7eb' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                🛠️ Quick Actions for {prescriptions.length} prescription(s)
+                🛠️ Quick Actions for {filteredPrescriptions.length} prescription(s)
+                {prescriptions.length !== filteredPrescriptions.length && ` (filtered from ${prescriptions.length} total)`}
               </div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <Button 
                   variant="secondary" 
                   size="sm"
                   onClick={() => {
-                    prescriptions.forEach(prescription => {
+                    filteredPrescriptions.forEach(prescription => {
                       setTimeout(() => generatePrescriptionPDF(prescription), 100);
                     });
                   }}
@@ -533,7 +832,7 @@ export default function PrescriptionList() {
                   onClick={() => {
                     const shareText = `Prescription Summary\n` +
                       `Patient: ${patientInfo?.fullName || 'Multiple Patients'}\n` +
-                      `Total Prescriptions: ${prescriptions.length}\n` +
+                      `Total Prescriptions: ${filteredPrescriptions.length}\n` +
                       `Generated: ${new Date().toLocaleString()}\n` +
                       `Link: ${window.location.href}`;
                     
@@ -557,7 +856,7 @@ export default function PrescriptionList() {
                   onClick={() => {
                     const csvContent = "data:text/csv;charset=utf-8," + 
                       "Prescription ID,Patient Name,Doctor,Date,Diagnosis,Medications Count,Status\n" +
-                      prescriptions.map(p => 
+                      filteredPrescriptions.map(p => 
                         `"${p.id}","${p.patientName || 'Unknown'}","${p.doctorName || 'Unknown'}","${formatDate(p.prescriptionDate || p.createdAt)}","${p.diagnosis || 'N/A'}","${p.medications?.length || 0}","${p.status || 'Active'}"`
                       ).join("\n");
                     
@@ -585,15 +884,17 @@ export default function PrescriptionList() {
             <div style={{ fontSize: '0.875rem' }}>Please wait while we fetch the data</div>
           </div>
         </Card>
-      ) : prescriptions.length === 0 ? (
+      ) : filteredPrescriptions.length === 0 ? (
         <Card>
           <div style={{ padding: '3rem', textAlign: 'center', color: '#6b7280' }}>
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💊</div>
             <div style={{ fontSize: '1.125rem', marginBottom: '0.5rem' }}>No Prescriptions Found</div>
             <div style={{ fontSize: '0.875rem', marginBottom: '1.5rem' }}>
-              {viewMode === 'all' 
-                ? 'No prescriptions have been created in the system yet.' 
-                : 'No prescriptions have been created for this patient yet.'}
+              {searchTerm || statusFilter !== 'all' || urgencyFilter !== 'all' 
+                ? 'No prescriptions match your current filters. Try adjusting your search criteria.' 
+                : viewMode === 'all' 
+                  ? 'No prescriptions have been created in the system yet.' 
+                  : 'No prescriptions have been created for this patient yet.'}
             </div>
             {viewMode === 'patient' && (
               <Button onClick={() => navigate(`/hospital/medical-records/prescription-entry/${id}${patientInfo ? `?patientId=${patientInfo.id}` : ''}`)}>  
@@ -601,14 +902,14 @@ export default function PrescriptionList() {
               </Button>
             )}
             {viewMode === 'all' && (
-              <Button onClick={() => navigate('/hospital/medical-records')}>
-                Go to Medical Records
+              <Button onClick={() => navigate('/hospital/medical-records/create-prescription')}>
+                Create New Prescription
               </Button>
             )}
           </div>
         </Card>
       ) : (
-        prescriptions.map((prescription, index) => (
+        filteredPrescriptions.map((prescription, index) => (
           <div key={prescription.id || index} style={cardStyle}>
             <div style={headerStyle}>
               <div>
@@ -668,7 +969,11 @@ export default function PrescriptionList() {
                     onClick={() => {
                       const patient = patients.find(p => p.id === prescription.patientId);
                       if (patient) {
-                        navigate(`/hospital/patients/${patient.id}`);
+                        // Try to navigate to patient details page
+                        navigate(`/hospital/patients/details/${patient.id}`);
+                      } else {
+                        // Fallback: show patient info in alert
+                        alert(`Patient Information:\nName: ${prescription.patientName}\nID: ${prescription.patientId}\nNote: Full patient details not available`);
                       }
                     }}
                   >
@@ -689,9 +994,32 @@ export default function PrescriptionList() {
                 >
                   📤 Share
                 </Button>
-                <Button variant="secondary" size="sm">
-                  View Details
+                <Button 
+                  variant="secondary" 
+                  size="sm"
+                  onClick={() => viewPrescriptionDetails(prescription)}
+                >
+                  🔍 View Details
                 </Button>
+                {/* Status Update Dropdown */}
+                <select
+                  value={prescription.status || 'Active'}
+                  onChange={(e) => updatePrescriptionStatus(prescription.id, e.target.value)}
+                  style={{
+                    padding: '0.25rem 0.5rem',
+                    fontSize: '0.75rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    backgroundColor: 'white',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="PENDING">Pending</option>
+                  <option value="Active">Active</option>
+                  <option value="DISPENSED">Dispensed</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="CANCELLED">Cancelled</option>
+                </select>
               </div>
             </div>
             
@@ -793,7 +1121,7 @@ export default function PrescriptionList() {
       </Card>
 
       {/* Floating Action Button for Mobile */}
-      {prescriptions.length > 0 && (
+      {filteredPrescriptions.length > 0 && (
         <div style={{
           position: 'fixed',
           bottom: '20px',
@@ -804,7 +1132,75 @@ export default function PrescriptionList() {
           gap: '10px'
         }}>
           <Button
-            onClick={printAllPrescriptions}
+            onClick={() => {
+              const printWindow = window.open('', '_blank');
+              const patientName = patientInfo?.fullName || 'Multiple Patients';
+              
+              const htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <title>Prescription Summary - ${patientName}</title>
+                  <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+                    .header { text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
+                    .hospital-name { font-size: 24px; font-weight: bold; color: #2563eb; margin-bottom: 5px; }
+                    .prescription-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 30px; page-break-inside: avoid; }
+                    .prescription-header { display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb; }
+                    .medication { background: #f9fafb; padding: 10px; margin: 10px 0; border-radius: 4px; }
+                    @media print { body { margin: 0; } .prescription-card { page-break-inside: avoid; } }
+                  </style>
+                </head>
+                <body>
+                  <div class="header">
+                    <div class="hospital-name">E-Hospital System</div>
+                    <div>Prescription Summary Report</div>
+                    <div>Generated: ${new Date().toLocaleString()}</div>
+                    ${searchTerm || statusFilter !== 'all' || urgencyFilter !== 'all' ? `<div style="font-size: 14px; color: #666; margin-top: 10px;">Filtered Results: ${filteredPrescriptions.length} of ${prescriptions.length} prescriptions</div>` : ''}
+                  </div>
+                  
+                  ${filteredPrescriptions.map((prescription, index) => `
+                    <div class="prescription-card">
+                      <div class="prescription-header">
+                        <div>
+                          <h3>Prescription #${prescription.id || index + 1}</h3>
+                          <p><strong>Patient:</strong> ${prescription.patientName || 'Unknown'}</p>
+                          <p><strong>Date:</strong> ${formatDate(prescription.prescriptionDate || prescription.createdAt)}</p>
+                        </div>
+                        <div>
+                          <p><strong>Doctor:</strong> ${prescription.doctorName || getDoctorName(prescription.prescribedBy || prescription.doctorId)}</p>
+                          <p><strong>Status:</strong> ${prescription.status || 'Active'}</p>
+                        </div>
+                      </div>
+                      <p><strong>Diagnosis:</strong> ${prescription.diagnosis || 'No diagnosis'}</p>
+                      <div>
+                        <strong>Medications (${prescription.medications?.length || 0}):</strong>
+                        ${prescription.medications?.map(med => `
+                          <div class="medication">
+                            <strong>${med.medicationName}</strong> - ${med.strength}<br>
+                            Dosage: ${med.dosage}, Frequency: ${med.frequency}, Duration: ${med.duration}
+                          </div>
+                        `).join('') || '<p>No medications</p>'}
+                      </div>
+                    </div>
+                  `).join('')}
+                  
+                  <div style="text-align: center; margin-top: 40px; font-size: 12px; color: #666;">
+                    <p>Total Prescriptions: ${filteredPrescriptions.length}</p>
+                    <p>Generated by E-Hospital System</p>
+                  </div>
+                </body>
+                </html>
+              `;
+              
+              printWindow.document.write(htmlContent);
+              printWindow.document.close();
+              printWindow.focus();
+              
+              setTimeout(() => {
+                printWindow.print();
+              }, 500);
+            }}
             style={{
               borderRadius: '50%',
               width: '56px',
@@ -822,7 +1218,7 @@ export default function PrescriptionList() {
           </Button>
           <Button
             onClick={() => {
-              const shareText = `Prescription Summary for ${patientInfo?.fullName || 'Multiple Patients'}\nTotal: ${prescriptions.length} prescriptions\nLink: ${window.location.href}`;
+              const shareText = `Prescription Summary for ${patientInfo?.fullName || 'Multiple Patients'}\nTotal: ${filteredPrescriptions.length} prescriptions\nLink: ${window.location.href}`;
               if (navigator.share) {
                 navigator.share({ title: 'Prescriptions', text: shareText, url: window.location.href });
               } else {
