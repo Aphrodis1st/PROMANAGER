@@ -4,6 +4,7 @@ const DataTable = ({
   columns,
   data = [],
   pageSize = 10,
+  onRowClick,
 }) => {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState(null);
@@ -73,7 +74,11 @@ const DataTable = ({
 
         <tbody>
           {paginated.map((row, i) => (
-            <tr key={row.id || i} className="border-t dark:border-gray-700">
+            <tr 
+              key={row.id || i} 
+              className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+              onClick={() => onRowClick && onRowClick(row)}
+            >
               {columns.map((col) => (
                 <td key={`${row.id || i}-${col.key || col.accessor}`} className="py-3">
                   {col.render

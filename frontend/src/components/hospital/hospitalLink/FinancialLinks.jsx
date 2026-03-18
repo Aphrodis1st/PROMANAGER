@@ -37,6 +37,9 @@ export default function FinancialLinks() {
           <ListItemButton component={Link} to="/hospital/billing/reports" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
             <ListItemText primary="Revenue Reports" />
           </ListItemButton>
+          <ListItemButton component={Link} to="/hospital/billing/settings" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+            <ListItemText primary="Billing Settings" />
+          </ListItemButton>
         </List>
       </Collapse>
     </>

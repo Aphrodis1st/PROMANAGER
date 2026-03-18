@@ -9,60 +9,99 @@ import { useBilling } from "../../../hooks/useBilling";
 
 export default function BillingSettings() {
   const navigate = useNavigate();
-  const { 
-    insuranceProviders, 
-    paymentMethods,
-    addInsuranceProvider, 
-    updateInsuranceProvider,
-    deleteInsuranceProvider,
-    updatePaymentMethod
-  } = useBilling();
-  
   const [showAddProvider, setShowAddProvider] = useState(false);
   const [showAddPayment, setShowAddPayment] = useState(false);
+  const [error, setError] = useState(null);
+  const [localLoading, setLocalLoading] = useState(false);
   const [newProvider, setNewProvider] = useState({ name: "", code: "", type: "Private" });
   const [newPayment, setNewPayment] = useState({ name: "", icon: "💳", requiresReference: false });
 
-  const handleAddProvider = () => {
+  // Safe context access
+  let insuranceProviders = [];
+  let paymentMethods = [];
+  let addInsuranceProvider = () => Promise.resolve();
+  let updateInsuranceProvider = () => Promise.resolve();
+  let deleteInsuranceProvider = () => Promise.resolve();
+  let updatePaymentMethod = () => Promise.resolve();
+
+  try {
+    const billingContext = useBilling();
+    insuranceProviders = billingContext?.insuranceProviders || [];
+    paymentMethods = billingContext?.paymentMethods || [];
+    addInsuranceProvider = billingContext?.addInsuranceProvider || (() => Promise.resolve());
+    updateInsuranceProvider = billingContext?.updateInsuranceProvider || (() => Promise.resolve());
+    deleteInsuranceProvider = billingContext?.deleteInsuranceProvider || (() => Promise.resolve());
+    updatePaymentMethod = billingContext?.updatePaymentMethod || (() => Promise.resolve());
+  } catch (err) {
+    console.error("Billing context error:", err);
+    setError("Failed to load billing settings");
+  }
+
+  const handleAddProvider = async () => {
     if (!newProvider.name || !newProvider.code) {
       alert("Please enter provider name and code");
       return;
     }
-    addInsuranceProvider(newProvider);
-    setShowAddProvider(false);
-    setNewProvider({ name: "", code: "", type: "Private" });
-    alert("Insurance provider added successfully!");
+    try {
+      await addInsuranceProvider(newProvider);
+      setShowAddProvider(false);
+      setNewProvider({ name: "", code: "", type: "Private" });
+      alert("Insurance provider added successfully!");
+    } catch (err) {
+      alert("Failed to add provider");
+      console.error("Add provider error:", err);
+    }
   };
 
-  const handleAddPayment = () => {
+  const handleAddPayment = async () => {
     if (!newPayment.name) {
       alert("Please enter payment method name");
       return;
     }
-    updatePaymentMethod({ ...newPayment, status: "Active" });
-    setShowAddPayment(false);
-    setNewPayment({ name: "", icon: "💳", requiresReference: false });
-    alert("Payment method added successfully!");
+    try {
+      await updatePaymentMethod({ ...newPayment, status: "Active" });
+      setShowAddPayment(false);
+      setNewPayment({ name: "", icon: "💳", requiresReference: false });
+      alert("Payment method added successfully!");
+    } catch (err) {
+      alert("Failed to add payment method");
+      console.error("Add payment error:", err);
+    }
   };
 
-  const handleToggleProvider = (id, currentStatus) => {
+  const handleToggleProvider = async (id, currentStatus) => {
     const newStatus = currentStatus === "Active" ? "Inactive" : "Active";
     if (window.confirm(`${newStatus === "Inactive" ? "Deactivate" : "Activate"} this insurance provider?`)) {
-      updateInsuranceProvider(id, { status: newStatus });
+      try {
+        await updateInsuranceProvider(id, { status: newStatus });
+      } catch (err) {
+        alert("Failed to update provider status");
+        console.error("Toggle provider error:", err);
+      }
     }
   };
 
-  const handleDeleteProvider = (id, name) => {
+  const handleDeleteProvider = async (id, name) => {
     if (window.confirm(`Permanently delete ${name}? This action cannot be undone.`)) {
-      deleteInsuranceProvider(id);
-      alert("Insurance provider deleted successfully!");
+      try {
+        await deleteInsuranceProvider(id);
+        alert("Insurance provider deleted successfully!");
+      } catch (err) {
+        alert("Failed to delete provider");
+        console.error("Delete provider error:", err);
+      }
     }
   };
 
-  const handleTogglePayment = (id, currentStatus) => {
+  const handleTogglePayment = async (id, currentStatus) => {
     const newStatus = currentStatus === "Active" ? "Inactive" : "Active";
     if (window.confirm(`${newStatus === "Inactive" ? "Deactivate" : "Activate"} this payment method?`)) {
-      updatePaymentMethod(id, { status: newStatus });
+      try {
+        await updatePaymentMethod(id, { status: newStatus });
+      } catch (err) {
+        alert("Failed to update payment method status");
+        console.error("Toggle payment error:", err);
+      }
     }
   };
 
@@ -160,6 +199,37 @@ export default function BillingSettings() {
       ),
     },
   ];
+
+  if (error) {
+    return (
+      <>
+        <PageHeader title="Billing Settings" />
+        <Card>
+          <div style={{ textAlign: "center", padding: "2rem", color: "#ef4444" }}>
+            <h3>Error Loading Settings</h3>
+            <p>{error}</p>
+            <Button onClick={() => window.location.reload()} style={{ marginTop: "1rem" }}>
+              Retry
+            </Button>
+          </div>
+        </Card>
+      </>
+    );
+  }
+
+  if (localLoading) {
+    return (
+      <>
+        <PageHeader title="Billing Settings" />
+        <Card>
+          <div style={{ textAlign: "center", padding: "2rem" }}>
+            <div style={{ fontSize: "1.2rem", marginBottom: "1rem" }}>Loading settings...</div>
+            <div style={{ color: "#6b7280" }}>Please wait while we fetch your billing settings.</div>
+          </div>
+        </Card>
+      </>
+    );
+  }
 
   return (
     <>

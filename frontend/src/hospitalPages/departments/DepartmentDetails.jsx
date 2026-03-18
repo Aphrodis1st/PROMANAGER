@@ -60,6 +60,9 @@ export default function DepartmentDetails() {
             <Button onClick={() => navigate(`/hospital/departments/statistics/${id}`)}>
               View Statistics
             </Button>
+            <Button onClick={() => navigate(`/hospital/reports/department`)}>
+              📊 Department Analytics
+            </Button>
             <Button onClick={() => navigate(`/hospital/departments/assign-head/${id}`)}>
               Assign Head
             </Button>

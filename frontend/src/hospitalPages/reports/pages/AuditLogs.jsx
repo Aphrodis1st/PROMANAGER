@@ -5,7 +5,6 @@ import Button from "../../../components/hospital/Button";
 import { useReports } from "../../../hooks/useReports";
 
 export default function AuditLogs() {
-  const { fetchAuditLogs } = useReports();
   const [filters, setFilters] = useState({
     startDate: new Date(Date.now() - 7*24*60*60*1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
@@ -15,8 +14,20 @@ export default function AuditLogs() {
   });
   const [comments, setComments] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const auditLogs = fetchAuditLogs(filters);
+  // Safe access to audit logs
+  let fetchAuditLogs = () => [];
+  let auditLogs = [];
+
+  try {
+    const reports = useReports();
+    fetchAuditLogs = reports?.fetchAuditLogs || (() => []);
+    auditLogs = fetchAuditLogs(filters);
+  } catch (err) {
+    console.error('Reports context error:', err);
+    setError('Failed to load audit logs data');
+  }
 
   const exportToCSV = () => {
     const csvData = [
@@ -97,6 +108,23 @@ export default function AuditLogs() {
     };
     return icons[action] || '📝';
   };
+
+  if (error) {
+    return (
+      <>
+        <PageHeader title="System Audit Logs" />
+        <Card>
+          <div style={{ textAlign: "center", padding: "2rem", color: "#ef4444" }}>
+            <h3>Error Loading Audit Logs</h3>
+            <p>{error}</p>
+            <Button onClick={() => window.location.reload()} style={{ marginTop: "1rem" }}>
+              Retry
+            </Button>
+          </div>
+        </Card>
+      </>
+    );
+  }
 
   return (
     <>

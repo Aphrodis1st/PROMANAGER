@@ -9,11 +9,41 @@ import { useBilling } from "../../../hooks/useBilling";
 
 export default function InvoiceList() {
   const navigate = useNavigate();
-  const { invoices, loading, fetchInvoices, deleteInvoice } = useBilling();
   const [filter, setFilter] = useState("All");
+  const [error, setError] = useState(null);
+  const [localLoading, setLocalLoading] = useState(true);
+
+  // Safe destructuring with defaults
+  let invoices = [];
+  let loading = false;
+  let fetchInvoices = () => Promise.resolve();
+  let deleteInvoice = () => Promise.resolve();
+
+  try {
+    const billingContext = useBilling();
+    invoices = billingContext?.invoices || [];
+    loading = billingContext?.loading || false;
+    fetchInvoices = billingContext?.fetchInvoices || (() => Promise.resolve());
+    deleteInvoice = billingContext?.deleteInvoice || (() => Promise.resolve());
+  } catch (err) {
+    console.error("Billing context error:", err);
+    setError("Failed to load billing context");
+  }
 
   useEffect(() => {
-    fetchInvoices();
+    const loadInvoices = async () => {
+      try {
+        setLocalLoading(true);
+        await fetchInvoices();
+        setError(null);
+      } catch (err) {
+        setError("Failed to load invoices");
+        console.error("Error loading invoices:", err);
+      } finally {
+        setLocalLoading(false);
+      }
+    };
+    loadInvoices();
   }, []);
 
   const handleDelete = async (id, invoiceNumber) => {
@@ -23,13 +53,14 @@ export default function InvoiceList() {
         alert("Invoice deleted successfully");
       } catch (error) {
         alert("Failed to delete invoice");
+        console.error("Delete error:", error);
       }
     }
   };
 
   const filteredInvoices = filter === "All" 
     ? invoices 
-    : invoices.filter(inv => inv.status === filter);
+    : invoices.filter(inv => inv?.status === filter);
 
   const getStatusBadge = (status) => {
     const variants = {
@@ -38,7 +69,7 @@ export default function InvoiceList() {
       Pending: "danger",
       Overdue: "danger"
     };
-    return <Badge variant={variants[status] || "secondary"}>{status}</Badge>;
+    return <Badge variant={variants[status] || "secondary"}>{status || "Unknown"}</Badge>;
   };
 
   const columns = [
@@ -122,9 +153,28 @@ export default function InvoiceList() {
     },
   ];
 
-  const totalAmount = filteredInvoices.reduce((sum, inv) => sum + inv.amount, 0);
-  const totalPaid = filteredInvoices.reduce((sum, inv) => sum + inv.paid, 0);
-  const totalBalance = filteredInvoices.reduce((sum, inv) => sum + inv.balance, 0);
+  const totalAmount = filteredInvoices.reduce((sum, inv) => sum + (inv?.amount || 0), 0);
+  const totalPaid = filteredInvoices.reduce((sum, inv) => sum + (inv?.paid || 0), 0);
+  const totalBalance = filteredInvoices.reduce((sum, inv) => sum + (inv?.balance || 0), 0);
+
+  const isLoading = loading || localLoading;
+
+  if (error) {
+    return (
+      <>
+        <PageHeader title="Invoices" />
+        <Card>
+          <div style={{ textAlign: "center", padding: "2rem", color: "#ef4444" }}>
+            <h3>Error Loading Invoices</h3>
+            <p>{error}</p>
+            <Button onClick={() => window.location.reload()} style={{ marginTop: "1rem" }}>
+              Retry
+            </Button>
+          </div>
+        </Card>
+      </>
+    );
+  }
 
   return (
     <>
@@ -180,8 +230,11 @@ export default function InvoiceList() {
           ))}
         </div>
 
-        {loading ? (
-          <div style={{ textAlign: "center", padding: "2rem" }}>Loading invoices...</div>
+        {isLoading ? (
+          <div style={{ textAlign: "center", padding: "2rem" }}>
+            <div style={{ fontSize: "1.2rem", marginBottom: "1rem" }}>Loading invoices...</div>
+            <div style={{ color: "#6b7280" }}>Please wait while we fetch your invoice data.</div>
+          </div>
         ) : filteredInvoices.length > 0 ? (
           <DataTable
             columns={columns}
@@ -192,8 +245,11 @@ export default function InvoiceList() {
           />
         ) : (
           <div style={{ textAlign: "center", padding: "2rem" }}>
-            <p>No invoices found.</p>
-            <Button onClick={() => navigate("/hospital/billing/create")} style={{ marginTop: "1rem" }}>
+            <h3 style={{ marginBottom: "1rem", color: "#6b7280" }}>No invoices found</h3>
+            <p style={{ marginBottom: "1.5rem", color: "#9ca3af" }}>
+              {filter === "All" ? "You haven't created any invoices yet." : `No ${filter.toLowerCase()} invoices found.`}
+            </p>
+            <Button onClick={() => navigate("/hospital/billing/create")}>
               Create First Invoice
             </Button>
           </div>

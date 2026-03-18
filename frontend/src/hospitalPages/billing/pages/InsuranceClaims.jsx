@@ -10,11 +10,11 @@ import { usePatients } from "../../../hooks/usePatients";
 
 export default function InsuranceClaims() {
   const navigate = useNavigate();
-  const { insuranceClaims, submitInsuranceClaim, updateClaimStatus } = useBilling();
-  const { patients, fetchPatients } = usePatients();
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState("All");
+  const [error, setError] = useState(null);
+  const [localLoading, setLocalLoading] = useState(true);
   const [formData, setFormData] = useState({
     patientId: "",
     patientName: "",
@@ -25,8 +25,44 @@ export default function InsuranceClaims() {
     notes: ""
   });
 
+  // Safe context access
+  let insuranceClaims = [];
+  let submitInsuranceClaim = () => Promise.resolve();
+  let updateClaimStatus = () => Promise.resolve();
+  let patients = [];
+  let fetchPatients = () => Promise.resolve();
+
+  try {
+    const billingContext = useBilling();
+    insuranceClaims = billingContext?.insuranceClaims || [];
+    submitInsuranceClaim = billingContext?.submitInsuranceClaim || (() => Promise.resolve());
+    updateClaimStatus = billingContext?.updateClaimStatus || (() => Promise.resolve());
+  } catch (err) {
+    console.error("Billing context error:", err);
+  }
+
+  try {
+    const patientsContext = usePatients();
+    patients = patientsContext?.patients || [];
+    fetchPatients = patientsContext?.fetchPatients || (() => Promise.resolve());
+  } catch (err) {
+    console.error("Patients context error:", err);
+  }
+
   useEffect(() => {
-    fetchPatients();
+    const loadPatients = async () => {
+      try {
+        setLocalLoading(true);
+        await fetchPatients();
+        setError(null);
+      } catch (err) {
+        setError("Failed to load patients");
+        console.error("Error loading patients:", err);
+      } finally {
+        setLocalLoading(false);
+      }
+    };
+    loadPatients();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -167,8 +203,39 @@ export default function InsuranceClaims() {
     },
   ];
 
-  const totalClaimed = filteredClaims.reduce((sum, c) => sum + c.amount, 0);
-  const totalApproved = filteredClaims.reduce((sum, c) => sum + c.approved, 0);
+  const totalClaimed = filteredClaims.reduce((sum, c) => sum + (c.amount || 0), 0);
+  const totalApproved = filteredClaims.reduce((sum, c) => sum + (c.approved || 0), 0);
+
+  if (error) {
+    return (
+      <>
+        <PageHeader title="Insurance Claims Management" />
+        <Card>
+          <div style={{ textAlign: "center", padding: "2rem", color: "#ef4444" }}>
+            <h3>Error Loading Claims</h3>
+            <p>{error}</p>
+            <Button onClick={() => window.location.reload()} style={{ marginTop: "1rem" }}>
+              Retry
+            </Button>
+          </div>
+        </Card>
+      </>
+    );
+  }
+
+  if (localLoading) {
+    return (
+      <>
+        <PageHeader title="Insurance Claims Management" />
+        <Card>
+          <div style={{ textAlign: "center", padding: "2rem" }}>
+            <div style={{ fontSize: "1.2rem", marginBottom: "1rem" }}>Loading claims...</div>
+            <div style={{ color: "#6b7280" }}>Please wait while we fetch your claims data.</div>
+          </div>
+        </Card>
+      </>
+    );
+  }
 
   return (
     <>

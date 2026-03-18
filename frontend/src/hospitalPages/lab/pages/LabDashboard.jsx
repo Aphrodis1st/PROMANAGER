@@ -88,6 +88,9 @@ export default function LabDashboard() {
             <Button onClick={() => navigate("/hospital/lab/create")}>Order Lab Tests</Button>
             <Button variant="secondary" onClick={() => navigate("/hospital/lab/orders")}>View All Orders</Button>
             <Button variant="secondary" onClick={() => navigate("/hospital/patients")}>Select Patient</Button>
+            <Button variant="secondary" onClick={() => navigate("/hospital/reports/lab")}>
+              📊 Lab Analytics
+            </Button>
           </div>
         </Card>
         

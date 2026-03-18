@@ -5,13 +5,31 @@ import Button from "../../../components/hospital/Button";
 import { useReports } from "../../../hooks/useReports";
 
 export default function LabReports() {
-  const { labStats } = useReports();
   const [dateRange, setDateRange] = useState({
     startDate: new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0]
   });
   const [comments, setComments] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [error, setError] = useState(null);
+
+  // Safe access to lab stats
+  let labStats = {
+    totalTests: 0,
+    completedToday: 0,
+    pending: 0,
+    critical: 0,
+    avgTurnaroundTime: 24,
+    testTypes: []
+  };
+
+  try {
+    const reports = useReports();
+    labStats = reports?.labStats || labStats;
+  } catch (err) {
+    console.error('Reports context error:', err);
+    setError('Failed to load lab reports data');
+  }
 
   const exportToCSV = () => {
     const csvData = [
@@ -53,9 +71,26 @@ export default function LabReports() {
     }
   };
 
-  const completionRate = ((labStats.totalTests - labStats.pending) / labStats.totalTests * 100).toFixed(1);
-  const criticalRate = (labStats.critical / labStats.totalTests * 100).toFixed(1);
+  const completionRate = labStats.totalTests > 0 ? ((labStats.totalTests - labStats.pending) / labStats.totalTests * 100).toFixed(1) : 0;
+  const criticalRate = labStats.totalTests > 0 ? (labStats.critical / labStats.totalTests * 100).toFixed(1) : 0;
   const dailyAverage = Math.floor(labStats.totalTests / 30);
+
+  if (error) {
+    return (
+      <>
+        <PageHeader title="Laboratory Reports" />
+        <Card>
+          <div style={{ textAlign: "center", padding: "2rem", color: "#ef4444" }}>
+            <h3>Error Loading Laboratory Reports</h3>
+            <p>{error}</p>
+            <Button onClick={() => window.location.reload()} style={{ marginTop: "1rem" }}>
+              Retry
+            </Button>
+          </div>
+        </Card>
+      </>
+    );
+  }
 
   const testCategories = [
     { name: "Hematology", tests: labStats.testTypes.filter(t => ['CBC', 'Blood Count', 'Hemoglobin'].includes(t.type)).reduce((sum, t) => sum + t.count, 0), color: "#3b82f6" },

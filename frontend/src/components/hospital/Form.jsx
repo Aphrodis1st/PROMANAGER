@@ -58,13 +58,14 @@ export const Input = ({ label, error, ...props }) => (
   </div>
 );
 
-export const Select = ({ label, options = [], ...props }) => (
+export const Select = ({ label, options = [], placeholder, ...props }) => (
   <div>
     {label && <label className="block mb-1 text-sm">{label}</label>}
     <select
       {...props}
       className="w-full px-4 py-2 border rounded-xl dark:bg-gray-800"
     >
+      {placeholder && <option value="">{placeholder}</option>}
       {options.map((opt) => (
         <option key={opt.value} value={opt.value}>
           {opt.label}

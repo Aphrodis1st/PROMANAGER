@@ -222,6 +222,15 @@ export default function PatientDetails() {
           
           <Button 
             variant="secondary"
+            onClick={() => navigate(`/hospital/reports/medical-records`)}
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "1rem" }}
+          >
+            <span style={{ fontSize: "1.25rem" }}>📈</span>
+            Medical Analytics
+          </Button>
+          
+          <Button 
+            variant="secondary"
             onClick={() => navigate(`/hospital/billing/create?patientId=${id}`)}
             style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "1rem" }}
           >

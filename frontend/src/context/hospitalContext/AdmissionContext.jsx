@@ -21,19 +21,54 @@ export const AdmissionProvider = ({ children }) => {
   };
 
   const fetchAdmissionById = async (id) => {
-    setAdmission(null);
+    setLoading(true);
+    try {
+      const res = await hospitalService.getAdmissionById(id);
+      setAdmission(res.data || res);
+    } catch (error) {
+      console.error("Failed to fetch admission:", error);
+      setAdmission(null);
+    }
+    setLoading(false);
   };
 
   const admitPatient = async (data) => {
-    await fetchAdmissions();
+    setLoading(true);
+    try {
+      await hospitalService.createAdmission(data);
+      await fetchAdmissions();
+    } catch (error) {
+      console.error("Failed to admit patient:", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const dischargePatient = async (id, data) => {
-    await fetchAdmissions();
+    setLoading(true);
+    try {
+      await hospitalService.dischargeAdmission(id, data);
+      await fetchAdmissions();
+    } catch (error) {
+      console.error("Failed to discharge patient:", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const transferPatient = async (id, data) => {
-    await fetchAdmissions();
+    setLoading(true);
+    try {
+      await hospitalService.updateAdmission(id, data);
+      await fetchAdmissions();
+    } catch (error) {
+      console.error("Failed to transfer patient:", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -5,7 +5,6 @@ import Button from "../../../components/hospital/Button";
 import { useReports } from "../../../hooks/useReports";
 
 export default function DepartmentReports() {
-  const { departmentStats } = useReports();
   const [dateRange, setDateRange] = useState({
     startDate: new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0]
@@ -13,6 +12,24 @@ export default function DepartmentReports() {
   const [comments, setComments] = useState("");
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState("asc");
+  const [error, setError] = useState(null);
+
+  // Safe access to department stats
+  let departmentStats = {
+    total: 0,
+    totalDoctors: 0,
+    totalPatients: 0,
+    avgOccupancy: 0,
+    departments: []
+  };
+
+  try {
+    const reports = useReports();
+    departmentStats = reports?.departmentStats || departmentStats;
+  } catch (err) {
+    console.error('Reports context error:', err);
+    setError('Failed to load department reports data');
+  }
 
   const exportToCSV = () => {
     const csvData = [
@@ -72,6 +89,23 @@ export default function DepartmentReports() {
       setSortOrder('asc');
     }
   };
+
+  if (error) {
+    return (
+      <>
+        <PageHeader title="Department Performance Reports" />
+        <Card>
+          <div style={{ textAlign: "center", padding: "2rem", color: "#ef4444" }}>
+            <h3>Error Loading Department Reports</h3>
+            <p>{error}</p>
+            <Button onClick={() => window.location.reload()} style={{ marginTop: "1rem" }}>
+              Retry
+            </Button>
+          </div>
+        </Card>
+      </>
+    );
+  }
 
   const topPerformers = {
     revenue: sortedDepartments.sort((a, b) => b.revenue - a.revenue).slice(0, 3),

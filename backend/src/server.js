@@ -52,6 +52,7 @@ import vitalSignsRoutes from './routes/hospital/vitalSigns.routes.js';
 import prescriptionRoutes from './routes/hospital/prescription.routes.js';
 import surgeryRecordRoutes from './routes/hospital/surgeryRecord.routes.js';
 import treatmentPlanRoutes from './routes/hospital/treatmentPlan.routes.js';
+import admissionRoutes from './routes/hospital/admission.routes.js';
 
 dotenv.config();
 
@@ -119,6 +120,7 @@ app.use('/api/v1/hospital/vital-signs', vitalSignsRoutes);
 app.use('/api/v1/hospital/prescriptions', prescriptionRoutes);
 app.use('/api/v1/hospital/surgery-records', surgeryRecordRoutes);
 app.use('/api/v1/hospital/treatment-plans', treatmentPlanRoutes);
+app.use('/api/v1/hospital/admissions', admissionRoutes);
 
 // Start server
 const PORT = process.env.PORT || 5000;

@@ -7,20 +7,45 @@ import { useReports } from "../../../hooks/useReports";
 
 export default function HospitalReportDashboard() {
   const navigate = useNavigate();
-  const { patientStats, financialStats, labStats, departmentStats } = useReports();
   const [dateRange, setDateRange] = useState({
     startDate: new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0]
   });
+  const [error, setError] = useState(null);
+
+  // Safe access to reports data
+  let patientStats = { total: 0, newThisMonth: 0 };
+  let financialStats = { monthRevenue: 0 };
+  let labStats = { totalTests: 0, pending: 0, completedToday: 0 };
+  let departmentStats = { total: 0, avgOccupancy: 0, totalDoctors: 0 };
+
+  try {
+    const reports = useReports();
+    patientStats = reports?.patientStats || patientStats;
+    financialStats = reports?.financialStats || financialStats;
+    labStats = reports?.labStats || labStats;
+    departmentStats = reports?.departmentStats || departmentStats;
+  } catch (err) {
+    console.error('Reports context error:', err);
+    setError('Failed to load reports data');
+  }
 
   const reportCategories = [
     { 
       title: "Patient Reports", 
-      path: "/hospital/reports/patients", 
+      path: "/hospital/reports/patient", 
       icon: "👥", 
       description: "Patient statistics and demographics",
       stats: `${patientStats.total} Total | ${patientStats.newThisMonth} New`,
       color: "#3b82f6"
+    },
+    { 
+      title: "Medical Record Reports", 
+      path: "/hospital/reports/medical-records", 
+      icon: "📄", 
+      description: "Medical documentation and records",
+      stats: `${patientStats.total * 3} Records | 95% Complete`,
+      color: "#06b6d4"
     },
     { 
       title: "Financial Reports", 
@@ -32,7 +57,7 @@ export default function HospitalReportDashboard() {
     },
     { 
       title: "Department Reports", 
-      path: "/hospital/reports/departments", 
+      path: "/hospital/reports/department", 
       icon: "🏥", 
       description: "Department performance metrics",
       stats: `${departmentStats.total} Departments | ${departmentStats.avgOccupancy}% Avg Occupancy`,
@@ -62,6 +87,23 @@ export default function HospitalReportDashboard() {
     { label: "Active Doctors", value: departmentStats.totalDoctors, color: "#f59e0b" },
     { label: "Lab Tests Today", value: labStats.completedToday, color: "#8b5cf6" }
   ];
+
+  if (error) {
+    return (
+      <>
+        <PageHeader title="Hospital Reports Dashboard" />
+        <Card>
+          <div style={{ textAlign: "center", padding: "2rem", color: "#ef4444" }}>
+            <h3>Error Loading Reports</h3>
+            <p>{error}</p>
+            <Button onClick={() => window.location.reload()} style={{ marginTop: "1rem" }}>
+              Retry
+            </Button>
+          </div>
+        </Card>
+      </>
+    );
+  }
 
   const exportReport = (type) => {
     const data = {

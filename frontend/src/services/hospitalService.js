@@ -362,6 +362,42 @@ export const specializationService = {
 
 
 // =======================================================
+// 🏥 ADMISSION SERVICE
+// =======================================================
+export const admissionService = {
+  getAll: async () => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/admissions`, getAuthHeader());
+    return res.data;
+  },
+
+  getById: async (id) => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/admissions/${id}`, getAuthHeader());
+    return res.data;
+  },
+
+  create: async (data) => {
+    const res = await axios.post(`${HOSPITAL_API_URL}/admissions`, data, getAuthHeader());
+    return res.data;
+  },
+
+  update: async (id, data) => {
+    const res = await axios.put(`${HOSPITAL_API_URL}/admissions/${id}`, data, getAuthHeader());
+    return res.data;
+  },
+
+  discharge: async (id, data) => {
+    const res = await axios.put(`${HOSPITAL_API_URL}/admissions/${id}/discharge`, data, getAuthHeader());
+    return res.data;
+  },
+
+  remove: async (id) => {
+    const res = await axios.delete(`${HOSPITAL_API_URL}/admissions/${id}`, getAuthHeader());
+    return res.data;
+  },
+};
+
+
+// =======================================================
 // 🩺 VITAL SIGNS SERVICE
 // =======================================================
 export const vitalSignsService = {
@@ -525,7 +561,31 @@ const hospitalService = {
     return res.data;
   },
 
-  getAdmissions: async () => [],
+  getAdmissions: async () => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/admissions`, getAuthHeader());
+    return res.data;
+  },
+  getAdmissionById: async (id) => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/admissions/${id}`, getAuthHeader());
+    return res.data;
+  },
+  createAdmission: async (data) => {
+    const res = await axios.post(`${HOSPITAL_API_URL}/admissions`, data, getAuthHeader());
+    return res.data;
+  },
+  updateAdmission: async (id, data) => {
+    const res = await axios.put(`${HOSPITAL_API_URL}/admissions/${id}`, data, getAuthHeader());
+    return res.data;
+  },
+  dischargeAdmission: async (id, data) => {
+    const res = await axios.put(`${HOSPITAL_API_URL}/admissions/${id}/discharge`, data, getAuthHeader());
+    return res.data;
+  },
+  deleteAdmission: async (id) => {
+    const res = await axios.delete(`${HOSPITAL_API_URL}/admissions/${id}`, getAuthHeader());
+    return res.data;
+  },
+
   getReports: async () => [],
 };
 

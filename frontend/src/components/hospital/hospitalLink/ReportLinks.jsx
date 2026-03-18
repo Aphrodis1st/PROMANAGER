@@ -25,6 +25,9 @@ export default function ReportLinks() {
           <ListItemButton component={Link} to="/hospital/reports/patient" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
             <ListItemText primary="Patient Reports" />
           </ListItemButton>
+          <ListItemButton component={Link} to="/hospital/reports/medical-records" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+            <ListItemText primary="Medical Record Reports" />
+          </ListItemButton>
           <ListItemButton component={Link} to="/hospital/reports/financial" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
             <ListItemText primary="Financial Reports" />
           </ListItemButton>

@@ -94,12 +94,14 @@ import PaymentProcessing from './hospitalPages/billing/pages/PaymentProcessing.j
 import InsuranceClaims from './hospitalPages/billing/pages/InsuranceClaims.jsx';
 import RevenueReports from './hospitalPages/billing/pages/RevenueReports.jsx';
 import BillingSettings from './hospitalPages/billing/pages/BillingSettings.jsx';
+import InvoiceView from './hospitalPages/billing/pages/InvoiceView.jsx';
 import HospitalReportDashboard from './hospitalPages/reports/pages/HospitalReportDashboard.jsx';
 import AuditLogs from './hospitalPages/reports/pages/AuditLogs.jsx';
 import DepartmentReports from './hospitalPages/reports/pages/DepartmentReports.jsx';
 import FinancialReports from './hospitalPages/reports/pages/FinancialReports.jsx';
 import LabReports from './hospitalPages/reports/pages/LabReports.jsx';
 import PatientReports from './hospitalPages/reports/pages/PatientReports.jsx';
+import MedicalRecordReports from './hospitalPages/reports/pages/MedicalRecordReports.jsx';
 import AdmissionList from './hospitalPages/admissions/pages/AdmissionList.jsx';
 import AdmitPatient from './hospitalPages/admissions/pages/AdmitPatient.jsx';
 import DischargePatient from './hospitalPages/admissions/pages/DischargePatient.jsx';
@@ -348,6 +350,7 @@ function AppContent() {
         <Route path='medical-records/treatment-plan-list' element={<TreatmentPlanList />} />
         <Route path='billing' element={<BillingDashboard />} />
         <Route path='billing/invoices' element={<InvoiceList />} />
+        <Route path='billing/invoice/:id' element={<InvoiceView />} />
         <Route path='billing/create' element={<CreateInvoice />} />
         <Route path='billing/payment' element={<PaymentProcessing />} />
         <Route path='billing/insurance' element={<InsuranceClaims />} />
@@ -359,6 +362,7 @@ function AppContent() {
         <Route path='reports/financial' element={<FinancialReports />} />
         <Route path='reports/lab' element={<LabReports />} />
         <Route path='reports/patient' element={<PatientReports />} />
+        <Route path='reports/medical-records' element={<MedicalRecordReports />} />
       </Route>
 
       {/* Pharmacy Services Routes */}

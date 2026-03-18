@@ -5,12 +5,31 @@ import Button from "../../../components/hospital/Button";
 import { useReports } from "../../../hooks/useReports";
 
 export default function FinancialReports() {
-  const { financialStats } = useReports();
   const [dateRange, setDateRange] = useState({
     startDate: new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0]
   });
   const [comments, setComments] = useState("");
+  const [error, setError] = useState(null);
+
+  // Safe access to financial stats
+  let financialStats = {
+    todayRevenue: 0,
+    monthRevenue: 0,
+    yearRevenue: 0,
+    outstanding: 0,
+    totalInvoices: 0,
+    paidInvoices: 0,
+    paymentMethods: { cash: 0, card: 0, upi: 0, insurance: 0 }
+  };
+
+  try {
+    const reports = useReports();
+    financialStats = reports?.financialStats || financialStats;
+  } catch (err) {
+    console.error('Reports context error:', err);
+    setError('Failed to load financial reports data');
+  }
 
   const exportToCSV = () => {
     const csvData = [
@@ -54,8 +73,25 @@ export default function FinancialReports() {
     }
   };
 
-  const collectionRate = ((financialStats.paidInvoices / financialStats.totalInvoices) * 100).toFixed(1);
-  const outstandingRate = ((financialStats.outstanding / financialStats.yearRevenue) * 100).toFixed(1);
+  const collectionRate = financialStats.totalInvoices > 0 ? ((financialStats.paidInvoices / financialStats.totalInvoices) * 100).toFixed(1) : 0;
+  const outstandingRate = financialStats.yearRevenue > 0 ? ((financialStats.outstanding / financialStats.yearRevenue) * 100).toFixed(1) : 0;
+
+  if (error) {
+    return (
+      <>
+        <PageHeader title="Financial Reports" />
+        <Card>
+          <div style={{ textAlign: "center", padding: "2rem", color: "#ef4444" }}>
+            <h3>Error Loading Financial Reports</h3>
+            <p>{error}</p>
+            <Button onClick={() => window.location.reload()} style={{ marginTop: "1rem" }}>
+              Retry
+            </Button>
+          </div>
+        </Card>
+      </>
+    );
+  }
 
   return (
     <>

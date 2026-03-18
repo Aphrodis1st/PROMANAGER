@@ -5,12 +5,30 @@ import Button from "../../../components/hospital/Button";
 import { useReports } from "../../../hooks/useReports";
 
 export default function PatientReports() {
-  const { patientStats } = useReports();
   const [dateRange, setDateRange] = useState({
     startDate: new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0]
   });
   const [comments, setComments] = useState("");
+  const [error, setError] = useState(null);
+
+  // Safe access to patient stats
+  let patientStats = {
+    total: 0,
+    newThisMonth: 0,
+    active: 0,
+    admitted: 0,
+    ageDistribution: [],
+    gender: { male: 0, female: 0, other: 0 }
+  };
+
+  try {
+    const reports = useReports();
+    patientStats = reports?.patientStats || patientStats;
+  } catch (err) {
+    console.error('Reports context error:', err);
+    setError('Failed to load patient reports data');
+  }
 
   const exportToCSV = () => {
     const csvData = [
@@ -51,6 +69,23 @@ export default function PatientReports() {
       alert('Report link copied to clipboard!');
     }
   };
+
+  if (error) {
+    return (
+      <>
+        <PageHeader title="Patient Reports" />
+        <Card>
+          <div style={{ textAlign: "center", padding: "2rem", color: "#ef4444" }}>
+            <h3>Error Loading Patient Reports</h3>
+            <p>{error}</p>
+            <Button onClick={() => window.location.reload()} style={{ marginTop: "1rem" }}>
+              Retry
+            </Button>
+          </div>
+        </Card>
+      </>
+    );
+  }
 
   return (
     <>

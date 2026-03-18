@@ -214,6 +214,9 @@ export default function BillingDashboard() {
               <Button variant="secondary" onClick={() => navigate("/hospital/billing/reports")}>
                 Revenue Reports
               </Button>
+              <Button variant="secondary" onClick={() => navigate("/hospital/reports/financial")}>
+                📊 Financial Analytics
+              </Button>
               <Button variant="secondary" onClick={() => navigate("/hospital/billing/settings")}>
                 Settings
               </Button>
