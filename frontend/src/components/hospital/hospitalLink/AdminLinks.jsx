@@ -12,85 +12,49 @@ import {
   Plus,
   Lock
 } from 'lucide-react';
-import { useHospitalAuth } from '../../../context/HospitalAuthContext';
+import { useRBAC, ProtectedComponent, PERMISSIONS } from '../RBAC';
 
 const AdminLinks = () => {
   const location = useLocation();
-  const { admin } = useHospitalAuth();
-
-  // Only show admin links if user is hospital admin (accept both roles)
-  if (!admin || (admin.role !== 'hospital_admin' && admin.role !== 'admin')) {
-    return null;
-  }
+  const { hasPermission } = useRBAC();
 
   const adminLinks = [
-    {
-      title: 'Admin Dashboard',
-      path: '/hospital/admin/dashboard',
-      icon: BarChart3,
-      description: 'Hospital administration overview'
-    },
-    {
-      title: 'Admin Profile',
-      path: '/hospital/admin/profile',
-      icon: User,
-      description: 'Manage your admin profile'
-    },
-    {
-      title: 'Hospital Settings',
-      path: '/hospital/admin/settings',
-      icon: Settings,
-      description: 'Configure hospital settings'
-    },
-    {
-      title: 'Analytics',
-      path: '/hospital/admin/analytics',
-      icon: BarChart3,
-      description: 'View detailed analytics'
-    },
     {
       title: 'User Management',
       path: '/hospital/admin/users',
       icon: Users,
-      description: 'Manage hospital users'
+      description: 'Manage hospital users',
+      permission: PERMISSIONS.MANAGE_USERS
     },
     {
       title: 'Department Management',
       path: '/hospital/admin/departments',
       icon: Building2,
-      description: 'Manage departments'
+      description: 'Manage departments',
+      permission: PERMISSIONS.MANAGE_DEPARTMENTS
     },
     {
-      title: 'Staff Management',
-      path: '/hospital/admin/staff',
-      icon: UserCheck,
-      description: 'Manage hospital staff'
+      title: 'System Settings',
+      path: '/hospital/admin/settings',
+      icon: Settings,
+      description: 'Configure system settings',
+      permission: PERMISSIONS.SYSTEM_SETTINGS
     },
     {
-      title: 'Patient Management',
-      path: '/hospital/admin/patients',
-      icon: Users,
-      description: 'Advanced patient management'
-    },
-    {
-      title: 'Appointment System',
-      path: '/hospital/admin/appointments',
-      icon: Calendar,
-      description: 'Appointment system configuration'
-    },
-    {
-      title: 'Sub Admin Management',
-      path: '/hospital/admin/sub-admin',
-      icon: Plus,
-      description: 'Manage sub-administrators'
-    },
-    {
-      title: 'Access Control',
-      path: '/hospital/admin/access-control',
+      title: 'Audit Logs',
+      path: '/hospital/admin/audit',
       icon: Lock,
-      description: 'Manage user permissions'
+      description: 'View system audit logs',
+      permission: PERMISSIONS.VIEW_AUDIT_LOGS
     }
   ];
+
+  // Filter links based on permissions
+  const visibleLinks = adminLinks.filter(link => hasPermission(link.permission));
+
+  if (visibleLinks.length === 0) {
+    return null;
+  }
 
   return (
     <li>
@@ -101,7 +65,7 @@ const AdminLinks = () => {
         </div>
       </div>
       <ul className="space-y-1 ml-2">
-        {adminLinks.map((link) => {
+        {visibleLinks.map((link) => {
           const Icon = link.icon;
           const isActive = location.pathname === link.path;
           

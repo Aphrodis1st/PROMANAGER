@@ -6,16 +6,43 @@ const AuthContext = createContext(null);
 const tabTokens = {};
 
 export function AuthProvider({ children, tabId = "default" }) {
-  const [user, setUser] = useState(null);
-  const [token, setTokenState] = useState(tabTokens[tabId]?.token || null);
+  const [user, setUser] = useState(() => {
+    // Try to restore user from localStorage on initialization
+    const storedUser = localStorage.getItem('user');
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+  const [token, setTokenState] = useState(() => {
+    // Try to restore token from localStorage or tabTokens
+    return localStorage.getItem('token') || tabTokens[tabId]?.token || null;
+  });
   const [refreshToken, setRefreshToken] = useState(tabTokens[tabId]?.refreshToken || null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    // If we have both token and user from localStorage, we're not loading
+    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    return !(storedToken && storedUser);
+  });
 
   // ---- Set Token Helper ----
   const setToken = (t, r = null) => {
     tabTokens[tabId] = { token: t, refreshToken: r };
     setTokenState(t);
     setRefreshToken(r);
+    if (t) {
+      localStorage.setItem('token', t);
+    } else {
+      localStorage.removeItem('token');
+    }
+  };
+
+  // ---- Set User Helper (for external login like hospital) ----
+  const setUserData = (userData) => {
+    setUser(userData);
+    if (userData) {
+      localStorage.setItem('user', JSON.stringify(userData));
+    } else {
+      localStorage.removeItem('user');
+    }
   };
 
   // ---- LOGIN ----
@@ -32,7 +59,7 @@ export function AuthProvider({ children, tabId = "default" }) {
     const normalizedUser = { ...u, role: (u.role || "PATIENT").toUpperCase() };
 
     setToken(t, r);
-    setUser(normalizedUser);
+    setUserData(normalizedUser);
 
     // Set provider online
     if (["DOCTOR", "PHARMACY", "CALLCENTER"].includes(normalizedUser.role)) {
@@ -44,6 +71,13 @@ export function AuthProvider({ children, tabId = "default" }) {
     }
 
     return normalizedUser;
+  };
+
+  // ---- HOSPITAL LOGIN (external) ----
+  const hospitalLogin = (token, userData) => {
+    setToken(token);
+    setUserData(userData);
+    return userData;
   };
 
   // ---- REGISTER ----
@@ -63,7 +97,7 @@ export function AuthProvider({ children, tabId = "default" }) {
     const normalizedUser = { ...u, role: (u.role || "PATIENT").toUpperCase() };
 
     setToken(t, r);
-    setUser(normalizedUser);
+    setUserData(normalizedUser);
 
     // Set provider online if applicable
     if (["DOCTOR", "PHARMACY", "CALLCENTER"].includes(normalizedUser.role)) {
@@ -88,7 +122,8 @@ export function AuthProvider({ children, tabId = "default" }) {
     }
 
     setToken(null);
-    setUser(null);
+    setUserData(null);
+    localStorage.removeItem('hospital');
   };
 
   // ---- REFRESH ACCESS TOKEN ----
@@ -148,56 +183,46 @@ export function AuthProvider({ children, tabId = "default" }) {
 
   // ---- RESTORE SESSION (/me) ----
   useEffect(() => {
-    if (!token) {
+    // If we have both token and user from localStorage, we're good to go
+    if (token && user) {
       setLoading(false);
       return;
     }
-
-    const restoreSession = async () => {
-      try {
-        const resp = await fetchWithAuth("http://localhost:5000/api/v1/auth/me");
-        if (!resp.ok) throw new Error("Session restore failed");
-
-        const userData = await resp.json();
-        const normalizedUser = { ...userData, role: (userData.role || "PATIENT").toUpperCase() };
-        setUser(normalizedUser);
-
-        if (["DOCTOR", "PHARMACY", "CALLCENTER"].includes(normalizedUser.role)) {
-          try {
-            await fetchWithAuth("http://localhost:5000/api/v1/status/online", { method: "POST" });
-          } catch (err) {
-            console.error("Failed to set user online:", err);
-          }
-        }
-      } catch (err) {
-        console.error("Auth restore failed:", err);
-        await logout();
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    restoreSession();
-  }, [token]);
-
-  // ---- Auto offline on tab close ----
-  useEffect(() => {
-    const handleBeforeUnload = async () => {
-      if (user && ["DOCTOR", "PHARMACY", "CALLCENTER"].includes(user.role)) {
+    
+    // If we have a token but no user, try to restore session
+    if (token && !user) {
+      const restoreSession = async () => {
         try {
-          await fetchWithAuth("http://localhost:5000/api/v1/status/offline", { method: "POST" });
-        } catch (err) {
-          console.error("Failed to set user offline on tab close:", err);
-        }
-      }
-    };
+          const resp = await fetchWithAuth("http://localhost:5000/api/v1/auth/me");
+          if (!resp.ok) throw new Error("Session restore failed");
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [user, token]);
+          const userData = await resp.json();
+          const normalizedUser = { ...userData, role: (userData.role || "PATIENT").toUpperCase() };
+          setUserData(normalizedUser);
+
+          if (["DOCTOR", "PHARMACY", "CALLCENTER"].includes(normalizedUser.role)) {
+            try {
+              await fetchWithAuth("http://localhost:5000/api/v1/status/online", { method: "POST" });
+            } catch (err) {
+              console.error("Failed to set user online:", err);
+            }
+          }
+        } catch (err) {
+          console.error("Auth restore failed:", err);
+          await logout();
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      restoreSession();
+    } else {
+      setLoading(false);
+    }
+  }, [token, user]);
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, fetchWithAuth }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, fetchWithAuth, hospitalLogin }}>
       {children}
     </AuthContext.Provider>
   );

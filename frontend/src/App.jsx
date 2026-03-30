@@ -40,7 +40,7 @@ import StockProtectedRoute from './components/stock/StockProtectedRoute.jsx';
 import HospitalProtectedRoute from './components/hospital/HospitalProtectedRoute.jsx';
 
 // Hospital Pages
-import HospitalLayout from './pages/HospitalLayout.jsx';
+import HospitalRoutes from './hospitalPages/HospitalRoutes.jsx';
 import DashboardOverview from './hospitalPages/dashboard/DashboardOverview.jsx';
 import PatientList from './hospitalPages/patients/pages/PatientList.jsx';
 import PatientCreate from './hospitalPages/patients/pages/PatientCreate.jsx';
@@ -149,6 +149,8 @@ import HospitalLogin from './pages/auth/HospitalLogin.jsx';
 import PharmacyLogin from './pages/auth/PharmacyLogin.jsx';
 import StockRegister from './pages/auth/StockRegister.jsx';
 import SuperAdminLogin from './pages/auth/SuperAdminLogin.jsx';
+import Unauthorized from './pages/Unauthorized.jsx';
+import AuthDebug from './pages/AuthDebug.jsx';
 
 // Super Admin Pages
 import SuperAdminDashboard from './pages/superAdmin/SuperAdminDashboard.jsx';
@@ -173,6 +175,8 @@ function AppContent() {
       <Route path='/pharmacy/login' element={<PharmacyLogin />} />
       <Route path='/super-admin/login' element={<SuperAdminLogin />} />
       <Route path='/stock/register' element={<StockRegister />} />
+      <Route path='/unauthorized' element={<Unauthorized />} />
+      <Route path='/debug' element={<AuthDebug />} />
 
       {/* Super Admin Routes */}
       <Route path='/super-admin/dashboard' element={<SuperAdminDashboard />} />
@@ -207,104 +211,8 @@ function AppContent() {
         <Route path='production-cycle' element={<StockProtectedRoute roles={["ADMIN","PRODUCTIONMANAGER","MANAGER"]} departments={["Production"]}><ProductionCyclePage /></StockProtectedRoute>} />
       </Route>
 
-      {/* Hospital Routes — protected, all inside HospitalLayout with sidebar */}
-      <Route path='/hospital/*' element={
-        <HospitalProtectedRoute>
-          <HospitalLayout />
-        </HospitalProtectedRoute>
-      }>
-        <Route path='dashboard' element={<DashboardOverview />} />
-        <Route path='patients' element={<PatientList />} />
-        <Route path='patients/create' element={<PatientCreate />} />
-        <Route path='patients/:id' element={<PatientDetails />} />
-        <Route path='patients/:id/edit' element={<PatientEdit />} />
-        <Route path='patients/:id/history' element={<PatientHistory />} />
-        <Route path='patients/:id/vital-signs' element={<VitalSigns />} />
-        <Route path='patients/:id/documents' element={<PatientDocuments />} />
-        <Route path='patients/:id/insurance' element={<PatientInsurance />} />
-        <Route path='patients/:id/emergency-contacts' element={<PatientEmergencyContacts />} />
-        <Route path='appointments' element={<AppointmentList />} />
-        <Route path='appointments/:id' element={<AppointmentDetails />} />
-        <Route path='appointments/create' element={<AppointmentCreate />} />
-        <Route path='appointments/calendar' element={<AppointmentCalendar />} />
-        <Route path='doctors' element={<DoctorListNew />} />
-        <Route path='doctors/create' element={<CreateDoctor />} />
-        <Route path='doctors/:id' element={<DoctorProfileNew />} />
-        <Route path='doctors/:id/edit' element={<EditDoctor />} />
-        <Route path='doctors/:id/schedule' element={<DoctorScheduleNew />} />
-        <Route path='doctors/schedule' element={<DoctorScheduleNew />} />
-        <Route path='doctors/specialization' element={<DoctorSpecialization />} />
-        <Route path='departments' element={<DepartmentList />} />
-        <Route path='departments/create' element={<DepartmentCreate />} />
-        <Route path='departments/:id' element={<DepartmentDetails />} />
-        <Route path='departments/assign-head/:id' element={<AssignHeadOfDepartment />} />
-        <Route path='departments/statistics/:id' element={<DepartmentStatistics />} />
-        <Route path='admissions' element={<AdmissionList />} />
-        <Route path='admissions/admit' element={<AdmitPatient />} />
-        <Route path='admissions/:id' element={<AdmissionDetails />} />
-        <Route path='admissions/:id/discharge' element={<DischargePatient />} />
-        <Route path='admissions/:id/transfer' element={<TransferPatient />} />
-        <Route path='wards' element={<WardList />} />
-        <Route path='wards/allocation' element={<BedAllocation />} />
-        <Route path='wards/availability' element={<BedAvailability />} />
-        <Route path='wards/:id' element={<WardDetails />} />
-        <Route path='wards/icu' element={<ICUManagement />} />
-        <Route path='lab' element={<LabDashboard />} />
-        <Route path='lab/tests' element={<LabTestList />} />
-        <Route path='lab/create' element={<CreateLabTest />} />
-        <Route path='lab/results/entry' element={<LabResultsEntry />} />
-        <Route path='lab/results/:id' element={<LabResultsView />} />
-        <Route path='lab/pending' element={<PendingTests />} />
-        <Route path='lab/orders' element={<LabOrderList />} />
-        <Route path='lab/orders/create' element={<LabOrderCreateTest />} />
-        <Route path='lab/orders/:orderId/results' element={<LabOrderResultsView />} />
-        <Route path='lab/orders/:orderId/results/entry' element={<LabResultEntryNew />} />
-        <Route path='medical-records' element={<MedicalRecordList />} />
-        <Route path='medical-records/create' element={<CreateMedicalRecord />} />
-        <Route path='medical-records/view/:id' element={<ViewMedicalRecord />} />
-        <Route path='medical-records/:id' element={<ViewMedicalRecord />} />
-        <Route path='medical-records/vitals/:id' element={<VitalSigns />} />
-        <Route path='medical-records/vitals-trends/:id' element={<VitalSignsTrends />} />
-        <Route path='medical-records/diagnosis/:id' element={<DiagnosisEntry />} />
-        <Route path='medical-records/prescription/:id' element={<PrescriptionEntry />} />
-        <Route path='medical-records/prescription-entry/:id' element={<PrescriptionEntry />} />
-        <Route path='medical-records/prescriptions/:id' element={<PrescriptionListMedical />} />
-        <Route path='medical-records/prescriptions/all' element={<PrescriptionListMedical />} />
-        <Route path='medical-records/surgery-record' element={<SurgeryRecord />} />
-        <Route path='medical-records/surgery-list' element={<SurgeryList />} />
-        <Route path='medical-records/surgery/:patientId' element={<SurgeryRecord />} />
-        <Route path='medical-records/treatment/:id' element={<TreatmentPlan />} />
-        <Route path='medical-records/treatment-plan' element={<TreatmentPlan />} />
-        <Route path='medical-records/treatment-plan-list' element={<TreatmentPlanList />} />
-        <Route path='billing' element={<BillingDashboard />} />
-        <Route path='billing/invoices' element={<InvoiceList />} />
-        <Route path='billing/invoice/:id' element={<InvoiceView />} />
-        <Route path='billing/create' element={<CreateInvoice />} />
-        <Route path='billing/payment' element={<PaymentProcessing />} />
-        <Route path='billing/insurance' element={<InsuranceClaims />} />
-        <Route path='billing/reports' element={<RevenueReports />} />
-        <Route path='billing/settings' element={<BillingSettings />} />
-        <Route path='reports' element={<HospitalReportDashboard />} />
-        <Route path='reports/audit' element={<AuditLogs />} />
-        <Route path='reports/department' element={<DepartmentReports />} />
-        <Route path='reports/financial' element={<FinancialReports />} />
-        <Route path='reports/lab' element={<LabReports />} />
-        <Route path='reports/patient' element={<PatientReports />} />
-        <Route path='reports/medical-records' element={<MedicalRecordReports />} />
-        
-        {/* Hospital Admin Routes - Protected */}
-        <Route path='admin/dashboard' element={<AdminProtectedRoute><HospitalAdminDashboard /></AdminProtectedRoute>} />
-        <Route path='admin/profile' element={<AdminProtectedRoute><AdminProfile /></AdminProtectedRoute>} />
-        <Route path='admin/settings' element={<AdminProtectedRoute><AdminSettings /></AdminProtectedRoute>} />
-        <Route path='admin/analytics' element={<AdminProtectedRoute><AdminAnalytics /></AdminProtectedRoute>} />
-        <Route path='admin/users' element={<AdminProtectedRoute><UserManagement /></AdminProtectedRoute>} />
-        <Route path='admin/departments' element={<AdminProtectedRoute><DepartmentManagement /></AdminProtectedRoute>} />
-        <Route path='admin/staff' element={<AdminProtectedRoute><StaffManagement /></AdminProtectedRoute>} />
-        <Route path='admin/patients' element={<AdminProtectedRoute><PatientManagement /></AdminProtectedRoute>} />
-        <Route path='admin/appointments' element={<AdminProtectedRoute><AppointmentSystem /></AdminProtectedRoute>} />
-        <Route path='admin/sub-admin' element={<AdminProtectedRoute><SubAdminManagement /></AdminProtectedRoute>} />
-        <Route path='admin/access-control' element={<AdminProtectedRoute><AccessControl /></AdminProtectedRoute>} />
-      </Route>
+      {/* Hospital Routes — RBAC Protected with comprehensive role and department access control */}
+      <Route path='/hospital/*' element={<HospitalRoutes />} />
 
       {/* Pharmacy Routes */}
       <Route path='/pharmacy/*' element={<PharmacyLayout />}>

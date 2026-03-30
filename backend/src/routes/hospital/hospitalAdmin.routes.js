@@ -23,7 +23,8 @@ import {
   getProfessionalRoles,
   getStaffByDepartment,
   bulkUpdateUserStatus,
-  bulkDeleteUsers
+  bulkDeleteUsers,
+  setPartialPassword
 } from '../../controllers/hospital/hospitalAdmin.controller.js';
 import { authenticateToken } from '../../middleware/auth.middleware.js';
 import { checkHospitalAdmin } from '../../middleware/hospitalAuth.middleware.js';
@@ -83,6 +84,7 @@ router.put('/users/:userId', authenticateToken, checkHospitalAdmin, updateUser);
 router.delete('/users/:userId', authenticateToken, checkHospitalAdmin, deleteUser);
 router.post('/users/:userId/role', authenticateToken, checkHospitalAdmin, assignRole);
 router.post('/users/:userId/reset-password', authenticateToken, checkHospitalAdmin, resetUserPassword);
+router.post('/users/:userId/partial-password', authenticateToken, checkHospitalAdmin, setPartialPassword);
 router.post('/users/:userId/toggle-access', authenticateToken, checkHospitalAdmin, toggleUserAccess);
 
 // Department Management

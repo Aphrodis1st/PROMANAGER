@@ -9,9 +9,11 @@ import { Label } from '../../../components/hospital/Label';
 import { Plus, Edit, Trash2, UserCheck, Search, Lock, Eye, EyeOff, Copy, Check, AlertCircle, Shield, Users, Filter, Download, Upload, MoreVertical, UserPlus, UserMinus, RefreshCw, Calendar, Activity, Settings, Key, UserX, CheckSquare, Square, BarChart3, TrendingUp, Clock, MapPin, Phone, Mail, Building, Award, AlertTriangle, FileText, History } from 'lucide-react';
 import { hospitalAdminService } from '../../../services/hospitalAdmin.service';
 import { HOSPITAL_DEPARTMENTS } from '../../../constants/hospitalDepartments';
+import { useRBAC, ProtectedComponent, PERMISSIONS } from '../../../components/hospital/RBAC';
 
 const UserManagement = () => {
   const navigate = useNavigate();
+  const { hasPermission } = useRBAC();
   const [users, setUsers] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
@@ -275,12 +277,28 @@ const UserManagement = () => {
 
   // Generate partial password (first 4 characters visible)
   const generatePartialPassword = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+    const numbers = '0123456789';
+    const symbols = '!@#$%^&*';
+    
     let password = '';
-    for (let i = 0; i < 8; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    
+    // Ensure at least one character from each category
+    password += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
+    password += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
+    password += numbers.charAt(Math.floor(Math.random() * numbers.length));
+    password += symbols.charAt(Math.floor(Math.random() * symbols.length));
+    
+    // Fill remaining positions with random characters
+    const allChars = uppercase + lowercase + numbers + symbols;
+    for (let i = 4; i < 8; i++) {
+      password += allChars.charAt(Math.floor(Math.random() * allChars.length));
     }
-    setPartialPassword(password);
+    
+    // Shuffle the password to avoid predictable patterns
+    password = password.split('').sort(() => Math.random() - 0.5).join('');
+    
     return password;
   };
 
@@ -446,9 +464,10 @@ const UserManagement = () => {
       setLoading(true);
       await hospitalAdminService.createUser({
         ...newUser,
-        password: generatedPassword
+        password: generatedPassword,
+        isPartialPassword: newUser.passwordType === 'partial'
       });
-      setSuccessMessage('User created successfully');
+      setSuccessMessage(`User created successfully${newUser.passwordType === 'partial' ? ' with partial password' : ''}`);
       setIsCreateDialogOpen(false);
       // Reset form
       setNewUser({
@@ -502,7 +521,8 @@ const UserManagement = () => {
         permissions: {},
         userType: 'staff',
         isActive: true,
-        requirePasswordChange: true
+        requirePasswordChange: true,
+        passwordType: 'full'
       });
       setGeneratedPassword('');
       setPasswordCopied(false);
@@ -678,14 +698,18 @@ const UserManagement = () => {
           <p className="text-gray-600 mt-1">Manage users, roles, and permissions</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={exportUsers}>
-            <Download className="h-4 w-4 mr-2" />
-            Export Users
-          </Button>
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add New User
-          </Button>
+          <ProtectedComponent permissions={PERMISSIONS.EXPORT_REPORTS}>
+            <Button variant="outline" onClick={exportUsers}>
+              <Download className="h-4 w-4 mr-2" />
+              Export Users
+            </Button>
+          </ProtectedComponent>
+          <ProtectedComponent permissions={PERMISSIONS.MANAGE_USERS}>
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add New User
+            </Button>
+          </ProtectedComponent>
         </div>
       </div>
 
@@ -693,7 +717,7 @@ const UserManagement = () => {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create New {newUser.userType === 'staff' ? 'Staff Member' : 'User'}</DialogTitle>
+            <DialogTitle>Create New {newUser.userType === 'staff' ? 'Staff Member' : newUser.userType === 'admin' ? 'Hospital Administrator' : 'User'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreateUser} className="space-y-6">
             {/* Basic Information */}
@@ -819,25 +843,52 @@ const UserManagement = () => {
                   <Label htmlFor="userType">User Type *</Label>
                   <select
                     value={newUser.userType}
-                    onChange={(e) => setNewUser({...newUser, userType: e.target.value, role: ''})}
+                    onChange={(e) => {
+                      const newUserType = e.target.value;
+                      setNewUser({
+                        ...newUser, 
+                        userType: newUserType, 
+                        role: newUserType === 'admin' ? 'admin' : '',
+                        passwordType: newUserType === 'admin' ? 'full' : 'full' // Always full password by default
+                      });
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   >
                     <option value="staff">Staff Member</option>
                     <option value="user">General User</option>
+                    <option value="admin">Hospital Administrator</option>
                   </select>
                 </div>
                 <div>
                   <Label htmlFor="role">Role *</Label>
                   <select
                     value={newUser.role}
-                    onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+                    onChange={(e) => {
+                      const newRole = e.target.value;
+                      setNewUser({
+                        ...newUser, 
+                        role: newRole,
+                        passwordType: newRole === 'admin' ? 'full' : newUser.passwordType // Force full password for admin
+                      });
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   >
                     <option value="">Select role</option>
                     {roles
-                      .filter(role => newUser.userType === 'staff' ? ['doctor', 'nurse', 'lab_technician', 'pharmacist', 'receptionist', 'admin'].includes(role.value) : ['patient'].includes(role.value))
+                      .filter(role => {
+                        if (newUser.userType === 'staff') {
+                          // Staff members - exclude admin role
+                          return ['doctor', 'nurse', 'lab_technician', 'pharmacist', 'receptionist'].includes(role.value);
+                        } else if (newUser.userType === 'admin') {
+                          // Hospital administrators
+                          return ['admin'].includes(role.value);
+                        } else {
+                          // General users - only patients
+                          return ['patient'].includes(role.value);
+                        }
+                      })
                       .map(role => (
                         <option key={role.value} value={role.value}>
                           {role.icon} {role.label}
@@ -1195,53 +1246,153 @@ const UserManagement = () => {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
               <Label className="flex items-center gap-2">
                 <Lock className="h-4 w-4" />
-                Initial Password
+                Password Setup Options
               </Label>
-              <div className="flex gap-2">
-                <div className="flex-1 relative">
-                  <Input
-                    type={showPassword ? 'text' : 'password'}
-                    value={generatedPassword}
-                    readOnly
-                    placeholder="Generate password"
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-2.5"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                <Button type="button" onClick={generatePassword} variant="outline">
-                  Generate
-                </Button>
+              
+              {/* Password Type Selection - Only show for non-admin roles */}
+              <div className="space-y-3">
+                {newUser.userType !== 'admin' && newUser.role !== 'admin' ? (
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="passwordType"
+                        value="full"
+                        checked={newUser.passwordType !== 'partial'}
+                        onChange={() => setNewUser({...newUser, passwordType: 'full'})}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm font-medium">Full Password</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="passwordType"
+                        value="partial"
+                        checked={newUser.passwordType === 'partial'}
+                        onChange={() => setNewUser({...newUser, passwordType: 'partial'})}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm font-medium">Partial Password (User completes on first login)</span>
+                    </label>
+                  </div>
+                ) : (
+                  <div className="bg-red-50 border border-red-200 rounded p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertTriangle className="h-4 w-4 text-red-600" />
+                      <span className="text-sm font-medium text-red-800">Administrator Security Policy</span>
+                    </div>
+                    <p className="text-sm text-red-700">
+                      Hospital Administrator accounts require full passwords for security. Partial passwords are not available for admin roles.
+                    </p>
+                  </div>
+                )}
+                
+                {(newUser.passwordType === 'partial' && newUser.userType !== 'admin' && newUser.role !== 'admin') ? (
+                  <div className="bg-green-50 border border-green-200 rounded p-3">
+                    <p className="text-sm text-green-700 mb-3">
+                      User will receive a partial password and complete setup on first login.
+                    </p>
+                    <div className="flex gap-2">
+                      <div className="flex-1 relative">
+                        <Input
+                          type={showPassword ? 'text' : 'password'}
+                          value={generatedPassword}
+                          readOnly
+                          placeholder="Generate partial password"
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-2.5"
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                      <Button type="button" onClick={() => {
+                        const partialPwd = generatePartialPassword();
+                        setGeneratedPassword(partialPwd);
+                      }} variant="outline">
+                        Generate
+                      </Button>
+                    </div>
+                    {generatedPassword && (
+                      <div className="mt-2">
+                        <p className="text-xs text-gray-600 mb-2">
+                          Partial password preview: {generatedPassword.substring(0, 4)}****
+                        </p>
+                        <Button
+                          type="button"
+                          onClick={copyPassword}
+                          variant="outline"
+                          size="sm"
+                        >
+                          {passwordCopied ? (
+                            <>
+                              <Check className="h-4 w-4 mr-2" />
+                              Copied!
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-4 w-4 mr-2" />
+                              Copy Full Password
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex gap-2">
+                      <div className="flex-1 relative">
+                        <Input
+                          type={showPassword ? 'text' : 'password'}
+                          value={generatedPassword}
+                          readOnly
+                          placeholder="Generate password"
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-2.5"
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                      <Button type="button" onClick={generatePassword} variant="outline">
+                        Generate
+                      </Button>
+                    </div>
+                    {generatedPassword && (
+                      <Button
+                        type="button"
+                        onClick={copyPassword}
+                        variant="outline"
+                        className="w-full mt-2"
+                      >
+                        {passwordCopied ? (
+                          <>
+                            <Check className="h-4 w-4 mr-2" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-4 w-4 mr-2" />
+                            Copy Password
+                          </>
+                        )}
+                      </Button>
+                    )}
+                    <p className="text-sm text-gray-600 mt-2">User can change password after first login</p>
+                  </div>
+                )}
               </div>
-              {generatedPassword && (
-                <Button
-                  type="button"
-                  onClick={copyPassword}
-                  variant="outline"
-                  className="w-full"
-                >
-                  {passwordCopied ? (
-                    <>
-                      <Check className="h-4 w-4 mr-2" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copy Password
-                    </>
-                  )}
-                </Button>
-              )}
-              <p className="text-sm text-gray-600">User can change password after first login</p>
             </div>
 
-            <Button type="submit" className="w-full">Create {newUser.userType === 'staff' ? 'Staff Member' : 'User'}</Button>
+            <Button type="submit" className="w-full">Create {newUser.userType === 'staff' ? 'Staff Member' : newUser.userType === 'admin' ? 'Hospital Administrator' : 'User'}</Button>
           </form>
         </DialogContent>
       </Dialog>
@@ -1470,54 +1621,107 @@ const UserManagement = () => {
                       </Badge>
 
                       <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleToggleAccess(user.id)}
-                          className={user.isActive ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'}
-                          title={user.isActive ? 'Deactivate User' : 'Activate User'}
-                        >
-                          {user.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-                        </Button>
+                        <ProtectedComponent permissions={PERMISSIONS.MANAGE_USERS}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleToggleAccess(user.id)}
+                            className={user.isActive ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'}
+                            title={user.isActive ? 'Deactivate User' : 'Activate User'}
+                          >
+                            {user.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                          </Button>
+                        </ProtectedComponent>
                         
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openRoleChange(user)}
-                          title="Change Role"
-                        >
-                          <Settings className="h-4 w-4" />
-                        </Button>
+                        <ProtectedComponent permissions={PERMISSIONS.MANAGE_ROLES}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openRoleChange(user)}
+                            title="Change Role"
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        </ProtectedComponent>
                         
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openPartialPasswordDialog(user)}
-                          title="Set Partial Password"
-                        >
-                          <Key className="h-4 w-4" />
-                        </Button>
+                        {/* Password Management Dropdown */}
+                        <div className="relative group">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            title="Password Management"
+                            className="relative"
+                          >
+                            <Key className="h-4 w-4" />
+                          </Button>
+                          <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <div className="p-1">
+                              <button
+                                onClick={() => openPartialPasswordDialog(user)}
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded flex items-center gap-2"
+                              >
+                                <Key className="h-3 w-3" />
+                                Set Partial Password
+                              </button>
+                              <button
+                                onClick={() => openPasswordReset(user)}
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded flex items-center gap-2"
+                              >
+                                <Lock className="h-3 w-3" />
+                                Full Password Reset
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const tempPassword = generatePartialPassword();
+                                  navigator.clipboard.writeText(tempPassword);
+                                  setSuccessMessage(`Temporary password copied: ${tempPassword.substring(0, 4)}****`);
+                                  setTimeout(() => setSuccessMessage(''), 3000);
+                                }}
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded flex items-center gap-2"
+                              >
+                                <Copy className="h-3 w-3" />
+                                Generate & Copy Temp Password
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (window.confirm(`Force password change for ${user.firstName} ${user.lastName} on next login?`)) {
+                                    setSuccessMessage('User will be required to change password on next login');
+                                    setTimeout(() => setSuccessMessage(''), 3000);
+                                  }
+                                }}
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded flex items-center gap-2"
+                              >
+                                <AlertTriangle className="h-3 w-3" />
+                                Force Password Change
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (window.confirm(`Expire password for ${user.firstName} ${user.lastName}? They will need to reset it.`)) {
+                                    setSuccessMessage('Password expired. User must reset on next login.');
+                                    setTimeout(() => setSuccessMessage(''), 3000);
+                                  }
+                                }}
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-red-100 rounded flex items-center gap-2 text-red-600"
+                              >
+                                <UserX className="h-3 w-3" />
+                                Expire Password
+                              </button>
+                            </div>
+                          </div>
+                        </div>
 
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openPasswordReset(user)}
-                          title="Reset Password"
-                        >
-                          <Lock className="h-4 w-4" />
-                        </Button>
-
-                        <Dialog open={isAccessControlOpen && selectedUser?.id === user.id} onOpenChange={setIsAccessControlOpen}>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openAccessControl(user)}
-                              title="Manage Access & Permissions"
-                            >
-                              <Shield className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
+                        <ProtectedComponent permissions={PERMISSIONS.MANAGE_USERS}>
+                          <Dialog open={isAccessControlOpen && selectedUser?.id === user.id} onOpenChange={setIsAccessControlOpen}>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openAccessControl(user)}
+                                title="Manage Access & Permissions"
+                              >
+                                <Shield className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
                           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                             <DialogHeader>
                               <DialogTitle>Access Control - {selectedUser?.firstName} {selectedUser?.lastName}</DialogTitle>
@@ -1547,9 +1751,11 @@ const UserManagement = () => {
                               </Button>
                             </div>
                           </DialogContent>
-                        </Dialog>
+                          </Dialog>
+                        </ProtectedComponent>
 
-                        <Dialog open={isEditDialogOpen && editUser?.id === user.id} onOpenChange={setIsEditDialogOpen}>
+                        <ProtectedComponent permissions={PERMISSIONS.MANAGE_USERS}>
+                          <Dialog open={isEditDialogOpen && editUser?.id === user.id} onOpenChange={setIsEditDialogOpen}>
                           <DialogTrigger asChild>
                             <Button
                               variant="outline"
@@ -1626,17 +1832,20 @@ const UserManagement = () => {
                               </form>
                             )}
                           </DialogContent>
-                        </Dialog>
+                          </Dialog>
+                        </ProtectedComponent>
 
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteUser(user.id)}
-                          className="text-red-600 hover:text-red-700"
-                          title="Delete User"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <ProtectedComponent permissions={PERMISSIONS.MANAGE_USERS}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteUser(user.id)}
+                            className="text-red-600 hover:text-red-700"
+                            title="Delete User"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </ProtectedComponent>
                       </div>
                     </div>
                   </div>
@@ -1801,24 +2010,144 @@ const UserManagement = () => {
               </p>
             </div>
             
-            {partialPassword && (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <Label className="flex items-center gap-2 mb-2">
-                  <Eye className="h-4 w-4" />
-                  Generated Partial Password
-                </Label>
-                <div className="font-mono text-lg bg-white p-2 rounded border">
-                  {partialPassword.substring(0, 4)}****
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2">
+                <Lock className="h-4 w-4" />
+                Partial Password Options
+              </Label>
+              
+              {/* Option 1: Generate Partial Password */}
+              <div className="border rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium text-sm">Auto-Generate Partial Password</span>
+                  <Button 
+                    type="button" 
+                    onClick={() => {
+                      const generated = generatePartialPassword();
+                      setPartialPassword(generated);
+                    }} 
+                    variant="outline"
+                    size="sm"
+                  >
+                    Generate
+                  </Button>
                 </div>
-                <p className="text-xs text-gray-600 mt-2">
-                  Only first 4 characters shown. Full password will be sent securely.
+                {partialPassword && (
+                  <div className="bg-gray-50 border border-gray-200 rounded p-3">
+                    <Label className="flex items-center gap-2 mb-2 text-xs">
+                      <Eye className="h-3 w-3" />
+                      Generated Partial Password (First 4 characters visible)
+                    </Label>
+                    <div className="font-mono text-lg bg-white p-2 rounded border flex items-center justify-between">
+                      <span>{partialPassword.substring(0, 4)}****</span>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(partialPassword);
+                          setPasswordCopied(true);
+                          setTimeout(() => setPasswordCopied(false), 2000);
+                        }}
+                        variant="ghost"
+                        size="sm"
+                      >
+                        {passwordCopied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-600 mt-2">
+                      Full password: {partialPassword}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Option 2: Custom Partial Password */}
+              <div className="border rounded-lg p-3">
+                <Label className="font-medium text-sm mb-2 block">Set Custom Partial Password</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Enter partial password (min 4 chars)"
+                    value={partialPassword}
+                    onChange={(e) => setPartialPassword(e.target.value)}
+                    minLength={4}
+                    className="flex-1"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  User will complete the remaining characters on first login
                 </p>
               </div>
-            )}
+
+              {/* Password Strength Indicator */}
+              {partialPassword && (
+                <div className="bg-blue-50 border border-blue-200 rounded p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Shield className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-800">Password Strength</span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-xs">
+                      <div className={`w-2 h-2 rounded-full ${
+                        partialPassword.length >= 4 ? 'bg-green-500' : 'bg-gray-300'
+                      }`}></div>
+                      <span>Minimum 4 characters</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <div className={`w-2 h-2 rounded-full ${
+                        /[A-Z]/.test(partialPassword) ? 'bg-green-500' : 'bg-gray-300'
+                      }`}></div>
+                      <span>Contains uppercase letter</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <div className={`w-2 h-2 rounded-full ${
+                        /[0-9]/.test(partialPassword) ? 'bg-green-500' : 'bg-gray-300'
+                      }`}></div>
+                      <span>Contains number</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Additional Options */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                  <span className="text-sm font-medium text-yellow-800">Security Options</span>
+                </div>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input 
+                      type="checkbox" 
+                      defaultChecked 
+                      className="w-4 h-4 rounded"
+                    />
+                    <span>Force password change on first login</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 rounded"
+                    />
+                    <span>Send password via secure email</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 rounded"
+                    />
+                    <span>Set password expiry (30 days)</span>
+                  </label>
+                </div>
+              </div>
+            </div>
             
             <div className="flex gap-2">
               <Button 
-                onClick={() => setIsPartialPasswordOpen(false)} 
+                onClick={() => {
+                  setIsPartialPasswordOpen(false);
+                  setPartialPassword('');
+                  setPasswordCopied(false);
+                }} 
                 variant="outline" 
                 className="flex-1"
               >
@@ -1826,9 +2155,10 @@ const UserManagement = () => {
               </Button>
               <Button 
                 onClick={handlePartialPasswordReset}
+                disabled={!partialPassword || partialPassword.length < 4}
                 className="flex-1"
               >
-                {partialPassword ? 'Set Password' : 'Generate & Set'}
+                {partialPassword ? 'Set Partial Password' : 'Generate & Set'}
               </Button>
             </div>
           </div>

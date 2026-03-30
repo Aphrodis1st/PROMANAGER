@@ -1,6 +1,18 @@
 import jwt from 'jsonwebtoken';
+import { db } from '../../utils/firebase.js';
+import { 
+  hospitalAuth, 
+  requireRole, 
+  requireDepartment, 
+  requireRoleAndDepartment, 
+  requirePermission, 
+  requireAccess, 
+  requirePatientAccess, 
+  auditAccess 
+} from './rbac.middleware.js';
 
-export const hospitalAuth = (req, res, next) => {
+// Legacy middleware for backward compatibility
+export const legacyHospitalAuth = (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     if (!token)
@@ -17,3 +29,18 @@ export const hospitalAuth = (req, res, next) => {
     res.status(401).json({ success: false, error: 'Invalid token' });
   }
 };
+
+// Export new RBAC middleware as default
+export { 
+  hospitalAuth, 
+  requireRole, 
+  requireDepartment, 
+  requireRoleAndDepartment, 
+  requirePermission, 
+  requireAccess, 
+  requirePatientAccess, 
+  auditAccess 
+};
+
+// Default export for backward compatibility
+export default hospitalAuth;

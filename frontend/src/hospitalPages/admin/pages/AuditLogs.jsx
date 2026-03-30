@@ -1,19 +1,19 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/hospital/card';
-import { Building2 } from 'lucide-react';
+import { Shield } from 'lucide-react';
 
-const DepartmentManagement = () => (
+const AuditLogs = () => (
   <div className="p-6">
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Building2 className="h-5 w-5" />
-          Department Management
+          <Shield className="h-5 w-5" />
+          Audit Logs
         </CardTitle>
       </CardHeader>
-      <CardContent><p>Department management interface.</p></CardContent>
+      <CardContent><p>System audit logs interface.</p></CardContent>
     </Card>
   </div>
 );
 
-export default DepartmentManagement;
+export default AuditLogs;

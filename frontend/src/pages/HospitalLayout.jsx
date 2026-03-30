@@ -5,7 +5,7 @@ import HospitalSidebar from '../components/hospital/HospitalSidebar';
 
 const drawerWidth = 320;
 
-export default function HospitalLayout() {
+export default function HospitalLayout({ children }) {
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       <HospitalSidebar />
@@ -19,7 +19,7 @@ export default function HospitalLayout() {
           minHeight: '100vh',
         }}
       >
-        <Outlet />
+        {children || <Outlet />}
       </Box>
     </Box>
   );

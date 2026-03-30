@@ -8,82 +8,138 @@ export const hospitalLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
     console.log('Hospital login attempt for:', email);
+    console.log('Password provided:', password ? 'Yes' : 'No');
     
     if (!email || !password)
       return res.status(400).json({ success: false, error: 'Email and password required' });
 
-    // Find admin by email
-    const snapshot = await db().collection('hospitalAdmins')
+    let user = null;
+    let userType = null;
+    let userDoc = null;
+
+    // First, try to find in hospitalAdmins collection
+    const adminSnapshot = await db().collection('hospitalAdmins')
       .where('email', '==', email)
       .limit(1)
       .get();
 
-    if (snapshot.empty) {
-      console.log('No hospital admin found with email:', email);
+    if (!adminSnapshot.empty) {
+      userDoc = adminSnapshot.docs[0];
+      const userData = userDoc.data();
+      user = { ...userData, id: userDoc.id }; // Ensure document ID overwrites any id in data
+      userType = 'admin';
+      console.log('Found hospital admin:', { id: user.id, email: user.email, hospitalId: user.hospitalId, isPartialPassword: user.isPartialPassword });
+    } else {
+      // If not found in hospitalAdmins, try users collection
+      const userSnapshot = await db().collection('users')
+        .where('email', '==', email)
+        .limit(1)
+        .get();
+
+      if (!userSnapshot.empty) {
+        userDoc = userSnapshot.docs[0];
+        const userData = userDoc.data();
+        user = { ...userData, id: userDoc.id }; // Ensure document ID overwrites any id in data
+        userType = 'user';
+        console.log('Found hospital user:', { id: user.id, email: user.email, role: user.role, hospitalId: user.hospitalId, isPartialPassword: user.isPartialPassword });
+      }
+    }
+
+    if (!user) {
+      console.log('No hospital admin or user found with email:', email);
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
-    const adminDoc = snapshot.docs[0];
-    const adminData = adminDoc.data();
-    // Use document ID as the admin ID
-    const admin = { id: adminDoc.id, ...adminData };
-    // Remove any null id field from the data
-    if (admin.id && adminData.id === null) {
-      delete admin.id;
-      admin.id = adminDoc.id;
+    // Clean up user ID if needed - ensure we use the document ID
+    const userId = userDoc.id;
+    if (!userId || userId.trim() === '') {
+      console.error('Invalid user document ID:', userId);
+      return res.status(500).json({ success: false, error: 'Invalid user data' });
     }
-    
-    console.log('Admin document ID:', adminDoc.id);
-    console.log('Admin data:', adminData);
-    console.log('Found admin:', { id: admin.id, email: admin.email, hospitalId: admin.hospitalId });
 
-    if (admin.status !== 'active')
+    // Ensure user object has the correct ID
+    user.id = userId;
+
+    if (user.status !== 'active' && user.isActive !== true) {
+      console.log('User account is not active:', user.status || user.isActive);
       return res.status(403).json({ success: false, error: 'Account is inactive' });
+    }
 
-    const valid = await bcrypt.compare(password, admin.password);
+    // Check if this is a partial password
+    if (user.isPartialPassword) {
+      console.log('User has partial password, checking credentials...');
+      const valid = await bcrypt.compare(password, user.password);
+      if (!valid) {
+        console.log('Invalid partial password for user:', user.id);
+        return res.status(401).json({ success: false, error: 'Invalid credentials' });
+      }
+      
+      console.log('Partial password valid, generating partial token...');
+      // Generate partial token for password completion
+      const partialToken = jwt.sign(
+        { id: userDoc.id, hospitalId: user.hospitalId, type: 'partial', userType },
+        process.env.JWT_ACCESS_SECRET,
+        { expiresIn: '15m' }
+      );
+      
+      console.log('Returning partial password response');
+      return res.json({
+        success: false,
+        requiresPasswordCompletion: true,
+        partialToken,
+        message: 'Please complete your password setup'
+      });
+    }
+
+    console.log('Regular password login, checking credentials...');
+    const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
-      console.log('Invalid password for admin:', admin.id);
+      console.log('Invalid password for user:', user.id);
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
     // Validate hospitalId
-    if (!admin.hospitalId || admin.hospitalId.trim() === '') {
-      console.log('Admin has no valid hospitalId:', admin.id, 'hospitalId:', admin.hospitalId);
-      return res.status(400).json({ success: false, error: 'Admin has no hospitalId assigned', adminId: admin.id });
+    if (!user.hospitalId || user.hospitalId.trim() === '') {
+      console.log('User has no valid hospitalId:', user.id, 'hospitalId:', user.hospitalId);
+      return res.status(400).json({ success: false, error: 'User has no hospitalId assigned', userId: user.id });
     }
 
-    console.log('Fetching hospital with ID:', admin.hospitalId);
-    const hospital = await Hospital.getById(admin.hospitalId);
+    console.log('Fetching hospital with ID:', user.hospitalId);
+    const hospital = await Hospital.getById(user.hospitalId);
     if (!hospital) {
-      console.log('Hospital not found with ID:', admin.hospitalId);
-      return res.status(404).json({ success: false, error: 'Hospital not found', hospitalId: admin.hospitalId });
+      console.log('Hospital not found with ID:', user.hospitalId);
+      return res.status(404).json({ success: false, error: 'Hospital not found', hospitalId: user.hospitalId });
     }
     
     if (hospital.status === 'suspended' || hospital.status === 'deleted')
       return res.status(403).json({ success: false, error: `Hospital is ${hospital.status}` });
 
-    // Update lastLogin (use document ID)
-    if (adminDoc.id && adminDoc.id.trim() !== '') {
-      await db().collection('hospitalAdmins').doc(adminDoc.id).update({ lastLogin: new Date() });
-    } else {
-      console.warn('Skipping lastLogin update - invalid admin document ID:', adminDoc.id);
+    // Update lastLogin
+    if (userId && userId.trim() !== '') {
+      const collection = userType === 'admin' ? 'hospitalAdmins' : 'users';
+      await db().collection(collection).doc(userId).update({ lastLogin: new Date() });
     }
 
+    // Determine user role for token
+    const tokenRole = userType === 'admin' ? 'hospital_admin' : user.role;
+
     const token = jwt.sign(
-      { id: adminDoc.id, hospitalId: hospital.id, role: 'hospital_admin' },
+      { id: userId, hospitalId: hospital.id, role: tokenRole, userType },
       process.env.JWT_ACCESS_SECRET,
       { expiresIn: '8h' }
     );
 
-    const { password: _, ...adminResponse } = admin;
-    // Override role to hospital_admin for frontend and ensure ID is document ID
-    adminResponse.role = 'hospital_admin';
-    adminResponse.id = adminDoc.id;
-    console.log('Login successful for admin:', adminDoc.id);
+    const { password: _, ...userResponse } = user;
+    userResponse.role = tokenRole;
+    userResponse.id = userId;
+    userResponse.userType = userType;
+    
+    console.log('Login successful for user:', userId, 'type:', userType);
     res.json({
       success: true,
       token,
-      admin: adminResponse,
+      admin: userResponse, // Keep 'admin' for backward compatibility
+      user: userResponse,
       hospital: { id: hospital.id, name: hospital.name, location: hospital.location, subscriptionPlan: hospital.subscriptionPlan }
     });
   } catch (error) {
@@ -92,10 +148,92 @@ export const hospitalLogin = async (req, res) => {
   }
 };
 
+export const completePassword = async (req, res) => {
+  try {
+    const { partialToken, newPassword } = req.body;
+    
+    if (!partialToken || !newPassword) {
+      return res.status(400).json({ success: false, error: 'Partial token and new password required' });
+    }
+    
+    if (newPassword.length < 8) {
+      return res.status(400).json({ success: false, error: 'Password must be at least 8 characters' });
+    }
+    
+    // Verify partial token
+    let decoded;
+    try {
+      decoded = jwt.verify(partialToken, process.env.JWT_ACCESS_SECRET);
+      if (decoded.type !== 'partial') {
+        return res.status(401).json({ success: false, error: 'Invalid token type' });
+      }
+    } catch (error) {
+      return res.status(401).json({ success: false, error: 'Invalid or expired token' });
+    }
+    
+    // Determine which collection to use
+    const collection = decoded.userType === 'admin' ? 'hospitalAdmins' : 'users';
+    
+    // Get user
+    const userDoc = await db().collection(collection).doc(decoded.id).get();
+    if (!userDoc.exists) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    
+    const user = { id: userDoc.id, ...userDoc.data() };
+    
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    // Update user with new password and remove partial flag
+    await db().collection(collection).doc(decoded.id).update({
+      password: hashedPassword,
+      isPartialPassword: false,
+      passwordCompletedAt: new Date(),
+      lastLogin: new Date(),
+      updatedAt: new Date()
+    });
+    
+    // Get hospital
+    const hospital = await Hospital.getById(user.hospitalId);
+    if (!hospital) {
+      return res.status(404).json({ success: false, error: 'Hospital not found' });
+    }
+    
+    // Determine user role for token
+    const tokenRole = decoded.userType === 'admin' ? 'hospital_admin' : user.role;
+    
+    // Generate full access token
+    const token = jwt.sign(
+      { id: decoded.id, hospitalId: hospital.id, role: tokenRole, userType: decoded.userType },
+      process.env.JWT_ACCESS_SECRET,
+      { expiresIn: '8h' }
+    );
+    
+    const { password: _, isPartialPassword, ...userResponse } = user;
+    userResponse.role = tokenRole;
+    userResponse.id = decoded.id;
+    userResponse.userType = decoded.userType;
+    
+    res.json({
+      success: true,
+      token,
+      admin: userResponse, // Keep 'admin' for backward compatibility
+      user: userResponse,
+      hospital: { id: hospital.id, name: hospital.name, location: hospital.location, subscriptionPlan: hospital.subscriptionPlan },
+      message: 'Password completed successfully'
+    });
+  } catch (error) {
+    console.error('Complete password error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
 export const getHospitalMe = async (req, res) => {
   try {
     const hospital = await Hospital.getById(req.hospitalId);
-    if (!hospital) return res.status(404).json({ success: false, error: 'Hospital not found' });
+    if (!hospital) {
+      return res.status(404).json({ success: false, error: 'Hospital not found' });
+    }
     res.json({ success: true, hospital });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

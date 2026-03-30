@@ -59,7 +59,7 @@ export const getUserManagement = async (req, res) => {
 export const createUser = async (req, res) => {
   try {
     const hospitalId = req.user.hospitalId;
-    const { email, password, firstName, lastName, role, departmentId, phone } = req.body;
+    const { email, password, firstName, lastName, role, departmentId, phone, isPartialPassword, ...otherData } = req.body;
 
     // Validate role
     const allowedRoles = ['doctor', 'nurse', 'lab_technician', 'pharmacist', 'receptionist', 'patient'];
@@ -86,8 +86,11 @@ export const createUser = async (req, res) => {
       departmentId: departmentId || null,
       phone: phone || null,
       isActive: true,
+      isPartialPassword: isPartialPassword || false,
+      requirePasswordChange: isPartialPassword || false,
       createdAt: new Date(),
-      createdBy: req.user.uid
+      createdBy: req.user.uid,
+      ...otherData
     };
 
     const userRef = await db().collection('users').add(userData);
@@ -105,6 +108,8 @@ export const createUser = async (req, res) => {
       });
     }
 
+    // Remove password from response
+    delete userData.password;
     res.json({ success: true, data: { id: userRef.id, ...userData } });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -643,6 +648,35 @@ export const bulkUpdateUserStatus = async (req, res) => {
   }
 };
 
+// Set Partial Password
+export const setPartialPassword = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { partialPassword, requirePasswordChange } = req.body;
+    const hospitalId = req.user.hospitalId;
+
+    // Verify user belongs to hospital
+    const userDoc = await db().collection('users').doc(userId).get();
+    if (!userDoc.exists || userDoc.data().hospitalId !== hospitalId) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    // Hash partial password
+    const hashedPassword = await bcrypt.hash(partialPassword, 10);
+
+    await db().collection('users').doc(userId).update({
+      password: hashedPassword,
+      isPartialPassword: true,
+      requirePasswordChange: requirePasswordChange !== false,
+      partialPasswordSetAt: new Date(),
+      partialPasswordSetBy: req.user.uid
+    });
+
+    res.json({ success: true, message: 'Partial password set successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
 // Bulk Delete Users
 export const bulkDeleteUsers = async (req, res) => {
   try {
@@ -669,4 +703,4 @@ export const bulkDeleteUsers = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
-}
+};
