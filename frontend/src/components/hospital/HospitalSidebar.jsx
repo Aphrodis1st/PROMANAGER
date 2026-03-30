@@ -9,18 +9,25 @@ import {
 import {
   LocalHospital as HospitalIcon,
   Palette as PaletteIcon,
+  Person as PersonIcon,
+  VpnKey as KeyIcon,
 } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 
 import DashboardLinks from "./hospitalLink/DashboardLinks";
 import ClinicalLinks from "./hospitalLink/ClinicalLinks";
 import ManagementLinks from "./hospitalLink/ManagementLinks";
 import FinancialLinks from "./hospitalLink/FinancialLinks";
 import ReportLinks from "./hospitalLink/ReportLinks";
+import AdminLinks from "./hospitalLink/AdminLinks";
+import { useHospitalAuth } from "../../context/HospitalAuthContext";
 
 const drawerWidth = 320;
 
 export default function HospitalSidebar() {
   const [theme, setTheme] = useState("blue");
+  const { hospital, admin, logout } = useHospitalAuth();
+  const navigate = useNavigate();
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === "blue" ? "green" : "blue"));
@@ -73,9 +80,16 @@ export default function HospitalSidebar() {
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
             <HospitalIcon sx={{ fontSize: 32 }} />
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              E-Hospital
-            </Typography>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                {hospital?.name || 'E-Hospital'}
+              </Typography>
+              {admin?.email && (
+                <Typography variant="caption" sx={{ opacity: 0.75 }}>
+                  {admin.email}
+                </Typography>
+              )}
+            </Box>
           </Box>
 
           <Tooltip title="Switch Theme">
@@ -109,9 +123,55 @@ export default function HospitalSidebar() {
             <ManagementLinks />
             <FinancialLinks />
             <ReportLinks />
+            <AdminLinks />
 
           </Box>
         </Box>
+
+        {/* Admin Profile Section */}
+        {admin && (admin.role === 'hospital_admin' || admin.role === 'admin') && (
+          <Box
+            sx={{
+              p: 2,
+              borderTop: "1px solid rgba(255,255,255,0.1)",
+              borderBottom: "1px solid rgba(255,255,255,0.1)",
+            }}
+          >
+            <Typography variant="caption" sx={{ opacity: 0.8, fontWeight: 600, mb: 1, display: 'block' }}>
+              ADMIN PANEL
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Tooltip title="Admin Profile">
+                <IconButton
+                  onClick={() => navigate('/hospital/admin/profile')}
+                  sx={{
+                    color: "white",
+                    bgcolor: "rgba(255,255,255,0.15)",
+                    "&:hover": { bgcolor: "rgba(255,255,255,0.25)" },
+                    flex: 1
+                  }}
+                  size="small"
+                >
+                  <PersonIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Change Password">
+                <IconButton
+                  onClick={() => navigate('/hospital/admin/profile?tab=security')}
+                  sx={{
+                    color: "white",
+                    bgcolor: "rgba(255,255,255,0.15)",
+                    "&:hover": { bgcolor: "rgba(255,255,255,0.25)" },
+                    flex: 1
+                  }}
+                  size="small"
+                >
+                  <KeyIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Box>
+        )}
 
         {/* Footer */}
         <Box
@@ -121,6 +181,22 @@ export default function HospitalSidebar() {
             borderTop: "1px solid rgba(255,255,255,0.1)",
           }}
         >
+          <button
+            onClick={logout}
+            style={{
+              background: 'rgba(255,255,255,0.15)',
+              border: 'none',
+              color: 'white',
+              borderRadius: 8,
+              padding: '8px 20px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              width: '100%',
+              marginBottom: 8
+            }}
+          >
+            Logout
+          </button>
           <Typography variant="caption" sx={{ opacity: 0.7 }}>
             © 2026 E-Hospital System
           </Typography>

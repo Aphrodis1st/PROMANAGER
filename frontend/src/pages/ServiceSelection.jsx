@@ -655,6 +655,69 @@ export default function ServiceSelection() {
           </Grid>
         </Paper>
 
+        {/* Super Admin Access Section */}
+        <Paper 
+          elevation={12}
+          sx={{ 
+            p: 6, 
+            mb: 8, 
+            background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: 4,
+            color: 'white',
+            textAlign: 'center'
+          }}
+        >
+          <Avatar
+            sx={{
+              width: 100,
+              height: 100,
+              bgcolor: 'rgba(255,255,255,0.2)',
+              mx: 'auto',
+              mb: 3
+            }}
+          >
+            <SecurityIcon sx={{ fontSize: 50 }} />
+          </Avatar>
+          
+          <Typography variant="h3" gutterBottom sx={{ fontWeight: 700 }}>
+            Super Admin Access
+          </Typography>
+          
+          <Typography variant="h6" paragraph sx={{ maxWidth: 800, mx: 'auto', lineHeight: 1.7 }}>
+            System administrators can access the Super Admin panel to manage hospitals, 
+            hospital administrators, monitor system-wide activities, and configure platform settings.
+          </Typography>
+          
+          <Typography variant="body1" paragraph sx={{ maxWidth: 600, mx: 'auto', lineHeight: 1.7, opacity: 0.9 }}>
+            This is a restricted area requiring special authentication credentials.
+          </Typography>
+
+          <Button
+            variant="contained"
+            size="large"
+            onClick={() => navigate('/super-admin/login')}
+            sx={{
+              bgcolor: 'rgba(255,255,255,0.2)',
+              color: 'white',
+              py: 2,
+              px: 4,
+              fontSize: '1.1rem',
+              fontWeight: 700,
+              borderRadius: 3,
+              textTransform: 'none',
+              mt: 3,
+              border: '2px solid rgba(255,255,255,0.3)',
+              '&:hover': {
+                bgcolor: 'rgba(255,255,255,0.3)',
+                transform: 'translateY(-2px)',
+              }
+            }}
+          >
+            🔐 Access Super Admin Panel
+          </Button>
+        </Paper>
+
         {/* Enhanced Pharmacy Services Section */}
         <Paper 
           elevation={12}
@@ -1068,6 +1131,13 @@ export default function ServiceSelection() {
                   onClick={() => navigate('/pharmacy/dashboard')}
                 >
                   Pharmacy System
+                </Button>
+                <Button 
+                  variant="text" 
+                  sx={{ justifyContent: 'flex-start', color: '#666' }}
+                  onClick={() => navigate('/super-admin/login')}
+                >
+                  🔐 Super Admin Access
                 </Button>
               </Stack>
             </Grid>

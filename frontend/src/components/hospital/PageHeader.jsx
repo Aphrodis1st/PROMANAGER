@@ -32,4 +32,5 @@ const PageHeader = ({
   );
 };
 
+export { PageHeader };
 export default PageHeader;

@@ -1,134 +1,88 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { 
-  Box, 
-  Container, 
-  Typography, 
-  Card, 
-  CardContent, 
-  TextField,
-  Button,
-  Avatar,
-  Alert
-} from '@mui/material';
-import { LocalHospital as HospitalIcon } from '@mui/icons-material';
+import { useHospitalAuth } from '../../context/HospitalAuthContext';
 
 export default function HospitalLogin() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
+  const { login } = useHospitalAuth();
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add authentication logic here
-    if (formData.email && formData.password) {
+    setError('');
+    setLoading(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/hospital/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (!data.success) { setError(data.error || 'Login failed'); return; }
+      login(data);
       navigate('/hospital/dashboard');
-    } else {
-      setError('Please enter both email and password');
+    } catch {
+      setError('Server error. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        py: 4
-      }}
-    >
-      <Container maxWidth="sm">
-        <Card sx={{ boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
-          <CardContent sx={{ p: 4 }}>
-            <Box textAlign="center" mb={4}>
-              <Avatar
-                sx={{
-                  width: 80,
-                  height: 80,
-                  bgcolor: '#4caf50',
-                  mx: 'auto',
-                  mb: 2
-                }}
-              >
-                <HospitalIcon sx={{ fontSize: 40 }} />
-              </Avatar>
-              <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
-                Hospital Services
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Sign in to access your healthcare system
-              </Typography>
-            </Box>
+    <div className="min-h-screen bg-gradient-to-br from-green-600 to-green-800 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl font-bold text-green-600">H</span>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-800">Hospital Login</h1>
+          <p className="text-gray-500 text-sm mt-1">Sign in to access your hospital system</p>
+        </div>
 
-            {error && (
-              <Alert severity="error" sx={{ mb: 3 }}>
-                {error}
-              </Alert>
-            )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-6 text-sm">
+            {error}
+          </div>
+        )}
 
-            <form onSubmit={handleSubmit}>
-              <TextField
-                fullWidth
-                label="Email Address"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                margin="normal"
-                required
-              />
-              <TextField
-                fullWidth
-                label="Password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                margin="normal"
-                required
-              />
-              
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                size="large"
-                sx={{ 
-                  mt: 3, 
-                  mb: 2,
-                  bgcolor: '#4caf50',
-                  py: 1.5,
-                  fontSize: '1.1rem'
-                }}
-              >
-                Sign In
-              </Button>
-            </form>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+            <input
+              type="email"
+              required
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="admin@hospital.com"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input
+              type="password"
+              required
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="••••••••"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition-colors mt-2"
+          >
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
+        </form>
 
-            <Box textAlign="center" mt={3}>
-              <Typography variant="body2" color="text.secondary">
-                Don't have an account?{' '}
-                <Link 
-                  to="/hospital/register" 
-                  style={{ color: '#4caf50', textDecoration: 'none', fontWeight: 'bold' }}
-                >
-                  Register here
-                </Link>
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                <Link 
-                  to="/" 
-                  style={{ color: '#666', textDecoration: 'none' }}
-                >
-                  ← Back to Service Selection
-                </Link>
-              </Typography>
-            </Box>
-          </CardContent>
-        </Card>
-      </Container>
-    </Box>
+        <div className="text-center mt-6">
+          <Link to="/" className="text-sm text-gray-500 hover:text-gray-700">← Back to Service Selection</Link>
+        </div>
+      </div>
+    </div>
   );
 }

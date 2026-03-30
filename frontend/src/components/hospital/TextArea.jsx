@@ -1,12 +1,16 @@
-const TextArea = ({ label, ...props }) => (
-  <div>
-    {label && <label className="block mb-1 text-sm">{label}</label>}
-    <textarea
-      {...props}
-      className="w-full px-4 py-2 border rounded-xl dark:bg-gray-800"
-      rows={4}
-    />
-  </div>
-);
+import React from 'react';
 
-export default TextArea;
+const Textarea = ({ value, onChange, rows = 3, className = "", ...props }) => {
+  return (
+    <textarea
+      value={value}
+      onChange={onChange}
+      rows={rows}
+      className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${className}`}
+      {...props}
+    />
+  );
+};
+
+export { Textarea };
+export default Textarea;

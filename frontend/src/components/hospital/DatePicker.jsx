@@ -9,4 +9,5 @@ const DatePicker = ({ label, ...props }) => (
   </div>
 );
 
+export { DatePicker };
 export default DatePicker;

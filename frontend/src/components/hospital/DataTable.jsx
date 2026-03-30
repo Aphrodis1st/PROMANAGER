@@ -115,4 +115,5 @@ const DataTable = ({
   );
 };
 
+export { DataTable };
 export default DataTable;

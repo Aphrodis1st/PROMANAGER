@@ -100,24 +100,29 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
     const user = await getUserByEmail(email);
     console.log("User fetched from Firestore:", user); 
-    if (!user){console.log("No user found with this email");
-       return res.status(400).json({ message: "Invalid credentials" });
+    if (!user){
+      console.log("No user found with this email");
+      return res.status(400).json({ message: "Invalid credentials" });
     }
 
     const match = await comparePassword(password, user.passwordHash);
-     console.log("Password match result:", match)
+    console.log("Password match result:", match)
     if (!match) return res.status(400).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user.id, role: user.role  }, process.env.JWT_ACCESS_SECRET, { expiresIn: "1h" });
-     if (["DOCTOR", "PHARMACY", "CALLCENTER"].includes(user.role)) {
+    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_ACCESS_SECRET, { expiresIn: "1h" });
+    
+    // Set user status for specific roles
+    if (["DOCTOR", "PHARMACY", "CALLCENTER"].includes(user.role)) {
       await setUserStatus(user.id, user.role, true);
     }
 
+    // Return success response with user and token
     res.json({
+      success: true,
       token,
       user: {
         ...user,
-        role: (user.role || "PATIENT").toUpperCase(),
+        role: user.role || "PATIENT",
       },
     });
   } catch (err) {

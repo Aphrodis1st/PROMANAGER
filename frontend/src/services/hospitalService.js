@@ -1,9 +1,18 @@
 import axios from "axios";
 
 const HOSPITAL_API_URL = "http://localhost:5000/api/v1/hospital";
+const SUPER_ADMIN_API_URL = "http://localhost:5000/api/v1/super-admin";
 
 const getAuthHeader = () => ({
-  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+  headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+});
+
+const getSuperAdminAuthHeader = () => ({
+  headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+});
+
+const getHospitalAuthHeader = () => ({
+  headers: { Authorization: `Bearer ${localStorage.getItem('hospitalToken')}` },
 });
 
 
@@ -12,18 +21,18 @@ const getAuthHeader = () => ({
 // =======================================================
 export const patientService = {
   getAll: async () => {
-    const res = await axios.get(`${HOSPITAL_API_URL}/patients`, getAuthHeader());
+    const res = await axios.get(`${HOSPITAL_API_URL}/patients`, getHospitalAuthHeader());
     return res.data;
   },
 
   getById: async (id) => {
-    const res = await axios.get(`${HOSPITAL_API_URL}/patients/${id}`, getAuthHeader());
+    const res = await axios.get(`${HOSPITAL_API_URL}/patients/${id}`, getHospitalAuthHeader());
     return res.data;
   },
 
   create: async (data) => {
     try {
-      const res = await axios.post(`${HOSPITAL_API_URL}/patients`, data, getAuthHeader());
+      const res = await axios.post(`${HOSPITAL_API_URL}/patients`, data, getHospitalAuthHeader());
       return res.data;
     } catch (error) {
       console.error('Patient service create error:', error.response?.data || error.message);
@@ -32,12 +41,12 @@ export const patientService = {
   },
 
   update: async (id, data) => {
-    const res = await axios.put(`${HOSPITAL_API_URL}/patients/${id}`, data, getAuthHeader());
+    const res = await axios.put(`${HOSPITAL_API_URL}/patients/${id}`, data, getHospitalAuthHeader());
     return res.data;
   },
 
   remove: async (id) => {
-    const res = await axios.delete(`${HOSPITAL_API_URL}/patients/${id}`, getAuthHeader());
+    const res = await axios.delete(`${HOSPITAL_API_URL}/patients/${id}`, getHospitalAuthHeader());
     return res.data;
   },
 };
@@ -48,22 +57,22 @@ export const patientService = {
 // =======================================================
 export const appointmentService = {
   getAll: async () => {
-    const res = await axios.get(`${HOSPITAL_API_URL}/appointments`, getAuthHeader());
+    const res = await axios.get(`${HOSPITAL_API_URL}/appointments`, getHospitalAuthHeader());
     return res.data;
   },
 
   create: async (data) => {
-    const res = await axios.post(`${HOSPITAL_API_URL}/appointments`, data, getAuthHeader());
+    const res = await axios.post(`${HOSPITAL_API_URL}/appointments`, data, getHospitalAuthHeader());
     return res.data;
   },
 
   update: async (id, data) => {
-    const res = await axios.put(`${HOSPITAL_API_URL}/appointments/${id}`, data, getAuthHeader());
+    const res = await axios.put(`${HOSPITAL_API_URL}/appointments/${id}`, data, getHospitalAuthHeader());
     return res.data;
   },
 
   remove: async (id) => {
-    const res = await axios.delete(`${HOSPITAL_API_URL}/appointments/${id}`, getAuthHeader());
+    const res = await axios.delete(`${HOSPITAL_API_URL}/appointments/${id}`, getHospitalAuthHeader());
     return res.data;
   },
 };
@@ -74,27 +83,27 @@ export const appointmentService = {
 // =======================================================
 export const billingService = {
   getAll: async () => {
-    const res = await axios.get(`${HOSPITAL_API_URL}/billing`, getAuthHeader());
+    const res = await axios.get(`${HOSPITAL_API_URL}/billing`, getHospitalAuthHeader());
     return res.data;
   },
 
   getByPatient: async (patientId) => {
-    const res = await axios.get(`${HOSPITAL_API_URL}/billing/patient/${patientId}`, getAuthHeader());
+    const res = await axios.get(`${HOSPITAL_API_URL}/billing/patient/${patientId}`, getHospitalAuthHeader());
     return res.data;
   },
 
   create: async (data) => {
-    const res = await axios.post(`${HOSPITAL_API_URL}/billing`, data, getAuthHeader());
+    const res = await axios.post(`${HOSPITAL_API_URL}/billing`, data, getHospitalAuthHeader());
     return res.data;
   },
 
   markAsPaid: async (id) => {
-    const res = await axios.put(`${HOSPITAL_API_URL}/billing/${id}/pay`, {}, getAuthHeader());
+    const res = await axios.put(`${HOSPITAL_API_URL}/billing/${id}/pay`, {}, getHospitalAuthHeader());
     return res.data;
   },
 
   remove: async (id) => {
-    const res = await axios.delete(`${HOSPITAL_API_URL}/billing/${id}`, getAuthHeader());
+    const res = await axios.delete(`${HOSPITAL_API_URL}/billing/${id}`, getHospitalAuthHeader());
     return res.data;
   },
 };
@@ -105,48 +114,47 @@ export const billingService = {
 // =======================================================
 export const labService = {
   getAll: async () => {
-    const res = await axios.get(`${HOSPITAL_API_URL}/lab`, getAuthHeader());
+    const res = await axios.get(`${HOSPITAL_API_URL}/lab`, getHospitalAuthHeader());
     return res.data;
   },
 
   getByPatient: async (patientId) => {
-    const res = await axios.get(`${HOSPITAL_API_URL}/lab/patient/${patientId}`, getAuthHeader());
+    const res = await axios.get(`${HOSPITAL_API_URL}/lab/patient/${patientId}`, getHospitalAuthHeader());
     return res.data;
   },
 
   create: async (data) => {
-    const res = await axios.post(`${HOSPITAL_API_URL}/lab`, data, getAuthHeader());
+    const res = await axios.post(`${HOSPITAL_API_URL}/lab`, data, getHospitalAuthHeader());
     return res.data;
   },
 
   update: async (id, data) => {
-    const res = await axios.put(`${HOSPITAL_API_URL}/lab/${id}`, data, getAuthHeader());
+    const res = await axios.put(`${HOSPITAL_API_URL}/lab/${id}`, data, getHospitalAuthHeader());
     return res.data;
   },
 
   remove: async (id) => {
-    const res = await axios.delete(`${HOSPITAL_API_URL}/lab/${id}`, getAuthHeader());
+    const res = await axios.delete(`${HOSPITAL_API_URL}/lab/${id}`, getHospitalAuthHeader());
     return res.data;
   },
 
-  // Lab Orders
   getAllOrders: async () => {
-    const res = await axios.get(`${HOSPITAL_API_URL}/lab/orders`, getAuthHeader());
+    const res = await axios.get(`${HOSPITAL_API_URL}/lab/orders`, getHospitalAuthHeader());
     return res.data;
   },
 
   getOrderById: async (id) => {
-    const res = await axios.get(`${HOSPITAL_API_URL}/lab/orders/${id}`, getAuthHeader());
+    const res = await axios.get(`${HOSPITAL_API_URL}/lab/orders/${id}`, getHospitalAuthHeader());
     return res.data;
   },
 
   createOrder: async (data) => {
-    const res = await axios.post(`${HOSPITAL_API_URL}/lab/orders`, data, getAuthHeader());
+    const res = await axios.post(`${HOSPITAL_API_URL}/lab/orders`, data, getHospitalAuthHeader());
     return res.data;
   },
 
   submitResults: async (orderId, data) => {
-    const res = await axios.put(`${HOSPITAL_API_URL}/lab/orders/${orderId}/results`, data, getAuthHeader());
+    const res = await axios.put(`${HOSPITAL_API_URL}/lab/orders/${orderId}/results`, data, getHospitalAuthHeader());
     return res.data;
   },
 };
@@ -587,6 +595,137 @@ const hospitalService = {
   },
 
   getReports: async () => [],
+
+  // Admin Profile Management
+  updateAdminProfile: async (profileData) => {
+    const res = await axios.put(`${HOSPITAL_API_URL}/auth/profile`, profileData, getHospitalAuthHeader());
+    return res.data;
+  },
+
+  changeAdminPassword: async (passwordData) => {
+    const res = await axios.put(`${HOSPITAL_API_URL}/auth/password`, passwordData, getHospitalAuthHeader());
+    return res.data;
+  },
+
+  updateHospitalSettings: async (settings) => {
+    const res = await axios.put(`${HOSPITAL_API_URL}/auth/settings`, settings, getHospitalAuthHeader());
+    return res.data;
+  },
+
+  getAnalytics: async (timeRange = '7d') => {
+    const res = await axios.get(`${HOSPITAL_API_URL}/auth/analytics?timeRange=${timeRange}`, getHospitalAuthHeader());
+    return res.data;
+  },
+};
+
+// =======================================================
+// 🏥 SUPER ADMIN SERVICE
+// =======================================================
+export const superAdminService = {
+  // Dashboard
+  getDashboardStats: async () => {
+    const res = await axios.get(`${SUPER_ADMIN_API_URL}/dashboard/stats`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  getSystemActivity: async () => {
+    const res = await axios.get(`${SUPER_ADMIN_API_URL}/dashboard/activity`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  getSystemSettings: async () => {
+    const res = await axios.get(`${SUPER_ADMIN_API_URL}/dashboard/settings`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  getAllHospitals: async () => {
+    const res = await axios.get(`${SUPER_ADMIN_API_URL}/hospitals`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  getHospital: async (id) => {
+    const res = await axios.get(`${SUPER_ADMIN_API_URL}/hospitals/${id}`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  createHospital: async (data) => {
+    const res = await axios.post(`${SUPER_ADMIN_API_URL}/hospitals`, data, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  updateHospital: async (id, data) => {
+    const res = await axios.put(`${SUPER_ADMIN_API_URL}/hospitals/${id}`, data, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  updateHospitalStatus: async (id, status) => {
+    const res = await axios.patch(`${SUPER_ADMIN_API_URL}/hospitals/${id}/status`, { status }, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  updateHospitalFeatures: async (id, features) => {
+    const res = await axios.patch(`${SUPER_ADMIN_API_URL}/hospitals/${id}/features`, { features }, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  softDeleteHospital: async (id) => {
+    const res = await axios.patch(`${SUPER_ADMIN_API_URL}/hospitals/${id}/soft-delete`, {}, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  hardDeleteHospital: async (id) => {
+    const res = await axios.delete(`${SUPER_ADMIN_API_URL}/hospitals/${id}`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  getAllHospitalAdmins: async () => {
+    const res = await axios.get(`${SUPER_ADMIN_API_URL}/hospital-admins`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  getHospitalAdminsByHospital: async (hospitalId) => {
+    const res = await axios.get(`${SUPER_ADMIN_API_URL}/hospital-admins/hospital/${hospitalId}`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  getHospitalAdmin: async (id) => {
+    const res = await axios.get(`${SUPER_ADMIN_API_URL}/hospital-admins/${id}`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  createHospitalAdmin: async (data) => {
+    const res = await axios.post(`${SUPER_ADMIN_API_URL}/hospital-admins`, data, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  updateHospitalAdminStatus: async (id, status) => {
+    const res = await axios.patch(`${SUPER_ADMIN_API_URL}/hospital-admins/${id}/status`, { status }, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  resetHospitalAdminPassword: async (id, newPassword) => {
+    const res = await axios.patch(`${SUPER_ADMIN_API_URL}/hospital-admins/${id}/reset-password`, { newPassword }, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  trackAdminActivity: async (id) => {
+    const res = await axios.patch(`${SUPER_ADMIN_API_URL}/hospital-admins/${id}/track-activity`, {}, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  deleteHospitalAdmin: async (id) => {
+    const res = await axios.delete(`${SUPER_ADMIN_API_URL}/hospital-admins/${id}`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  reassignHospital: async (adminId, hospitalId) => {
+    const res = await axios.patch(
+      `${SUPER_ADMIN_API_URL}/hospital-admins/${adminId}/hospital`,
+      { hospitalId, docId: adminId },
+      getSuperAdminAuthHeader()
+    );
+    return res.data;
+  },
 };
 
 export default hospitalService;

@@ -38,6 +38,7 @@ import customerInvoiceRoutes from './routes/stock/customerInvoice.routes.js';
 import paymentRoutes from './routes/stock/payment.routes.js';
 
 // Hospital Routes
+import hospitalAuthRoutes from './routes/hospital/auth.routes.js';
 import appointmentRoutes from './routes/hospital/appointment.routes.js';
 import billingRoutes from './routes/hospital/billing.routes.js';
 import departmentRoutes from './routes/hospital/department.routes.js';
@@ -53,6 +54,12 @@ import prescriptionRoutes from './routes/hospital/prescription.routes.js';
 import surgeryRecordRoutes from './routes/hospital/surgeryRecord.routes.js';
 import treatmentPlanRoutes from './routes/hospital/treatmentPlan.routes.js';
 import admissionRoutes from './routes/hospital/admission.routes.js';
+import hospitalAdminRoutes from './routes/hospital/hospitalAdmin.routes.js';
+
+// Super Admin Routes
+import superAdminHospitalRoutes from './routes/superAdmin/hospital.routes.js';
+import superAdminHospitalAdminRoutes from './routes/superAdmin/hospitalAdmin.routes.js';
+import superAdminDashboardRoutes from './routes/superAdmin/dashboard.routes.js';
 
 dotenv.config();
 
@@ -106,6 +113,9 @@ app.use('/api/v1/stock/invoice', customerInvoiceRoutes);
 app.use('/api/v1/stock/payment', paymentRoutes);
 
 // Hospital routes
+console.log('Registering hospital auth routes...');
+app.use('/api/v1/hospital/auth', hospitalAuthRoutes);
+console.log('Hospital auth routes registered successfully');
 app.use('/api/v1/hospital/appointments', appointmentRoutes);
 app.use('/api/v1/hospital/billing', billingRoutes);
 app.use('/api/v1/hospital/departments', departmentRoutes);
@@ -121,6 +131,18 @@ app.use('/api/v1/hospital/prescriptions', prescriptionRoutes);
 app.use('/api/v1/hospital/surgery-records', surgeryRecordRoutes);
 app.use('/api/v1/hospital/treatment-plans', treatmentPlanRoutes);
 app.use('/api/v1/hospital/admissions', admissionRoutes);
+app.use('/api/v1/hospital/admin', hospitalAdminRoutes);
+
+// Super Admin routes
+app.use('/api/v1/super-admin/hospitals', superAdminHospitalRoutes);
+app.use('/api/v1/super-admin/hospital-admins', superAdminHospitalAdminRoutes);
+app.use('/api/v1/super-admin/dashboard', superAdminDashboardRoutes);
+
+// Catch-all for debugging
+app.use('*', (req, res) => {
+  console.log('Unmatched route:', req.method, req.originalUrl);
+  res.status(404).json({ error: 'Route not found', method: req.method, url: req.originalUrl });
+});
 
 // Start server
 const PORT = process.env.PORT || 5000;

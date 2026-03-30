@@ -1,34 +1,36 @@
 import React from "react";
 
-const Card = ({
-  title,
-  subtitle,
-  value,
-  icon,
-  children,
-  className = "",
-}) => {
+const Card = ({ children, className = "" }) => {
   return (
-    <div className={`bg-white rounded-2xl shadow-sm border border-gray-100 p-6 ${className}`}>
-      {(title || subtitle) && (
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            {title && <h3 className="text-lg font-semibold text-gray-800">{title}</h3>}
-            {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
-          </div>
-          {icon && <div className="text-blue-600">{icon}</div>}
-        </div>
-      )}
-
-      {value && (
-        <div className="text-3xl font-bold text-gray-900 mb-4">
-          {value}
-        </div>
-      )}
-
+    <div className={`bg-white rounded-2xl shadow-sm border border-gray-100 ${className}`}>
       {children}
     </div>
   );
 };
 
+const CardHeader = ({ children, className = "" }) => {
+  return (
+    <div className={`p-6 pb-3 ${className}`}>
+      {children}
+    </div>
+  );
+};
+
+const CardTitle = ({ children, className = "" }) => {
+  return (
+    <h3 className={`text-lg font-semibold text-gray-800 ${className}`}>
+      {children}
+    </h3>
+  );
+};
+
+const CardContent = ({ children, className = "" }) => {
+  return (
+    <div className={`p-6 pt-0 ${className}`}>
+      {children}
+    </div>
+  );
+};
+
+export { Card, CardHeader, CardTitle, CardContent };
 export default Card;

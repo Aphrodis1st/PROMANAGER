@@ -14,4 +14,5 @@ const Select = ({ label, options = [], ...props }) => (
   </div>
 );
 
+export { Select };
 export default Select;
