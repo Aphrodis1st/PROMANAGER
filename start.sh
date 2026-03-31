@@ -1,14 +1,22 @@
 #!/bin/bash
+set -e
 
-# Navigate to backend directory
-cd backend
-
-# Install dependencies if node_modules doesn't exist
-if [ ! -d "node_modules" ]; then
-    echo "Installing backend dependencies..."
-    npm install
+# Determine working directory
+if [ -d "/app" ] && [ -f "/app/package.json" ]; then
+    # Container environment
+    WORK_DIR="/app"
+else
+    # Local environment
+    WORK_DIR="./backend"
 fi
 
-# Start the backend server
-echo "Starting backend server..."
-npm start
+echo "Working directory: $WORK_DIR"
+cd "$WORK_DIR"
+
+# Install dependencies
+echo "Installing dependencies..."
+npm install
+
+# Start the application
+echo "Starting application..."
+exec node src/server.js
