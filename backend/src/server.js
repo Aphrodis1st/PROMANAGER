@@ -5,13 +5,30 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { initFirebase } from '../utils/firebase.js';
 
+// Load environment variables
+dotenv.config();
+
+// Environment configuration
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const PORT = process.env.PORT || 5000;
+const CORS_ORIGIN = process.env.CORS_ORIGIN || (NODE_ENV === 'production' ? false : 'http://localhost:5173');
+
+console.log(`🚀 Starting server in ${NODE_ENV} mode`);
+console.log(`📡 CORS Origin: ${CORS_ORIGIN}`);
+console.log(`🔥 Firebase initialization starting...`);
+
+// Initialize Firebase
+await initFirebase();
+console.log('✅ Firebase initialized successfully');
+
+const app = express();
+
 // Routes
 import authRoutes from './routes/auth.routes.js';
 import rxRoutes from './routes/rx.routes.js';
 import pharmacyRoutes from './routes/pharmacy.routes.js';
 import callcenterRoutes from './routes/callcenter.routes.js';
-import statusRoutes from './routes/status.routes.js'; // ✅ add thi
-//import dispenseRouter from"./routes/stock/dispense.routes.js";
+import statusRoutes from './routes/status.routes.js';
 import productRouter from './routes/stock/product.routes.js';
 import purchaseRouter from './routes/stock/purchase.routes.js';
 import dispenseRouter from './routes/stock/dispense.routes.js';
@@ -29,7 +46,6 @@ import cashFlowRouter from './routes/stock/cashFlow.routes.js';
 import fixedAssetRouter from './routes/stock/fixedAssets.routes.js';
 import productionRouter from './routes/production/production.routes.js';
 import authRouters from './routes/stock/auths.routes.js';
-// import stockAdminRoutes from "./routes/stock/StockAdmin.routes.js";
 import purchaseRoutes from './routes/stock/purchase.routes.js';
 import supplierRoutes from './routes/stock/supplier.routes.js';
 import supplierInvoiceRoutes from './routes/stock/supplierInvoice.routes.js';
@@ -61,20 +77,18 @@ import superAdminHospitalRoutes from './routes/superAdmin/hospital.routes.js';
 import superAdminHospitalAdminRoutes from './routes/superAdmin/hospitalAdmin.routes.js';
 import superAdminDashboardRoutes from './routes/superAdmin/dashboard.routes.js';
 
-dotenv.config();
-
-// Initialize Firebase
-await initFirebase(process.env.SERVICE_ACCOUNT_PATH);
-
-const app = express();
-
 // Middlewares
 app.use(
   helmet(),
   express.json(),
   express.urlencoded({ extended: true }),
-  cors({ origin: process.env.CORS_ORIGIN || '*' }),
-  morgan('dev')
+  cors({ 
+    origin: CORS_ORIGIN,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  }),
+  morgan(NODE_ENV === 'production' ? 'combined' : 'dev')
 );
 
 // Health check
@@ -145,5 +159,11 @@ app.use('*', (req, res) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`API running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`\n🚀 Server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${NODE_ENV}`);
+  console.log(`📡 CORS Origin: ${CORS_ORIGIN}`);
+  console.log(`🔗 Health Check: http://localhost:${PORT}/api/v1/health`);
+  console.log(`📚 API Base URL: http://localhost:${PORT}/api/v1`);
+  console.log('\n✅ Server ready to accept connections\n');
+});
