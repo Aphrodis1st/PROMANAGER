@@ -5,6 +5,15 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const initFirebase = async (serviceAccountPath = process.env.SERVICE_ACCOUNT_PATH || './firebase-service-account.json') => {
+  // Debug: List files in current directory
+  console.log('Current working directory:', process.cwd());
+  try {
+    const files = fs.readdirSync('.');
+    console.log('Files in current directory:', files);
+  } catch (err) {
+    console.log('Could not list current directory:', err.message);
+  }
+  
   // Try multiple possible paths for Railway deployment
   const possiblePaths = [
     serviceAccountPath,
