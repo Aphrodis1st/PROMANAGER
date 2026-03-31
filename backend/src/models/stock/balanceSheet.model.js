@@ -1,12 +1,16 @@
 import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
 
-const journalCollection = db().collection("journalEntries");
-const accountSettingsCollection = db().collection("accountSettings");
-const bsCollection = db().collection("balanceSheets");
+const getJournalCollection = () => db().collection("journalEntries");
+const getAccountSettingsCollection = () => db().collection("accountSettings");
+const getBsCollection = () => db().collection("balanceSheets");
 
 const BalanceSheetModel = {
   async generate({ asOf = null, runId = `run-${Date.now()}` } = {}) {
+    const accountSettingsCollection = getAccountSettingsCollection();
+    const journalCollection = getJournalCollection();
+    const bsCollection = getBsCollection();
+    
     // load accounts
     const acctSnap = await accountSettingsCollection.get();
     const accounts = acctSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -80,6 +84,8 @@ const BalanceSheetModel = {
   },
 
   async getSnapshot(runId = null) {
+    const bsCollection = getBsCollection();
+    
     if (runId) {
       const doc = await bsCollection.doc(runId).get();
       if (!doc.exists) return null;
@@ -92,6 +98,7 @@ const BalanceSheetModel = {
   },
 
   async removeSnapshot(runId) {
+    const bsCollection = getBsCollection();
     await bsCollection.doc(runId).delete();
     return true;
   },

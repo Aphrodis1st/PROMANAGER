@@ -6,6 +6,7 @@ const returnCollection = db().collection('returns');
 
 export const ReturnModel = {
   async create(data) {
+    const returnCollection = getReturnCollection();
     const newDoc = returnCollection.doc();
     const timestamp = admin.firestore.FieldValue.serverTimestamp();
 
@@ -15,6 +16,7 @@ export const ReturnModel = {
   },
 
   async findAll() {
+    const returnCollection = getReturnCollection();
     const snapshot = await returnCollection.get();
     return snapshot.docs.map(doc => {
       const data = doc.data();
@@ -28,6 +30,7 @@ export const ReturnModel = {
   },
 
   async findById(id) {
+    const returnCollection = getReturnCollection();
     const snap = await returnCollection.doc(id).get();
     if (!snap.exists) return null;
     const data = snap.data();
@@ -40,6 +43,7 @@ export const ReturnModel = {
   },
 
   async update(id, data) {
+    const returnCollection = getReturnCollection();
     const ref = returnCollection.doc(id);
     const updateData = { ...data, updatedAt: admin.firestore.FieldValue.serverTimestamp() };
     await ref.update(updateData);
@@ -47,7 +51,8 @@ export const ReturnModel = {
   },
 
   async remove(id) {
-    await returnCollection.doc(id).delete();
+    const returnCollection = getReturnCollection();
+    const result = await returnCollection.doc(id).delete();
     return { id };
   },
 };

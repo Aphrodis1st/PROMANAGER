@@ -2,11 +2,12 @@
 import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
 
-const collection = db().collection("productionPlans");
+const getCollection = () => db().collection("productionPlans");
 
 export const ProductionPlanModel = {
   // Create new production plan
   async create(data) {
+    const collection = getCollection();
     const doc = collection.doc();
     const payload = {
       id: doc.id,
@@ -30,12 +31,14 @@ export const ProductionPlanModel = {
 
   // Find all plans
   async findAll() {
+    const collection = getCollection();
     const snap = await collection.orderBy("createdAt", "desc").get();
     return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
   },
 
   // Find by ID
   async findById(id) {
+    const collection = getCollection();
     const doc = await collection.doc(id).get();
     if (!doc.exists) return null;
     return { id: doc.id, ...doc.data() };
@@ -44,7 +47,8 @@ export const ProductionPlanModel = {
   async update(id, data) {
   if (!id) throw new Error("Document ID is missing");
 
-  const docRef = collection.doc(id);
+  const collection = getCollection();
+    const docRef = collection.doc(id);
   const doc = await docRef.get();
 
   if (!doc.exists) throw new Error(`Plan with ID ${id} does not exist`);
@@ -64,7 +68,8 @@ export const ProductionPlanModel = {
 
   // Remove plan
   async remove(id) {
-    await collection.doc(id).delete();
+    const collection = getCollection();
+    const result = await collection.doc(id).delete();
     return true;
   },
 };

@@ -2,11 +2,12 @@
 import { db } from '../../../utils/firebase.js';
 import admin from 'firebase-admin';
 
-// Call db() because it's a function
-const purchaseCollection = db().collection('purchases');
+// Lazy-loaded collection
+const getPurchaseCollection = () => db().collection('purchases');
 
 export const PurchaseModel = {
   async create(data) {
+    const purchaseCollection = getPurchaseCollection();
     const newDoc = purchaseCollection.doc();
     await newDoc.set({
       ...data,
@@ -17,17 +18,20 @@ export const PurchaseModel = {
   },
 
   async findAll() {
+    const purchaseCollection = getPurchaseCollection();
     const snapshot = await purchaseCollection.get();
     return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
   },
 
   async findById(id) {
+    const purchaseCollection = getPurchaseCollection();
     const snap = await purchaseCollection.doc(id).get();
     if (!snap.exists) return null;
     return { id: snap.id, ...snap.data() };
   },
 
   async update(id, data) {
+    const purchaseCollection = getPurchaseCollection();
     const ref = purchaseCollection.doc(id);
     await ref.update({
       ...data,
@@ -37,6 +41,7 @@ export const PurchaseModel = {
   },
 
   async remove(id) {
+    const purchaseCollection = getPurchaseCollection();
     const ref = purchaseCollection.doc(id);
     await ref.delete();
     return { id };
@@ -44,6 +49,7 @@ export const PurchaseModel = {
 
   // --- New method to adjust stock for a purchase ---
   async adjustStock(id, qtyChange) {
+    const purchaseCollection = getPurchaseCollection();
     const ref = purchaseCollection.doc(id);
     const doc = await ref.get();
     if (!doc.exists) throw new Error("Purchase not found");

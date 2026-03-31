@@ -1,16 +1,20 @@
 import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
 
-const productCollection = db().collection("products");
-const purchaseCollection = db().collection("purchases");
-const salesCollection = db().collection("sales");
-const returnsCollection = db().collection("returns"); // For returned products
+// Lazy-loaded collections to avoid calling db() before Firebase is initialized
+const getCollections = () => ({
+  productCollection: db().collection("products"),
+  purchaseCollection: db().collection("purchases"),
+  salesCollection: db().collection("sales"),
+  returnsCollection: db().collection("returns")
+});
 
 export const ProductModel = {
   // ========================
   // CREATE PRODUCT
   // ========================
   async create(data) {
+    const { productCollection } = getCollections();
     const newDoc = productCollection.doc();
     const timestamp = admin.firestore.FieldValue.serverTimestamp();
 
@@ -37,6 +41,7 @@ export const ProductModel = {
   // GET ALL PRODUCTS
   // ========================
   async findAll() {
+    const { productCollection } = getCollections();
     const snapshot = await productCollection.orderBy("createdAt", "desc").get();
     return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
   },
@@ -45,6 +50,7 @@ export const ProductModel = {
   // GET PRODUCT BY ID
   // ========================
   async findById(id) {
+    const { productCollection } = getCollections();
     const snap = await productCollection.doc(id).get();
     if (!snap.exists) return null;
     return { id: snap.id, ...snap.data() };
@@ -54,6 +60,7 @@ export const ProductModel = {
   // UPDATE PRODUCT
   // ========================
   async update(id, data) {
+    const { productCollection } = getCollections();
     const ref = productCollection.doc(id);
     const oldDoc = await ref.get();
     if (!oldDoc.exists) throw new Error("Product not found");
@@ -72,6 +79,7 @@ export const ProductModel = {
   // DELETE PRODUCT
   // ========================
   async remove(id) {
+    const { productCollection } = getCollections();
     const ref = productCollection.doc(id);
     const doc = await ref.get();
     if (!doc.exists) throw new Error("Product not found");
@@ -83,6 +91,7 @@ export const ProductModel = {
   // ADJUST STOCK
   // ========================
   async adjustStock(id, qtyChange) {
+    const { productCollection } = getCollections();
     const ref = productCollection.doc(id);
     const doc = await ref.get();
     if (!doc.exists) throw new Error("Product not found");
@@ -144,6 +153,7 @@ export const ProductModel = {
   // GET FULL SUMMARY REPORT
   // ========================
   async getSummaryReport(startDate, endDate) {
+    const { productCollection, purchaseCollection, salesCollection, returnsCollection } = getCollections();
     const [productsSnap, purchases, sales, returns] = await Promise.all([
       productCollection.get(),
       this.filterTransactionsByDateRange(purchaseCollection, startDate, endDate),

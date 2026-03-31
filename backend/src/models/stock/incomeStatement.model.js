@@ -1,13 +1,17 @@
 import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
 
-const journalCollection = db().collection("journalEntries");
-const accountSettingsCollection = db().collection("accountSettings");
-const incomeCollection = db().collection("incomeStatements");
+const getJournalCollection = () => db().collection("journalEntries");
+const getAccountSettingsCollection = () => db().collection("accountSettings");
+const getIncomeCollection = () => db().collection("incomeStatements");
 
 const IncomeStatementModel = {
   // Build income statement for given date range (inclusive)
   async generate({ from = null, to = null, runId = `run-${Date.now()}` } = {}) {
+    const accountSettingsCollection = getAccountSettingsCollection();
+    const journalCollection = getJournalCollection();
+    const incomeCollection = getIncomeCollection();
+    
     // load accounts metadata
     const acctSnap = await accountSettingsCollection.get();
     const accounts = acctSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -74,6 +78,8 @@ const IncomeStatementModel = {
   },
 
   async getSnapshot(runId = null) {
+    const incomeCollection = getIncomeCollection();
+    
     if (runId) {
       const doc = await incomeCollection.doc(runId).get();
       if (!doc.exists) return null;
@@ -86,6 +92,7 @@ const IncomeStatementModel = {
   },
 
   async removeSnapshot(runId) {
+    const incomeCollection = getIncomeCollection();
     await incomeCollection.doc(runId).delete();
     return true;
   },

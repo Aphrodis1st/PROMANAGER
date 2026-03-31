@@ -1,10 +1,11 @@
 import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
 
-const accountsCollection = db().collection("accounts");
+const getAccountsCollection = () => db().collection("accounts");
 
 export const AccountModel = {
   async create(data) {
+    const accountsCollection = getAccountsCollection();
     const newDoc = accountsCollection.doc(); // Firestore auto-ID
     await newDoc.set({
       ...data,
@@ -15,11 +16,13 @@ export const AccountModel = {
   },
 
   async findAll() {
+    const accountsCollection = getAccountsCollection();
     const snapshot = await accountsCollection.get();
     return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
   },
 
   async removeAll() {
+    const accountsCollection = getAccountsCollection();
     const snapshot = await accountsCollection.get();
     const batch = db().batch();
     snapshot.docs.forEach(doc => batch.delete(doc.ref));

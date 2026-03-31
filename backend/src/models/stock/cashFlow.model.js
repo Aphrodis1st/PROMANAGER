@@ -1,9 +1,9 @@
 import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
 
-const journalCollection = db().collection("journalEntries");
-const accountSettingsCollection = db().collection("accountSettings");
-const cfCollection = db().collection("cashFlows");
+const getJournalCollection = () => db().collection("journalEntries");
+const getAccountSettingsCollection = () => db().collection("accountSettings");
+const getCfCollection = () => db().collection("cashFlows");
 
 const CashFlowModel = {
   // generate cashflow for period
@@ -81,7 +81,8 @@ const CashFlowModel = {
 
   async getSnapshot(runId = null) {
     if (runId) {
-      const doc = await cfCollection.doc(runId).get();
+      const cfCollection = getCfCollection();
+    const doc = await cfCollection.doc(runId).get();
       if (!doc.exists) return null;
       return { id: doc.id, ...doc.data() };
     }
@@ -92,6 +93,7 @@ const CashFlowModel = {
   },
 
   async removeSnapshot(runId) {
+    const cfCollection = getCfCollection();
     await cfCollection.doc(runId).delete();
     return true;
   },

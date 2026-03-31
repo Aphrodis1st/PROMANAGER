@@ -6,6 +6,7 @@ const adjustmentCollection = db().collection('adjustments');
 
 export const AdjustmentModel = {
   async create(data) {
+    const adjustmentCollection = getAdjustmentCollection();
     const newDoc = adjustmentCollection.doc();
     const timestamp = admin.firestore.FieldValue.serverTimestamp();
 
@@ -15,6 +16,7 @@ export const AdjustmentModel = {
   },
 
   async findAll() {
+    const adjustmentCollection = getAdjustmentCollection();
     const snapshot = await adjustmentCollection.get();
     return snapshot.docs.map(doc => {
       const data = doc.data();
@@ -28,6 +30,7 @@ export const AdjustmentModel = {
   },
 
   async findById(id) {
+    const adjustmentCollection = getAdjustmentCollection();
     const snap = await adjustmentCollection.doc(id).get();
     if (!snap.exists) return null;
     const data = snap.data();
@@ -40,6 +43,7 @@ export const AdjustmentModel = {
   },
 
   async update(id, data) {
+    const adjustmentCollection = getAdjustmentCollection();
     const ref = adjustmentCollection.doc(id);
     const updateData = { ...data, updatedAt: admin.firestore.FieldValue.serverTimestamp() };
     await ref.update(updateData);
@@ -47,7 +51,8 @@ export const AdjustmentModel = {
   },
 
   async remove(id) {
-    await adjustmentCollection.doc(id).delete();
+    const adjustmentCollection = getAdjustmentCollection();
+    const result = await adjustmentCollection.doc(id).delete();
     return { id };
   },
 };

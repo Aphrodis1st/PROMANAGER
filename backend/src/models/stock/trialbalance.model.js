@@ -1,11 +1,12 @@
 import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
 
-const tbCollection = db().collection("trialBalance");
+const getTbCollection = () => db().collection("trialBalance");
 
 const TrialBalanceModel = {
   // Update trial balance totals for an account
   async update(accountId, type, amount) {
+    const tbCollection = getTbCollection();
     const docRef = tbCollection.doc(accountId);
     const snapshot = await docRef.get();
 
@@ -25,6 +26,7 @@ const TrialBalanceModel = {
 
   // Adjust trial balance (used for deleting or updating journal entries)
   async adjust(accountId, type, amount, isSubtract = false) {
+    const tbCollection = getTbCollection();
     const docRef = tbCollection.doc(accountId);
     const snapshot = await docRef.get();
     if (!snapshot.exists) return null;
@@ -42,6 +44,7 @@ const TrialBalanceModel = {
 
   // Get all trial balance entries
   async findAll() {
+    const tbCollection = getTbCollection();
     const snapshot = await tbCollection.get();
     return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
   }

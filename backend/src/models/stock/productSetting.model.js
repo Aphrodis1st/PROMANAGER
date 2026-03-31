@@ -1,11 +1,12 @@
 import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
 
-const collection = db().collection("productSettings");
+const getCollection = () => db().collection("productSettings");
 
 export const ProductSettingModel = {
   // CREATE PRODUCT SETTING
   async create(data) {
+    const collection = getCollection();
     const newDoc = collection.doc();
     const timestamp = admin.firestore.FieldValue.serverTimestamp();
 
@@ -34,12 +35,14 @@ export const ProductSettingModel = {
 
   // GET ALL PRODUCT SETTINGS
   async getAll() {
+    const collection = getCollection();
     const snapshot = await collection.orderBy("createdAt", "desc").get();
     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   },
 
   // GET PRODUCT SETTING BY ID
   async getById(id) {
+    const collection = getCollection();
     const doc = await collection.doc(id).get();
     if (!doc.exists) return null;
     return { id: doc.id, ...doc.data() };
@@ -47,6 +50,7 @@ export const ProductSettingModel = {
 
   // UPDATE PRODUCT SETTING
   async update(id, data) {
+    const collection = getCollection();
     const ref = collection.doc(id);
     const existing = await ref.get();
     if (!existing.exists) return null;
@@ -63,6 +67,7 @@ export const ProductSettingModel = {
 
   // UPDATE STOCK QUANTITY (used by sales/returns)
   async updateStock(id, quantityChange) {
+    const collection = getCollection();
     const ref = collection.doc(id);
     const doc = await ref.get();
     if (!doc.exists) throw new Error("Product not found");
@@ -81,6 +86,7 @@ export const ProductSettingModel = {
 
   // DELETE PRODUCT SETTING
   async remove(id) {
+    const collection = getCollection();
     const ref = collection.doc(id);
     const doc = await ref.get();
     if (!doc.exists) return false;

@@ -2,10 +2,11 @@
 import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
 
-const collection = db().collection("finishedGoods");
+const getCollection = () => db().collection("finishedGoods");
 
 export const FinishedGoodModel = {
   async create(data) {
+    const collection = getCollection();
     const doc = collection.doc();
     const payload = {
       id: doc.id,
@@ -25,11 +26,13 @@ export const FinishedGoodModel = {
   },
 
   async findAll() {
+    const collection = getCollection();
     const snap = await collection.orderBy("createdAt", "desc").get();
     return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
   },
 
   async findByCycle(cycleId) {
+    const collection = getCollection();
     const snap = await collection.where("cycleId", "==", cycleId).get();
     return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
   },
@@ -41,13 +44,15 @@ export const FinishedGoodModel = {
   },
 
   async findById(id) {
+    const collection = getCollection();
     const doc = await collection.doc(id).get();
     if (!doc.exists) return null;
     return { id: doc.id, ...doc.data() };
   },
 
   async remove(id) {
-    await collection.doc(id).delete();
+    const collection = getCollection();
+    const result = await collection.doc(id).delete();
     return true;
   },
 };

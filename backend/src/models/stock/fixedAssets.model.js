@@ -1,7 +1,7 @@
 import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
 
-const fixedAssetsCollection = db().collection("fixedAssets");
+const getFixedAssetsCollection = () => db().collection("fixedAssets");
 
 export const FixedAssetModel = {
   async create(data) {
@@ -38,11 +38,13 @@ export const FixedAssetModel = {
   },
 
   async findAll() {
+    const fixedAssetsCollection = getFixedAssetsCollection();
     const snapshot = await fixedAssetsCollection.orderBy("acquisitionDate", "desc").get();
     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   },
 
   async findById(id) {
+    const fixedAssetsCollection = getFixedAssetsCollection();
     const doc = await fixedAssetsCollection.doc(id).get();
     if (!doc.exists) return null;
     return { id: doc.id, ...doc.data() };
@@ -59,6 +61,7 @@ export const FixedAssetModel = {
   },
 
   async remove(id) {
+    const fixedAssetsCollection = getFixedAssetsCollection();
     await fixedAssetsCollection.doc(id).delete();
     return true;
   },

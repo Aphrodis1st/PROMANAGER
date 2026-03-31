@@ -1,11 +1,12 @@
 import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
 
-const salesCollection = db().collection("sales");
+const getSalesCollection = () => db().collection("sales");
 
 export const SalesModel = {
   // CREATE SALE
   async create(data) {
+    const salesCollection = getSalesCollection();
     const newDoc = salesCollection.doc();
     const payload = {
       ...data,
@@ -19,12 +20,14 @@ export const SalesModel = {
 
   // FIND ALL SALES
   async findAll() {
+    const salesCollection = getSalesCollection();
     const snapshot = await salesCollection.orderBy("createdAt", "desc").get();
     return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
   },
 
   // FIND ONE SALE BY ID
   async findById(id) {
+    const salesCollection = getSalesCollection();
     const doc = await salesCollection.doc(id).get();
     if (!doc.exists) return null;
     return { id: doc.id, ...doc.data() };
@@ -32,6 +35,7 @@ export const SalesModel = {
 
   // UPDATE SALE
   async update(id, data) {
+    const salesCollection = getSalesCollection();
     const ref = salesCollection.doc(id);
     const doc = await ref.get();
     if (!doc.exists) return null;
@@ -48,6 +52,7 @@ export const SalesModel = {
 
   // DELETE SALE
   async remove(id) {
+    const salesCollection = getSalesCollection();
     const ref = salesCollection.doc(id);
     const doc = await ref.get();
     if (!doc.exists) return false;

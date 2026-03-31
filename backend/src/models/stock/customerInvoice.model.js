@@ -1,10 +1,11 @@
 import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
 
-const customerInvoiceCollection = db().collection("customerInvoices");
+const getCustomerInvoiceCollection = () => db().collection("customerInvoices");
 
 export const CustomerInvoiceModel = {
   async create(data) {
+    const customerInvoiceCollection = getCustomerInvoiceCollection();
     const newDoc = customerInvoiceCollection.doc();
     await newDoc.set({
       ...data,
@@ -15,17 +16,20 @@ export const CustomerInvoiceModel = {
   },
 
   async findAll() {
+    const customerInvoiceCollection = getCustomerInvoiceCollection();
     const snapshot = await customerInvoiceCollection.get();
     return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
   },
 
   async findById(id) {
+    const customerInvoiceCollection = getCustomerInvoiceCollection();
     const snap = await customerInvoiceCollection.doc(id).get();
     if (!snap.exists) return null;
     return { id: snap.id, ...snap.data() };
   },
 
   async update(id, data) {
+    const customerInvoiceCollection = getCustomerInvoiceCollection();
     const ref = customerInvoiceCollection.doc(id);
     await ref.update({
       ...data,
@@ -35,12 +39,14 @@ export const CustomerInvoiceModel = {
   },
 
   async remove(id) {
+    const customerInvoiceCollection = getCustomerInvoiceCollection();
     const ref = customerInvoiceCollection.doc(id);
     await ref.delete();
     return { id };
   },
 
   async findByCustomer(customerId) {
+    const customerInvoiceCollection = getCustomerInvoiceCollection();
     const snapshot = await customerInvoiceCollection
       .where("customerId", "==", customerId)
       .get();

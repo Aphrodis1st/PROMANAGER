@@ -6,6 +6,7 @@ const auditCollection = db().collection('stock_audits');
 
 export const StockAuditModel = {
   async log(action, data, userId) {
+    const auditCollection = getAuditCollection();
     const newDoc = auditCollection.doc();
     const timestamp = admin.firestore.FieldValue.serverTimestamp();
 
@@ -15,6 +16,7 @@ export const StockAuditModel = {
   },
 
   async findAll() {
+    const auditCollection = getAuditCollection();
     const snapshot = await auditCollection.get();
     return snapshot.docs.map(doc => {
       const data = doc.data();
@@ -28,6 +30,7 @@ export const StockAuditModel = {
   },
 
   async findById(id) {
+    const auditCollection = getAuditCollection();
     const snap = await auditCollection.doc(id).get();
     if (!snap.exists) return null;
     const data = snap.data();

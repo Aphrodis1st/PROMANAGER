@@ -2,10 +2,11 @@
 import { db } from '../../../utils/firebase.js';
 import admin from 'firebase-admin';
 
-const transferCollection = db().collection('transfers');
+const getTransferCollection = () => db().collection('transfers');
 
 export const TransferModel = {
   async create(data) {
+    const transferCollection = getTransferCollection();
     const newDoc = transferCollection.doc();
     const timestamp = admin.firestore.FieldValue.serverTimestamp();
 
@@ -20,6 +21,7 @@ export const TransferModel = {
   },
 
   async findAll() {
+    const transferCollection = getTransferCollection();
     const snapshot = await transferCollection.get();
     return snapshot.docs.map(doc => {
       const data = doc.data();
@@ -33,6 +35,7 @@ export const TransferModel = {
   },
 
   async findById(id) {
+    const transferCollection = getTransferCollection();
     const snap = await transferCollection.doc(id).get();
     if (!snap.exists) return null;
     const data = snap.data();
@@ -45,6 +48,7 @@ export const TransferModel = {
   },
 
   async update(id, data) {
+    const transferCollection = getTransferCollection();
     const ref = transferCollection.doc(id);
     const updateData = {
       ...data,
@@ -55,6 +59,7 @@ export const TransferModel = {
   },
 
   async remove(id) {
+    const transferCollection = getTransferCollection();
     await transferCollection.doc(id).delete();
     return { id };
   },

@@ -2,10 +2,11 @@
 import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
 
-const collection = db().collection("materialConsumption");
+const getCollection = () => db().collection("materialConsumption");
 
 export const MaterialConsumptionModel = {
   async create(data) {
+    const collection = getCollection();
     const doc = collection.doc();
     const payload = {
       id: doc.id,
@@ -23,11 +24,13 @@ export const MaterialConsumptionModel = {
   },
 
   async findByCycle(cycleId) {
+    const collection = getCollection();
     const snap = await collection.where("cycleId", "==", cycleId).get();
     return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
   },
 
   async findByFinishedGood(fgId) {
+    const collection = getCollection();
     const snap = await collection.where("finishedGoodId", "==", fgId).get();
     return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
   },
