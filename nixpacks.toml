@@ -1,0 +1,1 @@
+[phases.setup]\nnixPkgs = ['nodejs-18_x', 'npm-9_x']\n\n[phases.install]\ncmds = ['cd backend && npm ci --only=production']\n\n[phases.build]\ncmds = ['echo \"No build step required\"']\n\n[start]\ncmd = 'cd backend && npm start'

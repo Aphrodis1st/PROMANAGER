@@ -1,22 +1,15 @@
 #!/bin/bash
 set -e
 
-# Determine working directory
-if [ -d "/app" ] && [ -f "/app/package.json" ]; then
-    # Container environment
-    WORK_DIR="/app"
-else
-    # Local environment
-    WORK_DIR="./backend"
-fi
+echo "Starting MADSMART backend..."
 
-echo "Working directory: $WORK_DIR"
-cd "$WORK_DIR"
+# Navigate to backend directory
+cd backend
 
 # Install dependencies
 echo "Installing dependencies..."
-npm install
+npm install --production
 
-# Start the application
-echo "Starting application..."
-exec node src/server.js
+# Start the server
+echo "Starting server on port 8000..."
+exec npm start
