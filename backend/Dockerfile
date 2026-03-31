@@ -13,6 +13,7 @@ RUN npm ci --only=production && npm cache clean --force
 COPY src/ ./src/
 COPY utils/ ./utils/
 COPY serveces/ ./serveces/
+COPY firebase-service-account.json ./
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
