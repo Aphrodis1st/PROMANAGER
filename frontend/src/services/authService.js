@@ -1,8 +1,9 @@
 // src/services/authService.js
 import axios from "axios";
+import { API_BASE_URL } from '../constants/api';
 
 // Change this to match your backend URL
-const API_URL = "http://localhost:5000/api/v1/stock/auth";
+const API_URL = `${API_BASE_URL}/api/v1/stock/auth`;
 
 const getAuthHeader = () => ({
     headers: {

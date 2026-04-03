@@ -1,7 +1,8 @@
 import axios from "axios";
+import { API_BASE_URL } from '../constants/api';
 
-const API_URL = "http://localhost:5000/api/v1/stock";
-const PRODUCTION_API_URL = "http://localhost:5000/api/v1/production";
+const API_URL = `${API_BASE_URL}/api/v1/stock`;
+const PRODUCTION_API_URL = `${API_BASE_URL}/api/v1/production`;
 
 const getAuthHeader = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

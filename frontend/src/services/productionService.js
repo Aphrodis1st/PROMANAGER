@@ -1,7 +1,8 @@
 // services/productionService.js
 import axios from "axios";
+import { API_BASE_URL } from '../constants/api';
 
-const PRODUCTION_API_URL = "http://localhost:5000/api/v1/production";
+const PRODUCTION_API_URL = `${API_BASE_URL}/api/v1/production`;
 
 const getAuthHeader = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
