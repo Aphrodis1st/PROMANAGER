@@ -20,20 +20,37 @@ export const initFirebase = async () => {
   if (projectId && privateKeyRaw && clientEmail) {
     console.log('Using Firebase service account from individual environment variables');
     
-    // Handle private key formatting - Railway might mess up newlines
+    // Handle private key formatting - Railway messes up newlines and quotes
     let privateKey = privateKeyRaw;
     
-    // If the key doesn't have proper newlines, add them
-    if (!privateKey.includes('\n')) {
+    // Remove any surrounding quotes that Railway might add
+    privateKey = privateKey.replace(/^["']|["']$/g, '');
+    
+    // Handle different newline formats
+    if (privateKey.includes('\\n')) {
+      // Replace escaped newlines with actual newlines
+      privateKey = privateKey.replace(/\\n/g, '\n');
+    } else if (!privateKey.includes('\n')) {
+      // If no newlines at all, reconstruct the key
       privateKey = privateKey
         .replace('-----BEGIN PRIVATE KEY-----', '-----BEGIN PRIVATE KEY-----\n')
         .replace('-----END PRIVATE KEY-----', '\n-----END PRIVATE KEY-----')
         .replace(/(.{64})/g, '$1\n')
         .replace(/\n\n/g, '\n');
-    } else {
-      // Replace escaped newlines with actual newlines
-      privateKey = privateKey.replace(/\\n/g, '\n');
     }
+    
+    // Clean up any malformed formatting
+    privateKey = privateKey
+      .replace(/\n\s+/g, '\n') // Remove spaces after newlines
+      .replace(/\s+\n/g, '\n') // Remove spaces before newlines
+      .trim();
+    
+    console.log('Private key format check:', {
+      hasBeginMarker: privateKey.includes('-----BEGIN PRIVATE KEY-----'),
+      hasEndMarker: privateKey.includes('-----END PRIVATE KEY-----'),
+      hasNewlines: privateKey.includes('\n'),
+      length: privateKey.length
+    });
     
     serviceAccount = {
       type: "service_account",
@@ -54,11 +71,17 @@ export const initFirebase = async () => {
   }
 
   if (admin.apps.length === 0) {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      storageBucket: cleanEnvVar(process.env.FIREBASE_STORAGE_BUCKET) || 'e-pharmc.appspot.com',
-    });
-    console.log('Firebase Admin initialized with Storage Bucket');
+    try {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+        storageBucket: cleanEnvVar(process.env.FIREBASE_STORAGE_BUCKET) || 'e-pharmc.appspot.com',
+      });
+      console.log('Firebase Admin initialized with Storage Bucket');
+    } catch (error) {
+      console.error('Firebase initialization failed:', error.message);
+      console.error('Private key preview:', privateKey.substring(0, 100) + '...');
+      throw error;
+    }
   } else {
     console.log('Firebase Admin already initialized');
   }

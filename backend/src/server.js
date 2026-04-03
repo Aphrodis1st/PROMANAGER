@@ -16,7 +16,7 @@ const cleanEnvVar = (value) => {
 
 // Environment configuration
 const NODE_ENV = cleanEnvVar(process.env.NODE_ENV) || 'development';
-const PORT = parseInt(cleanEnvVar(process.env.PORT)) || (NODE_ENV === 'production' ? 5000 : 3001);
+const PORT = parseInt(cleanEnvVar(process.env.PORT)) || (NODE_ENV === 'production' ? 8080 : 3001);
 const CORS_ORIGIN = cleanEnvVar(process.env.CORS_ORIGIN) || (NODE_ENV === 'production' ? false : 'http://localhost:5173');
 
 console.log(`🚀 Starting server in ${NODE_ENV} mode`);
