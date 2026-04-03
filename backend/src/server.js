@@ -159,11 +159,12 @@ app.use('*', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`\n🚀 Server running on port ${PORT}`);
+const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+app.listen(PORT, HOST, () => {
+  console.log(`\n🚀 Server running on ${HOST}:${PORT}`);
   console.log(`🌍 Environment: ${NODE_ENV}`);
   console.log(`📡 CORS Origin: ${CORS_ORIGIN}`);
-  console.log(`🔗 Health Check: http://localhost:${PORT}/api/v1/health`);
-  console.log(`📚 API Base URL: http://localhost:${PORT}/api/v1`);
+  console.log(`🔗 Health Check: http://${HOST}:${PORT}/api/v1/health`);
+  console.log(`📚 API Base URL: http://${HOST}:${PORT}/api/v1`);
   console.log('\n✅ Server ready to accept connections\n');
 });
