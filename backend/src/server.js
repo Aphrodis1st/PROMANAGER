@@ -6,7 +6,8 @@ import dotenv from 'dotenv';
 import { initFirebase } from '../utils/firebase.js';
 
 // Load environment variables
-dotenv.config();
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development';
+dotenv.config({ path: envFile });
 
 // Clean environment variables (remove quotes if present)
 const cleanEnvVar = (value) => {
