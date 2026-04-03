@@ -8,13 +8,20 @@ import { initFirebase } from '../utils/firebase.js';
 // Load environment variables
 dotenv.config();
 
+// Clean environment variables (remove quotes if present)
+const cleanEnvVar = (value) => {
+  if (!value) return value;
+  return value.replace(/^["']|["']$/g, '');
+};
+
 // Environment configuration
-const NODE_ENV = process.env.NODE_ENV || 'development';
-const PORT = process.env.PORT || 5000;
-const CORS_ORIGIN = process.env.CORS_ORIGIN || (NODE_ENV === 'production' ? false : 'http://localhost:5173');
+const NODE_ENV = cleanEnvVar(process.env.NODE_ENV) || 'development';
+const PORT = parseInt(cleanEnvVar(process.env.PORT)) || (NODE_ENV === 'production' ? 5000 : 3001);
+const CORS_ORIGIN = cleanEnvVar(process.env.CORS_ORIGIN) || (NODE_ENV === 'production' ? false : 'http://localhost:5173');
 
 console.log(`🚀 Starting server in ${NODE_ENV} mode`);
 console.log(`📡 CORS Origin: ${CORS_ORIGIN}`);
+console.log(`🔌 Port will be: ${PORT}`);
 console.log(`🔥 Firebase initialization starting...`);
 
 // Initialize Firebase
@@ -159,7 +166,7 @@ app.use('*', (req, res) => {
 });
 
 // Start server
-const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1';
 app.listen(PORT, HOST, () => {
   console.log(`\n🚀 Server running on ${HOST}:${PORT}`);
   console.log(`🌍 Environment: ${NODE_ENV}`);
