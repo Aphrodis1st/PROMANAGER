@@ -24,13 +24,20 @@ const allowed = CORS_ORIGIN ? CORS_ORIGIN.split(',') : false;
 console.log(`🚀 Starting server in ${NODE_ENV} mode`);
 console.log(`📡 CORS Origin: ${CORS_ORIGIN}`);
 console.log(`🔌 Port will be: ${PORT}`);
-console.log(`🔥 Firebase initialization starting...`);
-
-// Initialize Firebase
-await initFirebase();
-console.log('✅ Firebase initialized successfully');
 
 const app = express();
+
+// Initialize Firebase asynchronously (non-blocking)
+let firebaseReady = false;
+console.log(`🔥 Firebase initialization starting...`);
+initFirebase()
+  .then(() => {
+    firebaseReady = true;
+    console.log('✅ Firebase initialized successfully');
+  })
+  .catch((error) => {
+    console.error('❌ Firebase initialization failed:', error);
+  });
 
 // Routes
 import authRoutes from './routes/auth.routes.js';
@@ -111,9 +118,28 @@ app.options('*', (req, res) => {
   res.sendStatus(200);
 });
 
+// Firebase readiness middleware
+const requireFirebase = (req, res, next) => {
+  if (!firebaseReady) {
+    return res.status(503).json({ 
+      error: 'Service temporarily unavailable', 
+      message: 'Firebase is still initializing' 
+    });
+  }
+  next();
+};
+
 // Health check
-app.get('/', (_req, res) => res.json({ message: 'ProManager API Server', status: 'running', timestamp: new Date().toISOString() }));
-app.get('/api/v1/health', (_req, res) => res.json({ ok: true }));
+app.get('/', (_req, res) => res.json({ 
+  message: 'ProManager API Server', 
+  status: 'running', 
+  firebase: firebaseReady ? 'ready' : 'initializing',
+  timestamp: new Date().toISOString() 
+}));
+app.get('/api/v1/health', (_req, res) => res.json({ 
+  ok: true, 
+  firebase: firebaseReady ? 'ready' : 'initializing' 
+}));
 
 // API routes
 app.use('/api/v1/auth', authRoutes); // auth (register/login)
@@ -149,24 +175,24 @@ app.use('/api/v1/stock/payment', paymentRoutes);
 
 // Hospital routes
 console.log('Registering hospital auth routes...');
-app.use('/api/v1/hospital/auth', hospitalAuthRoutes);
+app.use('/api/v1/hospital/auth', requireFirebase, hospitalAuthRoutes);
 console.log('Hospital auth routes registered successfully');
-app.use('/api/v1/hospital/appointments', appointmentRoutes);
-app.use('/api/v1/hospital/billing', billingRoutes);
-app.use('/api/v1/hospital/departments', departmentRoutes);
-app.use('/api/v1/hospital/doctors', doctorRoutes);
-app.use('/api/v1/hospital/lab', labRoutes);
-app.use('/api/v1/hospital/medical-records', medicalRecordRoutes);
-app.use('/api/v1/hospital/patients', patientRoutes);
-app.use('/api/v1/hospital/specializations', specializationRoutes);
-app.use('/api/v1/hospital/wards', wardRoutes);
-app.use('/api/v1/hospital/insurance-providers', insuranceProviderRoutes);
-app.use('/api/v1/hospital/vital-signs', vitalSignsRoutes);
-app.use('/api/v1/hospital/prescriptions', prescriptionRoutes);
-app.use('/api/v1/hospital/surgery-records', surgeryRecordRoutes);
-app.use('/api/v1/hospital/treatment-plans', treatmentPlanRoutes);
-app.use('/api/v1/hospital/admissions', admissionRoutes);
-app.use('/api/v1/hospital/admin', hospitalAdminRoutes);
+app.use('/api/v1/hospital/appointments', requireFirebase, appointmentRoutes);
+app.use('/api/v1/hospital/billing', requireFirebase, billingRoutes);
+app.use('/api/v1/hospital/departments', requireFirebase, departmentRoutes);
+app.use('/api/v1/hospital/doctors', requireFirebase, doctorRoutes);
+app.use('/api/v1/hospital/lab', requireFirebase, labRoutes);
+app.use('/api/v1/hospital/medical-records', requireFirebase, medicalRecordRoutes);
+app.use('/api/v1/hospital/patients', requireFirebase, patientRoutes);
+app.use('/api/v1/hospital/specializations', requireFirebase, specializationRoutes);
+app.use('/api/v1/hospital/wards', requireFirebase, wardRoutes);
+app.use('/api/v1/hospital/insurance-providers', requireFirebase, insuranceProviderRoutes);
+app.use('/api/v1/hospital/vital-signs', requireFirebase, vitalSignsRoutes);
+app.use('/api/v1/hospital/prescriptions', requireFirebase, prescriptionRoutes);
+app.use('/api/v1/hospital/surgery-records', requireFirebase, surgeryRecordRoutes);
+app.use('/api/v1/hospital/treatment-plans', requireFirebase, treatmentPlanRoutes);
+app.use('/api/v1/hospital/admissions', requireFirebase, admissionRoutes);
+app.use('/api/v1/hospital/admin', requireFirebase, hospitalAdminRoutes);
 
 // Super Admin routes
 app.use('/api/v1/super-admin/hospitals', superAdminHospitalRoutes);
