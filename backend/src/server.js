@@ -18,6 +18,7 @@ const cleanEnvVar = (value) => {
 const NODE_ENV = cleanEnvVar(process.env.NODE_ENV) || 'development';
 const PORT = parseInt(cleanEnvVar(process.env.PORT)) || (NODE_ENV === 'production' ? 8080 : 3001);
 const CORS_ORIGIN = cleanEnvVar(process.env.CORS_ORIGIN) || (NODE_ENV === 'production' ? false : 'http://localhost:5173');
+const allowed = CORS_ORIGIN ? CORS_ORIGIN.split(',') : false;
 
 console.log(`🚀 Starting server in ${NODE_ENV} mode`);
 console.log(`📡 CORS Origin: ${CORS_ORIGIN}`);
@@ -90,7 +91,7 @@ app.use(
   express.json(),
   express.urlencoded({ extended: true }),
   cors({ 
-    origin: CORS_ORIGIN,
+    origin: allowed,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
