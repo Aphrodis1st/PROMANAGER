@@ -95,12 +95,24 @@ app.use(
     origin: allowed,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    preflightContinue: false,
+    optionsSuccessStatus: 200
   }),
   morgan(NODE_ENV === 'production' ? 'combined' : 'dev')
 );
 
+// Additional CORS preflight handler
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin);
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.sendStatus(200);
+});
+
 // Health check
+app.get('/', (_req, res) => res.json({ message: 'ProManager API Server', status: 'running', timestamp: new Date().toISOString() }));
 app.get('/api/v1/health', (_req, res) => res.json({ ok: true }));
 
 // API routes
