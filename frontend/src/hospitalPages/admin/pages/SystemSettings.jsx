@@ -18,7 +18,19 @@ import {
   Globe,
   Lock,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Calendar,
+  FileText,
+  DollarSign,
+  Stethoscope,
+  Bed,
+  Activity,
+  Package,
+  UserCog,
+  BarChart,
+  Layout,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { useHospitalAuth } from '../../../context/HospitalAuthContext';
 import hospitalService from '../../../services/hospitalService';
@@ -65,7 +77,51 @@ const SystemSettings = () => {
     labIntegration: false,
     pharmacyIntegration: false,
     insuranceIntegration: false,
-    paymentGateway: 'stripe'
+    paymentGateway: 'stripe',
+    
+    // Module Access Control
+    modules: {
+      dashboard: { enabled: true, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },
+      appointments: { enabled: true, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },
+      patients: { enabled: true, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },
+      doctors: { enabled: true, roles: ['admin', 'receptionist'] },
+      staff: { enabled: true, roles: ['admin'] },
+      departments: { enabled: true, roles: ['admin'] },
+      billing: { enabled: true, roles: ['admin', 'receptionist'] },
+      pharmacy: { enabled: true, roles: ['admin', 'pharmacist'] },
+      laboratory: { enabled: true, roles: ['admin', 'lab_tech'] },
+      inventory: { enabled: true, roles: ['admin', 'inventory_manager'] },
+      reports: { enabled: true, roles: ['admin', 'doctor'] },
+      settings: { enabled: true, roles: ['admin'] }
+    },
+    
+    // Page Features
+    features: {
+      onlineBooking: true,
+      patientPortal: true,
+      telemedicine: false,
+      emergencyMode: true,
+      bedManagement: true,
+      queueManagement: true,
+      smsReminders: false,
+      emailReminders: true,
+      paymentProcessing: true,
+      insuranceClaims: false,
+      prescriptionManagement: true,
+      labReports: true,
+      medicalRecords: true,
+      analytics: true
+    },
+    
+    // Display Settings
+    display: {
+      theme: 'light',
+      compactMode: false,
+      showPatientPhotos: true,
+      showDoctorRatings: true,
+      dashboardLayout: 'grid',
+      itemsPerPage: 10
+    }
   });
 
   const handleSaveSettings = async () => {
@@ -87,6 +143,9 @@ const SystemSettings = () => {
   const tabs = [
     { id: 'general', label: 'General', icon: Hospital, color: 'bg-blue-50 text-blue-600' },
     { id: 'system', label: 'System', icon: Settings, color: 'bg-green-50 text-green-600' },
+    { id: 'modules', label: 'Modules', icon: Layout, color: 'bg-indigo-50 text-indigo-600' },
+    { id: 'features', label: 'Features', icon: Activity, color: 'bg-cyan-50 text-cyan-600' },
+    { id: 'display', label: 'Display', icon: Eye, color: 'bg-teal-50 text-teal-600' },
     { id: 'notifications', label: 'Notifications', icon: Bell, color: 'bg-yellow-50 text-yellow-600' },
     { id: 'security', label: 'Security', icon: Shield, color: 'bg-red-50 text-red-600' },
     { id: 'integrations', label: 'Integrations', icon: Globe, color: 'bg-purple-50 text-purple-600' }
@@ -417,10 +476,229 @@ const SystemSettings = () => {
     </div>
   );
 
+  const renderModulesSettings = () => {
+    const modulesList = [
+      { key: 'dashboard', label: 'Dashboard', icon: BarChart, desc: 'Main analytics dashboard' },
+      { key: 'appointments', label: 'Appointments', icon: Calendar, desc: 'Appointment scheduling system' },
+      { key: 'patients', label: 'Patients', icon: Users, desc: 'Patient management' },
+      { key: 'doctors', label: 'Doctors', icon: Stethoscope, desc: 'Doctor profiles and schedules' },
+      { key: 'staff', label: 'Staff', icon: UserCog, desc: 'Staff management' },
+      { key: 'departments', label: 'Departments', icon: Hospital, desc: 'Department organization' },
+      { key: 'billing', label: 'Billing', icon: DollarSign, desc: 'Billing and invoicing' },
+      { key: 'pharmacy', label: 'Pharmacy', icon: Package, desc: 'Pharmacy management' },
+      { key: 'laboratory', label: 'Laboratory', icon: Activity, desc: 'Lab tests and results' },
+      { key: 'inventory', label: 'Inventory', icon: Database, desc: 'Inventory tracking' },
+      { key: 'reports', label: 'Reports', icon: FileText, desc: 'Reports and analytics' },
+      { key: 'settings', label: 'Settings', icon: Settings, desc: 'System settings' }
+    ];
+
+    return (
+      <div className="space-y-6">
+        <Card className="shadow-sm">
+          <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50">
+            <CardTitle className="flex items-center gap-2 text-indigo-800">
+              <Layout className="h-5 w-5" />
+              Module Access Control
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {modulesList.map(({ key, label, icon: Icon, desc }) => (
+                <div key={key} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-indigo-50 rounded-lg">
+                        <Icon className="h-5 w-5 text-indigo-600" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-800">{label}</div>
+                        <div className="text-xs text-gray-600">{desc}</div>
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settings.modules[key]?.enabled}
+                        onChange={(e) => setSettings({
+                          ...settings,
+                          modules: {
+                            ...settings.modules,
+                            [key]: { ...settings.modules[key], enabled: e.target.checked }
+                          }
+                        })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Access: {settings.modules[key]?.roles?.join(', ')}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderFeaturesSettings = () => {
+    const featuresList = [
+      { key: 'onlineBooking', label: 'Online Booking', desc: 'Allow patients to book online', icon: Calendar },
+      { key: 'patientPortal', label: 'Patient Portal', desc: 'Patient self-service portal', icon: Users },
+      { key: 'telemedicine', label: 'Telemedicine', desc: 'Virtual consultations', icon: Activity },
+      { key: 'emergencyMode', label: 'Emergency Mode', desc: 'Emergency patient handling', icon: AlertTriangle },
+      { key: 'bedManagement', label: 'Bed Management', desc: 'Track bed availability', icon: Bed },
+      { key: 'queueManagement', label: 'Queue Management', desc: 'Patient queue system', icon: Users },
+      { key: 'smsReminders', label: 'SMS Reminders', desc: 'Send SMS notifications', icon: Phone },
+      { key: 'emailReminders', label: 'Email Reminders', desc: 'Send email notifications', icon: Mail },
+      { key: 'paymentProcessing', label: 'Payment Processing', desc: 'Online payment gateway', icon: DollarSign },
+      { key: 'insuranceClaims', label: 'Insurance Claims', desc: 'Process insurance claims', icon: Shield },
+      { key: 'prescriptionManagement', label: 'Prescriptions', desc: 'Digital prescriptions', icon: FileText },
+      { key: 'labReports', label: 'Lab Reports', desc: 'Digital lab reports', icon: Activity },
+      { key: 'medicalRecords', label: 'Medical Records', desc: 'Electronic health records', icon: Database },
+      { key: 'analytics', label: 'Analytics', desc: 'Advanced analytics', icon: BarChart }
+    ];
+
+    return (
+      <div className="space-y-6">
+        <Card className="shadow-sm">
+          <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50">
+            <CardTitle className="flex items-center gap-2 text-cyan-800">
+              <Activity className="h-5 w-5" />
+              Feature Management
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {featuresList.map(({ key, label, desc, icon: Icon }) => (
+                <div key={key} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <Icon className="h-5 w-5 text-cyan-600" />
+                    <div>
+                      <div className="font-semibold text-gray-800">{label}</div>
+                      <div className="text-xs text-gray-600">{desc}</div>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={settings.features[key]}
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        features: { ...settings.features, [key]: e.target.checked }
+                      })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                  </label>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderDisplaySettings = () => (
+    <div className="space-y-6">
+      <Card className="shadow-sm">
+        <CardHeader className="bg-gradient-to-r from-teal-50 to-green-50">
+          <CardTitle className="flex items-center gap-2 text-teal-800">
+            <Eye className="h-5 w-5" />
+            Display & UI Settings
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6 p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Theme</label>
+              <select
+                value={settings.display.theme}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  display: { ...settings.display, theme: e.target.value }
+                })}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+              >
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="auto">Auto</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Dashboard Layout</label>
+              <select
+                value={settings.display.dashboardLayout}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  display: { ...settings.display, dashboardLayout: e.target.value }
+                })}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+              >
+                <option value="grid">Grid</option>
+                <option value="list">List</option>
+                <option value="compact">Compact</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Items Per Page</label>
+              <select
+                value={settings.display.itemsPerPage}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  display: { ...settings.display, itemsPerPage: parseInt(e.target.value) }
+                })}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+              >
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {[
+              { key: 'compactMode', label: 'Compact Mode', desc: 'Reduce spacing for more content' },
+              { key: 'showPatientPhotos', label: 'Show Patient Photos', desc: 'Display patient profile photos' },
+              { key: 'showDoctorRatings', label: 'Show Doctor Ratings', desc: 'Display doctor ratings and reviews' }
+            ].map(({ key, label, desc }) => (
+              <div key={key} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                <div>
+                  <div className="font-semibold text-gray-800">{label}</div>
+                  <div className="text-sm text-gray-600">{desc}</div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={settings.display[key]}
+                    onChange={(e) => setSettings({
+                      ...settings,
+                      display: { ...settings.display, [key]: e.target.checked }
+                    })}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
+                </label>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'general': return renderGeneralSettings();
       case 'system': return renderSystemSettings();
+      case 'modules': return renderModulesSettings();
+      case 'features': return renderFeaturesSettings();
+      case 'display': return renderDisplaySettings();
       case 'notifications': return renderNotificationSettings();
       case 'security': return renderSecuritySettings();
       case 'integrations': return renderIntegrationSettings();
