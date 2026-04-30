@@ -651,7 +651,7 @@ const HospitalRoutes = () => {
         <Route 
           path="departments" 
           element={
-            <ProtectedRoute permissions={PERMISSIONS.VIEW_DEPARTMENTS}>
+            <ProtectedRoute roles={[HOSPITAL_ROLES.ADMIN, HOSPITAL_ROLES.HOSPITAL_ADMIN]} permissions={PERMISSIONS.VIEW_DEPARTMENTS}>
               <HospitalLayout>
                 <DepartmentList />
               </HospitalLayout>
@@ -662,7 +662,7 @@ const HospitalRoutes = () => {
         <Route 
           path="departments/create" 
           element={
-            <ProtectedRoute permissions={PERMISSIONS.MANAGE_DEPARTMENTS}>
+            <ProtectedRoute roles={[HOSPITAL_ROLES.ADMIN, HOSPITAL_ROLES.HOSPITAL_ADMIN]} permissions={PERMISSIONS.MANAGE_DEPARTMENTS}>
               <HospitalLayout>
                 <DepartmentCreate />
               </HospitalLayout>
@@ -673,7 +673,7 @@ const HospitalRoutes = () => {
         <Route 
           path="departments/:id" 
           element={
-            <ProtectedRoute permissions={PERMISSIONS.VIEW_DEPARTMENTS}>
+            <ProtectedRoute roles={[HOSPITAL_ROLES.ADMIN, HOSPITAL_ROLES.HOSPITAL_ADMIN]} permissions={PERMISSIONS.VIEW_DEPARTMENTS}>
               <HospitalLayout>
                 <DepartmentDetails />
               </HospitalLayout>
@@ -682,9 +682,9 @@ const HospitalRoutes = () => {
         />
 
         <Route 
-          path="departments/:id/assign-head" 
+          path="departments/assign-head/:id" 
           element={
-            <ProtectedRoute permissions={PERMISSIONS.MANAGE_DEPARTMENTS}>
+            <ProtectedRoute roles={[HOSPITAL_ROLES.ADMIN, HOSPITAL_ROLES.HOSPITAL_ADMIN]} permissions={PERMISSIONS.MANAGE_DEPARTMENTS}>
               <HospitalLayout>
                 <AssignHeadOfDepartment />
               </HospitalLayout>
@@ -693,9 +693,9 @@ const HospitalRoutes = () => {
         />
 
         <Route 
-          path="departments/:id/statistics" 
+          path="departments/statistics/:id" 
           element={
-            <ProtectedRoute permissions={PERMISSIONS.VIEW_DEPARTMENTS}>
+            <ProtectedRoute roles={[HOSPITAL_ROLES.ADMIN, HOSPITAL_ROLES.HOSPITAL_ADMIN]} permissions={PERMISSIONS.VIEW_DEPARTMENTS}>
               <HospitalLayout>
                 <DepartmentStatistics />
               </HospitalLayout>

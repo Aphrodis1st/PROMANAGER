@@ -26,12 +26,14 @@ const PERMISSIONS = {
   CREATE_PATIENTS: 'createPatients',
   EDIT_PATIENTS: 'editPatients',
   DELETE_PATIENTS: 'deletePatients',
+  MANAGE_PATIENTS: 'managePatients',
   
   // Medical Records
   VIEW_MEDICAL_RECORDS: 'viewMedicalRecords',
   CREATE_MEDICAL_RECORDS: 'createMedicalRecords',
   EDIT_MEDICAL_RECORDS: 'editMedicalRecords',
   DELETE_MEDICAL_RECORDS: 'deleteMedicalRecords',
+  MANAGE_MEDICAL_RECORDS: 'manageMedicalRecords',
   
   // Prescriptions
   VIEW_PRESCRIPTIONS: 'viewPrescriptions',
@@ -46,6 +48,7 @@ const PERMISSIONS = {
   VIEW_LAB_RESULTS: 'viewLabResults',
   ENTER_LAB_RESULTS: 'enterLabResults',
   EDIT_LAB_RESULTS: 'editLabResults',
+  MANAGE_LAB_TESTS: 'manageLabTests',
   
   // Appointments
   VIEW_APPOINTMENTS: 'viewAppointments',
@@ -63,6 +66,7 @@ const PERMISSIONS = {
   MANAGE_USERS: 'manageUsers',
   MANAGE_ROLES: 'manageRoles',
   MANAGE_DEPARTMENTS: 'manageDepartments',
+  VIEW_DEPARTMENTS: 'viewDepartments',
   VIEW_AUDIT_LOGS: 'viewAuditLogs',
   SYSTEM_SETTINGS: 'systemSettings',
   
