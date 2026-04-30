@@ -1,308 +1,132 @@
-import React, { useState } from "react";
-import PageHeader from "../../../components/hospital/PageHeader";
-import Card from "../../../components/hospital/card";
-import Button from "../../../components/hospital/Button";
-import { useReports } from "../../../hooks/useReports";
+import React, { useState } from 'react';
+import { Card } from '../../../components/hospital/card';
+import { Button } from '../../../components/hospital/Button';
+import { LoadingSpinner } from '../../../components/hospital/LoadingSpinner';
 
-export default function LabReports() {
-  const [dateRange, setDateRange] = useState({
-    startDate: new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0]
-  });
-  const [comments, setComments] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
+const LabReports = () => {
+  const [reportData, setReportData] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Safe access to lab stats
-  let labStats = {
-    totalTests: 0,
-    completedToday: 0,
-    pending: 0,
-    critical: 0,
-    avgTurnaroundTime: 24,
-    testTypes: []
-  };
-
-  try {
-    const reports = useReports();
-    labStats = reports?.labStats || labStats;
-  } catch (err) {
-    console.error('Reports context error:', err);
-    setError('Failed to load lab reports data');
-  }
-
-  const exportToCSV = () => {
-    const csvData = [
-      ['Lab Metric', 'Value'],
-      ['Total Tests', labStats.totalTests],
-      ['Completed Today', labStats.completedToday],
-      ['Pending Tests', labStats.pending],
-      ['Critical Results', labStats.critical],
-      ['Average Turnaround Time (hours)', labStats.avgTurnaroundTime],
-      [''],
-      ['Test Type', 'Count'],
-      ...labStats.testTypes.map(test => [test.type, test.count])
-    ];
+  const generateReport = async () => {
+    setLoading(true);
+    setError(null);
     
-    const csvContent = csvData.map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `lab-report-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const exportToPDF = () => {
-    window.print();
-  };
-
-  const shareReport = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: 'Laboratory Report',
-        text: `Lab Report - ${labStats.totalTests} total tests, ${labStats.pending} pending`,
-        url: window.location.href
+    try {
+      const token = localStorage.getItem('hospitalToken');
+      const response = await fetch('/api/v1/hospital/reports/lab', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert('Report link copied to clipboard!');
+
+      if (!response.ok) throw new Error('Failed to generate lab report');
+      const data = await response.json();
+      setReportData(data.report);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const completionRate = labStats.totalTests > 0 ? ((labStats.totalTests - labStats.pending) / labStats.totalTests * 100).toFixed(1) : 0;
-  const criticalRate = labStats.totalTests > 0 ? (labStats.critical / labStats.totalTests * 100).toFixed(1) : 0;
-  const dailyAverage = Math.floor(labStats.totalTests / 30);
-
-  if (error) {
-    return (
-      <>
-        <PageHeader title="Laboratory Reports" />
-        <Card>
-          <div style={{ textAlign: "center", padding: "2rem", color: "#ef4444" }}>
-            <h3>Error Loading Laboratory Reports</h3>
-            <p>{error}</p>
-            <Button onClick={() => window.location.reload()} style={{ marginTop: "1rem" }}>
-              Retry
-            </Button>
-          </div>
-        </Card>
-      </>
-    );
-  }
-
-  const testCategories = [
-    { name: "Hematology", tests: labStats.testTypes.filter(t => ['CBC', 'Blood Count', 'Hemoglobin'].includes(t.type)).reduce((sum, t) => sum + t.count, 0), color: "#3b82f6" },
-    { name: "Biochemistry", tests: labStats.testTypes.filter(t => ['Glucose', 'Cholesterol', 'Liver Function'].includes(t.type)).reduce((sum, t) => sum + t.count, 0), color: "#10b981" },
-    { name: "Microbiology", tests: labStats.testTypes.filter(t => ['Culture', 'Sensitivity', 'Gram Stain'].includes(t.type)).reduce((sum, t) => sum + t.count, 0), color: "#f59e0b" },
-    { name: "Immunology", tests: labStats.testTypes.filter(t => ['Antibody', 'Antigen', 'Serology'].includes(t.type)).reduce((sum, t) => sum + t.count, 0), color: "#8b5cf6" },
-    { name: "Others", tests: labStats.testTypes.filter(t => !['CBC', 'Blood Count', 'Hemoglobin', 'Glucose', 'Cholesterol', 'Liver Function', 'Culture', 'Sensitivity', 'Gram Stain', 'Antibody', 'Antigen', 'Serology'].includes(t.type)).reduce((sum, t) => sum + t.count, 0), color: "#6b7280" }
-  ];
-
   return (
-    <>
-      <PageHeader 
-        title="Laboratory Reports" 
-        action={
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <Button size="sm" variant="secondary" onClick={exportToCSV}>📊 CSV</Button>
-            <Button size="sm" variant="secondary" onClick={exportToPDF}>🖨️ PDF</Button>
-            <Button size="sm" variant="secondary" onClick={shareReport}>🔗 Share</Button>
-          </div>
-        }
-      />
-
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", alignItems: "center" }}>
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-          <label style={{ fontSize: "0.875rem", fontWeight: "500" }}>Report Period:</label>
-          <input
-            type="date"
-            value={dateRange.startDate}
-            onChange={(e) => setDateRange({...dateRange, startDate: e.target.value})}
-            style={{ padding: "0.375rem", border: "1px solid #e5e7eb", borderRadius: "0.375rem", fontSize: "0.875rem" }}
-          />
-          <span>to</span>
-          <input
-            type="date"
-            value={dateRange.endDate}
-            onChange={(e) => setDateRange({...dateRange, endDate: e.target.value})}
-            style={{ padding: "0.375rem", border: "1px solid #e5e7eb", borderRadius: "0.375rem", fontSize: "0.875rem" }}
-          />
-        </div>
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-          <label style={{ fontSize: "0.875rem", fontWeight: "500" }}>Category:</label>
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            style={{ padding: "0.375rem", border: "1px solid #e5e7eb", borderRadius: "0.375rem", fontSize: "0.875rem" }}
-          >
-            <option value="All">All Categories</option>
-            <option value="Hematology">Hematology</option>
-            <option value="Biochemistry">Biochemistry</option>
-            <option value="Microbiology">Microbiology</option>
-            <option value="Immunology">Immunology</option>
-          </select>
-        </div>
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Laboratory Performance Report</h1>
+        <Button onClick={generateReport} disabled={loading}>
+          {loading ? 'Generating...' : 'Generate Report'}
+        </Button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
-        <Card>
-          <div style={{ padding: "1.5rem", textAlign: "center" }}>
-            <div style={{ fontSize: "0.875rem", color: "#6b7280", marginBottom: "0.5rem" }}>Total Tests</div>
-            <div style={{ fontSize: "2.5rem", fontWeight: "bold", color: "#3b82f6" }}>{labStats.totalTests}</div>
-            <div style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.25rem" }}>All time</div>
-          </div>
-        </Card>
-        <Card>
-          <div style={{ padding: "1.5rem", textAlign: "center" }}>
-            <div style={{ fontSize: "0.875rem", color: "#6b7280", marginBottom: "0.5rem" }}>Completed Today</div>
-            <div style={{ fontSize: "2.5rem", fontWeight: "bold", color: "#10b981" }}>{labStats.completedToday}</div>
-            <div style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.25rem" }}>Daily progress</div>
-          </div>
-        </Card>
-        <Card>
-          <div style={{ padding: "1.5rem", textAlign: "center" }}>
-            <div style={{ fontSize: "0.875rem", color: "#6b7280", marginBottom: "0.5rem" }}>Pending Tests</div>
-            <div style={{ fontSize: "2.5rem", fontWeight: "bold", color: "#f59e0b" }}>{labStats.pending}</div>
-            <div style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.25rem" }}>Awaiting results</div>
-          </div>
-        </Card>
-        <Card>
-          <div style={{ padding: "1.5rem", textAlign: "center" }}>
-            <div style={{ fontSize: "0.875rem", color: "#6b7280", marginBottom: "0.5rem" }}>Critical Results</div>
-            <div style={{ fontSize: "2.5rem", fontWeight: "bold", color: "#ef4444" }}>{labStats.critical}</div>
-            <div style={{ fontSize: "0.75rem", color: "#ef4444", marginTop: "0.25rem" }}>{criticalRate}% of total</div>
-          </div>
-        </Card>
-      </div>
+      {loading && <div className="flex justify-center"><LoadingSpinner /></div>}
+      {error && <Card className="p-4 border-red-200 bg-red-50"><p className="text-red-600">Error: {error}</p></Card>}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "1.5rem", marginBottom: "1.5rem" }}>
-        <Card>
-          <div style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem", color: "#374151" }}>Test Categories Distribution</h3>
-            <div style={{ display: "grid", gap: "0.75rem" }}>
-              {testCategories.map((category) => {
-                const percentage = labStats.totalTests > 0 ? ((category.tests / labStats.totalTests) * 100).toFixed(1) : 0;
-                return (
-                  <div key={category.name} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.75rem", backgroundColor: "#f9fafb", borderRadius: "0.375rem" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <div style={{ width: "12px", height: "12px", borderRadius: "50%", backgroundColor: category.color }}></div>
-                      <span style={{ fontWeight: "500" }}>{category.name}</span>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: "1.125rem", fontWeight: "600", color: category.color }}>{category.tests}</div>
-                      <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>{percentage}%</div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+      {reportData && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card className="p-4">
+              <h3 className="font-semibold text-gray-600">Total Tests</h3>
+              <p className="text-2xl font-bold text-blue-600">{reportData.summary.totalTests}</p>
+            </Card>
+            <Card className="p-4">
+              <h3 className="font-semibold text-gray-600">Completion Rate</h3>
+              <p className="text-2xl font-bold text-green-600">{reportData.summary.completionRate}</p>
+            </Card>
+            <Card className="p-4">
+              <h3 className="font-semibold text-gray-600">Avg Turnaround</h3>
+              <p className="text-2xl font-bold text-purple-600">{reportData.summary.avgTurnaroundTime}</p>
+            </Card>
+            <Card className="p-4">
+              <h3 className="font-semibold text-gray-600">Critical Results</h3>
+              <p className="text-2xl font-bold text-red-600">{reportData.summary.criticalResults}</p>
+            </Card>
           </div>
-        </Card>
 
-        <Card>
-          <div style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem", color: "#374151" }}>Performance Metrics</h3>
-            <div style={{ display: "grid", gap: "1rem" }}>
-              <div style={{ padding: "1rem", border: "1px solid #e5e7eb", borderRadius: "0.5rem" }}>
-                <div style={{ fontSize: "0.875rem", color: "#6b7280", marginBottom: "0.5rem" }}>Completion Rate</div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#10b981" }}>{completionRate}%</div>
-                  <div style={{ flex: 1, height: "8px", backgroundColor: "#e5e7eb", borderRadius: "4px", overflow: "hidden" }}>
-                    <div style={{ width: `${completionRate}%`, height: "100%", backgroundColor: "#10b981" }}></div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="p-4">
+              <h3 className="text-lg font-semibold mb-3">Most Frequent Tests</h3>
+              <div className="space-y-2">
+                {reportData.testAnalysis.mostFrequentTests.map((test, index) => (
+                  <div key={index} className="flex justify-between">
+                    <span>{test.testType}</span>
+                    <span className="font-semibold">{test.count}</span>
                   </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card className="p-4">
+              <h3 className="text-lg font-semibold mb-3">Quality Metrics</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span>On-time Completion</span>
+                  <span className="font-semibold text-green-600">{reportData.qualityMetrics.onTimeCompletionRate}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Test Accuracy Rate</span>
+                  <span className="font-semibold text-blue-600">{reportData.qualityMetrics.testAccuracyRate}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Critical Notification Rate</span>
+                  <span className="font-semibold text-purple-600">{reportData.qualityMetrics.criticalValueNotificationRate}</span>
                 </div>
               </div>
-              
-              <div style={{ padding: "1rem", border: "1px solid #e5e7eb", borderRadius: "0.5rem" }}>
-                <div style={{ fontSize: "0.875rem", color: "#6b7280", marginBottom: "0.5rem" }}>Average Turnaround</div>
-                <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#3b82f6" }}>{labStats.avgTurnaroundTime} hours</div>
-              </div>
-              
-              <div style={{ padding: "1rem", border: "1px solid #e5e7eb", borderRadius: "0.5rem" }}>
-                <div style={{ fontSize: "0.875rem", color: "#6b7280", marginBottom: "0.5rem" }}>Daily Average</div>
-                <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#8b5cf6" }}>{dailyAverage} tests</div>
-              </div>
-            </div>
+            </Card>
           </div>
-        </Card>
-      </div>
 
-      <Card>
-        <div style={{ padding: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem", color: "#374151" }}>Test Type Breakdown</h3>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: "2px solid #e5e7eb", backgroundColor: "#f9fafb" }}>
-                  <th style={{ padding: "0.75rem", textAlign: "left", fontWeight: "600", fontSize: "0.875rem" }}>Test Type</th>
-                  <th style={{ padding: "0.75rem", textAlign: "center", fontWeight: "600", fontSize: "0.875rem" }}>Count</th>
-                  <th style={{ padding: "0.75rem", textAlign: "center", fontWeight: "600", fontSize: "0.875rem" }}>Percentage</th>
-                  <th style={{ padding: "0.75rem", textAlign: "center", fontWeight: "600", fontSize: "0.875rem" }}>Trend</th>
-                </tr>
-              </thead>
-              <tbody>
-                {labStats.testTypes.map((test, i) => {
-                  const percentage = ((test.count / labStats.totalTests) * 100).toFixed(1);
-                  const trend = Math.random() > 0.5 ? 'up' : 'down'; // Mock trend data
-                  const trendValue = (Math.random() * 20).toFixed(1);
-                  
-                  return (
-                    <tr key={test.type} style={{ borderBottom: "1px solid #e5e7eb", backgroundColor: i % 2 === 0 ? "#ffffff" : "#f9fafb" }}>
-                      <td style={{ padding: "1rem", fontWeight: "500" }}>{test.type}</td>
-                      <td style={{ padding: "1rem", textAlign: "center", fontSize: "1.125rem", fontWeight: "600", color: "#3b82f6" }}>{test.count}</td>
-                      <td style={{ padding: "1rem", textAlign: "center" }}>{percentage}%</td>
-                      <td style={{ padding: "1rem", textAlign: "center" }}>
-                        <span style={{ 
-                          display: "inline-flex", 
-                          alignItems: "center", 
-                          gap: "0.25rem",
-                          padding: "0.25rem 0.5rem", 
-                          borderRadius: "0.375rem", 
-                          fontSize: "0.75rem", 
-                          fontWeight: "500",
-                          backgroundColor: trend === 'up' ? '#dcfce7' : '#fee2e2',
-                          color: trend === 'up' ? '#166534' : '#991b1b'
-                        }}>
-                          {trend === 'up' ? '↑' : '↓'} {trendValue}%
-                        </span>
-                      </td>
+          <Card className="p-4">
+            <h3 className="text-lg font-semibold mb-3">Test Result Analysis</h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full table-auto">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="px-4 py-2 text-left">Test Type</th>
+                    <th className="px-4 py-2 text-left">Total</th>
+                    <th className="px-4 py-2 text-left">Normal Rate</th>
+                    <th className="px-4 py-2 text-left">Abnormal Rate</th>
+                    <th className="px-4 py-2 text-left">Critical Rate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reportData.testAnalysis.resultAnalysis.slice(0, 10).map((result, index) => (
+                    <tr key={index} className="border-t">
+                      <td className="px-4 py-2">{result.testType}</td>
+                      <td className="px-4 py-2">{result.total}</td>
+                      <td className="px-4 py-2 text-green-600">{result.normalRate}</td>
+                      <td className="px-4 py-2 text-yellow-600">{result.abnormalRate}</td>
+                      <td className="px-4 py-2 text-red-600">{result.criticalRate}</td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
         </div>
-      </Card>
-
-      <Card>
-        <div style={{ padding: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem", color: "#374151" }}>Laboratory Analysis & Quality Notes</h3>
-          <textarea
-            value={comments}
-            onChange={(e) => setComments(e.target.value)}
-            placeholder="Add your laboratory performance analysis, quality observations, recommendations, or improvement suggestions..."
-            style={{
-              width: "100%",
-              minHeight: "100px",
-              padding: "0.75rem",
-              border: "1px solid #e5e7eb",
-              borderRadius: "0.375rem",
-              fontSize: "0.875rem",
-              resize: "vertical"
-            }}
-          />
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.75rem" }}>
-            <Button size="sm" onClick={() => alert('Laboratory analysis saved!')}>Save Analysis</Button>
-          </div>
-        </div>
-      </Card>
-
-      <div style={{ marginTop: "1.5rem", padding: "1rem", backgroundColor: "#f9fafb", borderRadius: "0.5rem", fontSize: "0.75rem", color: "#6b7280" }}>
-        Laboratory report generated on {new Date().toLocaleString()} | Period: {dateRange.startDate} to {dateRange.endDate} | Completion rate: {completionRate}% | Avg turnaround: {labStats.avgTurnaroundTime}h
-      </div>
-    </>
+      )}
+    </div>
   );
-}
+};
+
+export default LabReports;

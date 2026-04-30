@@ -636,7 +636,7 @@ export default function ServiceSelection() {
                 <Button
                   variant="contained"
                   size="large"
-                  onClick={() => navigate('/hospital/dashboard')}
+                  onClick={() => navigate('/hospital/admin/dashboard')}
                   sx={{
                     bgcolor: '#388e3c',
                     py: 2,
@@ -1121,7 +1121,7 @@ export default function ServiceSelection() {
                 <Button 
                   variant="text" 
                   sx={{ justifyContent: 'flex-start', color: '#666' }}
-                  onClick={() => navigate('/hospital/dashboard')}
+                  onClick={() => navigate('/hospital/admin/dashboard')}
                 >
                   Hospital Management
                 </Button>

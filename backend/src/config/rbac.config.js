@@ -307,6 +307,11 @@ export const hasPermission = (userRole, userPermissions, requiredPermission) => 
 };
 
 export const canAccessPage = (userRole, userDepartment, userPermissions, pageConfig) => {
+  // Admin and hospital_admin have access to all pages
+  if (userRole === 'hospital_admin' || userRole === 'admin') {
+    return true;
+  }
+  
   const { roles, departments, permissions, requireAll = false } = pageConfig;
   
   let hasRoleAccess = !roles || hasRole(userRole, roles);
@@ -328,7 +333,7 @@ export const PAGE_ACCESS_CONFIG = {
     requireAll: false
   },
   
-  // Patient Management
+  // Patient Management - Admin has full access
   '/hospital/patients': {
     roles: ['hospital_admin', 'admin', 'doctor', 'nurse', 'receptionist'],
     permissions: ['viewPatients'],
@@ -341,54 +346,166 @@ export const PAGE_ACCESS_CONFIG = {
     requireAll: false
   },
   
-  // Medical Records
+  '/hospital/patients/:id': {
+    roles: ['hospital_admin', 'admin', 'doctor', 'nurse', 'receptionist'],
+    requireAll: false
+  },
+  
+  // Medical Records - Admin has full access
   '/hospital/medical-records': {
     roles: ['hospital_admin', 'admin', 'doctor', 'nurse'],
     permissions: ['viewMedicalRecords'],
     requireAll: false
   },
   
-  // Laboratory
+  '/hospital/medical-records/create': {
+    roles: ['hospital_admin', 'admin', 'doctor', 'nurse'],
+    requireAll: false
+  },
+  
+  // Appointments - Admin has full access
+  '/hospital/appointments': {
+    roles: ['hospital_admin', 'admin', 'doctor', 'nurse', 'receptionist'],
+    requireAll: false
+  },
+  
+  // Admissions - Admin has full access
+  '/hospital/admissions': {
+    roles: ['hospital_admin', 'admin', 'doctor', 'nurse'],
+    requireAll: false
+  },
+  
+  // Laboratory - Admin has full access
   '/hospital/lab': {
     roles: ['hospital_admin', 'admin', 'doctor', 'nurse', 'lab_technician'],
-    departments: ['laboratory', 'pathology'],
     permissions: ['viewLabTests'],
     requireAll: false
   },
   
-  // Pharmacy
+  '/hospital/lab/orders': {
+    roles: ['hospital_admin', 'admin', 'doctor', 'nurse', 'lab_technician'],
+    requireAll: false
+  },
+  
+  '/hospital/lab/results': {
+    roles: ['hospital_admin', 'admin', 'doctor', 'nurse', 'lab_technician'],
+    requireAll: false
+  },
+  
+  // Pharmacy - Admin has full access
   '/hospital/pharmacy': {
     roles: ['hospital_admin', 'admin', 'doctor', 'pharmacist'],
-    departments: ['pharmacy'],
     permissions: ['viewPrescriptions'],
     requireAll: false
   },
   
-  // Billing
+  // Billing - Admin has full access
   '/hospital/billing': {
     roles: ['hospital_admin', 'admin', 'billing_staff', 'receptionist'],
-    departments: ['billing', 'finance'],
     permissions: ['viewBilling'],
     requireAll: false
   },
   
-  // Administration
+  '/hospital/billing/invoices': {
+    roles: ['hospital_admin', 'admin', 'billing_staff', 'receptionist'],
+    requireAll: false
+  },
+  
+  '/hospital/billing/payments': {
+    roles: ['hospital_admin', 'admin', 'billing_staff', 'receptionist'],
+    requireAll: false
+  },
+  
+  // Departments - Admin has full access
+  '/hospital/departments': {
+    roles: ['hospital_admin', 'admin', 'doctor', 'nurse'],
+    requireAll: false
+  },
+  
+  '/hospital/departments/create': {
+    roles: ['hospital_admin', 'admin'],
+    requireAll: false
+  },
+  
+  // Doctors - Admin has full access
+  '/hospital/doctors': {
+    roles: ['hospital_admin', 'admin', 'doctor', 'nurse', 'receptionist'],
+    requireAll: false
+  },
+  
+  '/hospital/doctors/create': {
+    roles: ['hospital_admin', 'admin'],
+    requireAll: false
+  },
+  
+  // Wards - Admin has full access
+  '/hospital/wards': {
+    roles: ['hospital_admin', 'admin', 'doctor', 'nurse'],
+    requireAll: false
+  },
+  
+  // Administration - Admin has full access
+  '/hospital/admin': {
+    roles: ['hospital_admin', 'admin'],
+    requireAll: false
+  },
+  
   '/hospital/admin/users': {
     roles: ['hospital_admin', 'admin'],
     permissions: ['manageUsers'],
-    requireAll: true
+    requireAll: false
   },
   
   '/hospital/admin/departments': {
     roles: ['hospital_admin', 'admin'],
     permissions: ['manageDepartments'],
-    requireAll: true
+    requireAll: false
   },
   
-  // Reports
+  '/hospital/admin/settings': {
+    roles: ['hospital_admin', 'admin'],
+    requireAll: false
+  },
+  
+  '/hospital/admin/analytics': {
+    roles: ['hospital_admin', 'admin'],
+    requireAll: false
+  },
+  
+  '/hospital/admin/audit-logs': {
+    roles: ['hospital_admin', 'admin'],
+    requireAll: false
+  },
+  
+  // Reports - Admin has full access
   '/hospital/reports': {
     roles: ['hospital_admin', 'admin', 'doctor', 'billing_staff'],
     permissions: ['viewReports'],
+    requireAll: false
+  },
+  
+  '/hospital/reports/patients': {
+    roles: ['hospital_admin', 'admin', 'doctor'],
+    requireAll: false
+  },
+  
+  '/hospital/reports/departments': {
+    roles: ['hospital_admin', 'admin'],
+    requireAll: false
+  },
+  
+  '/hospital/reports/financial': {
+    roles: ['hospital_admin', 'admin', 'billing_staff'],
+    requireAll: false
+  },
+  
+  '/hospital/reports/lab': {
+    roles: ['hospital_admin', 'admin', 'lab_technician'],
+    requireAll: false
+  },
+  
+  '/hospital/reports/audit': {
+    roles: ['hospital_admin', 'admin'],
     requireAll: false
   }
 };

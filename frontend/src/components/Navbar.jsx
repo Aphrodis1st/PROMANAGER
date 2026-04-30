@@ -6,7 +6,7 @@ export default function Navbar() {
     <nav style={styles.nav}>
       <Link to='/' style={styles.link}>Home</Link>
       <Link to='/stock/inventory' style={styles.link}>Stock Management</Link>
-      <Link to='/hospital/dashboard' style={styles.link}>Hospital Services</Link>
+      <Link to='/hospital/admin/dashboard' style={styles.link}>Hospital Services</Link>
       <Link to='/pharmacy/dashboard' style={styles.link}>Pharmacy Services</Link>
       <Link to='/admin' style={styles.link}>Admin</Link> 
       <Link to='/register' style={styles.link}>Register</Link>

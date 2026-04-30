@@ -87,6 +87,7 @@ import surgeryRecordRoutes from './routes/hospital/surgeryRecord.routes.js';
 import treatmentPlanRoutes from './routes/hospital/treatmentPlan.routes.js';
 import admissionRoutes from './routes/hospital/admission.routes.js';
 import hospitalAdminRoutes from './routes/hospital/hospitalAdmin.routes.js';
+import reportsRoutes from './routes/hospital/reports.routes.js';
 
 // Super Admin Routes
 import superAdminHospitalRoutes from './routes/superAdmin/hospital.routes.js';
@@ -193,6 +194,7 @@ app.use('/api/v1/hospital/surgery-records', requireFirebase, surgeryRecordRoutes
 app.use('/api/v1/hospital/treatment-plans', requireFirebase, treatmentPlanRoutes);
 app.use('/api/v1/hospital/admissions', requireFirebase, admissionRoutes);
 app.use('/api/v1/hospital/admin', requireFirebase, hospitalAdminRoutes);
+app.use('/api/v1/hospital/reports', requireFirebase, reportsRoutes);
 
 // Super Admin routes
 app.use('/api/v1/super-admin/hospitals', superAdminHospitalRoutes);

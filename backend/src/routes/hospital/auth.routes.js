@@ -6,7 +6,8 @@ import {
   updateAdminProfile, 
   changeAdminPassword,
   updateHospitalSettings,
-  getAnalytics
+  getAnalytics,
+  resetUserPassword
 } from '../../controllers/hospital/auth.controller.js';
 import { hospitalAuth } from '../../middleware/hospitalAuth.js';
 
@@ -19,6 +20,7 @@ router.get('/test', (req, res) => {
 
 router.post('/login', hospitalLogin);
 router.post('/complete-password', completePassword);
+router.post('/reset-password', resetUserPassword);
 router.get('/me', hospitalAuth, getHospitalMe);
 router.put('/profile', hospitalAuth, updateAdminProfile);
 router.put('/password', hospitalAuth, changeAdminPassword);

@@ -15,13 +15,13 @@ const Unauthorized = () => {
 
   const handleGoToDashboard = () => {
     const roleRoutes = {
-      admin: '/hospital/dashboard',
+      admin: '/hospital/admin/dashboard',
       doctor: '/hospital/doctor/dashboard',
       nurse: '/hospital/nurse/dashboard',
       receptionist: '/hospital/receptionist/dashboard'
     };
     
-    const defaultRoute = roleRoutes[user?.role] || '/hospital/dashboard';
+    const defaultRoute = roleRoutes[user?.role] || '/hospital/admin/dashboard';
     navigate(defaultRoute);
   };
 

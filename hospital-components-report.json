@@ -1,0 +1,1335 @@
+{
+  "timestamp": "2026-04-30T09:55:48.134Z",
+  "totalComponents": 41,
+  "existingComponents": 41,
+  "missingComponents": 0,
+  "criticalMissing": 0,
+  "results": [
+    {
+      "component": "Hospital Dashboard",
+      "path": "src/pages/HospitalDashboard.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 27451,
+        "hasEssentialFeatures": [
+          "useState",
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "doctor",
+          "appointment",
+          "billing",
+          "medical",
+          "hospital",
+          "dashboard",
+          "admin"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 603,
+        "hasErrorHandling": false,
+        "hasValidation": false,
+        "hasLoading": false,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "Hospital Layout",
+      "path": "src/pages/HospitalLayout.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 641,
+        "hasEssentialFeatures": [
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": false,
+        "hasJSX": true,
+        "linesOfCode": 26,
+        "hasErrorHandling": false,
+        "hasValidation": false,
+        "hasLoading": false,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "Patient List",
+      "path": "src/hospitalPages/patients/pages/PatientList.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 6376,
+        "hasEssentialFeatures": [
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "billing",
+          "medical",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": false,
+        "hasJSX": true,
+        "linesOfCode": 190,
+        "hasErrorHandling": true,
+        "hasValidation": false,
+        "hasLoading": true,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "Patient Create",
+      "path": "src/hospitalPages/patients/pages/PatientCreate.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 12325,
+        "hasEssentialFeatures": [
+          "useState",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "billing",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 261,
+        "hasErrorHandling": true,
+        "hasValidation": true,
+        "hasLoading": true,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "Patient Details",
+      "path": "src/hospitalPages/patients/pages/PatientDetails.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 16295,
+        "hasEssentialFeatures": [
+          "useState",
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "doctor",
+          "appointment",
+          "billing",
+          "medical",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 351,
+        "hasErrorHandling": false,
+        "hasValidation": false,
+        "hasLoading": true,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "Patient Edit",
+      "path": "src/hospitalPages/patients/pages/PatientEdit.jsx",
+      "critical": false,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 2790,
+        "hasEssentialFeatures": [
+          "useState",
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 98,
+        "hasErrorHandling": false,
+        "hasValidation": true,
+        "hasLoading": true,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "Doctor List",
+      "path": "src/hospitalPages/doctors/pages/DoctorList.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 2121,
+        "hasEssentialFeatures": [
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "doctor",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 68,
+        "hasErrorHandling": false,
+        "hasValidation": false,
+        "hasLoading": true,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "Doctor Profile",
+      "path": "src/hospitalPages/doctors/pages/DoctorProfile.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 2480,
+        "hasEssentialFeatures": [
+          "useState",
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "doctor",
+          "appointment",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 77,
+        "hasErrorHandling": false,
+        "hasValidation": false,
+        "hasLoading": true,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "Create Doctor",
+      "path": "src/hospitalPages/doctors/pages/CreateDoctor.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 2328,
+        "hasEssentialFeatures": [
+          "useState",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "doctor",
+          "medical",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 64,
+        "hasErrorHandling": true,
+        "hasValidation": true,
+        "hasLoading": true,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "Appointment List",
+      "path": "src/hospitalPages/Appointment/AppointmentList.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 1961,
+        "hasEssentialFeatures": [
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "doctor",
+          "appointment",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 62,
+        "hasErrorHandling": false,
+        "hasValidation": false,
+        "hasLoading": true,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "Appointment Calendar",
+      "path": "src/hospitalPages/Appointment/AppointmentCalendar.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 1914,
+        "hasEssentialFeatures": [
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "doctor",
+          "appointment",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": false,
+        "hasJSX": true,
+        "linesOfCode": 53,
+        "hasErrorHandling": false,
+        "hasValidation": false,
+        "hasLoading": false,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "Appointment Create",
+      "path": "src/hospitalPages/Appointment/AppointmentCreate.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 2839,
+        "hasEssentialFeatures": [
+          "useState",
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "doctor",
+          "appointment",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 78,
+        "hasErrorHandling": true,
+        "hasValidation": true,
+        "hasLoading": true,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "Billing Dashboard",
+      "path": "src/hospitalPages/billing/pages/BillingDashboard.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 10866,
+        "hasEssentialFeatures": [
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "billing",
+          "hospital",
+          "dashboard"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 257,
+        "hasErrorHandling": false,
+        "hasValidation": false,
+        "hasLoading": true,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "Invoice List",
+      "path": "src/hospitalPages/billing/pages/InvoiceList.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 8589,
+        "hasEssentialFeatures": [
+          "useState",
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "billing",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 261,
+        "hasErrorHandling": true,
+        "hasValidation": false,
+        "hasLoading": true,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "Create Invoice",
+      "path": "src/hospitalPages/billing/pages/CreateInvoice.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 21116,
+        "hasEssentialFeatures": [
+          "useState",
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "billing",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 499,
+        "hasErrorHandling": true,
+        "hasValidation": true,
+        "hasLoading": true,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "Payment Processing",
+      "path": "src/hospitalPages/billing/pages/PaymentProcessing.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 17182,
+        "hasEssentialFeatures": [
+          "useState",
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "billing",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 418,
+        "hasErrorHandling": true,
+        "hasValidation": true,
+        "hasLoading": true,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "Lab Dashboard",
+      "path": "src/hospitalPages/lab/pages/LabDashboard.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 5433,
+        "hasEssentialFeatures": [
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "hospital",
+          "dashboard"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 120,
+        "hasErrorHandling": false,
+        "hasValidation": false,
+        "hasLoading": true,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "Lab Test List",
+      "path": "src/hospitalPages/lab/pages/LabTestList.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 4768,
+        "hasEssentialFeatures": [
+          "useState",
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 162,
+        "hasErrorHandling": true,
+        "hasValidation": false,
+        "hasLoading": true,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "Lab Results Entry",
+      "path": "src/hospitalPages/lab/pages/LabResultsEntry.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 2955,
+        "hasEssentialFeatures": [
+          "useState",
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 93,
+        "hasErrorHandling": true,
+        "hasValidation": true,
+        "hasLoading": false,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "Pending Tests",
+      "path": "src/hospitalPages/lab/pages/PendingTests.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 5250,
+        "hasEssentialFeatures": [
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 164,
+        "hasErrorHandling": false,
+        "hasValidation": false,
+        "hasLoading": true,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "Medical Record List",
+      "path": "src/hospitalPages/medical-records/MedicalRecordList.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 12610,
+        "hasEssentialFeatures": [
+          "useState",
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "doctor",
+          "medical",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 300,
+        "hasErrorHandling": true,
+        "hasValidation": false,
+        "hasLoading": true,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "Create Medical Record",
+      "path": "src/hospitalPages/medical-records/CreateMedicalRecord.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 19115,
+        "hasEssentialFeatures": [
+          "useState",
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "doctor",
+          "medical",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 355,
+        "hasErrorHandling": true,
+        "hasValidation": true,
+        "hasLoading": true,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "Vital Signs",
+      "path": "src/hospitalPages/medical-records/VitalSigns.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 18539,
+        "hasEssentialFeatures": [
+          "useState",
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "doctor",
+          "medical",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 386,
+        "hasErrorHandling": false,
+        "hasValidation": false,
+        "hasLoading": true,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "Prescription Entry",
+      "path": "src/hospitalPages/medical-records/PrescriptionEntry.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 23462,
+        "hasEssentialFeatures": [
+          "useState",
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "doctor",
+          "medical",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 465,
+        "hasErrorHandling": true,
+        "hasValidation": true,
+        "hasLoading": true,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "Admission List",
+      "path": "src/hospitalPages/admissions/pages/AdmissionList.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 4568,
+        "hasEssentialFeatures": [
+          "useState",
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 133,
+        "hasErrorHandling": false,
+        "hasValidation": false,
+        "hasLoading": true,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "Admit Patient",
+      "path": "src/hospitalPages/admissions/pages/AdmitPatient.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 4401,
+        "hasEssentialFeatures": [
+          "useState",
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 123,
+        "hasErrorHandling": true,
+        "hasValidation": true,
+        "hasLoading": true,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "Discharge Patient",
+      "path": "src/hospitalPages/admissions/pages/DischargePatient.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 1510,
+        "hasEssentialFeatures": [
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "medical",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": false,
+        "hasJSX": true,
+        "linesOfCode": 43,
+        "hasErrorHandling": false,
+        "hasValidation": true,
+        "hasLoading": false,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "Department List",
+      "path": "src/hospitalPages/departments/DepartmentList.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 5110,
+        "hasEssentialFeatures": [
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "doctor",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": false,
+        "hasJSX": true,
+        "linesOfCode": 150,
+        "hasErrorHandling": true,
+        "hasValidation": false,
+        "hasLoading": true,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "Department Management",
+      "path": "src/hospitalPages/admin/pages/DepartmentManagement.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 562,
+        "hasEssentialFeatures": [
+          "export default",
+          "import React",
+          "const"
+        ],
+        "hasHospitalFeatures": [
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": false,
+        "hasJSX": true,
+        "linesOfCode": 19,
+        "hasErrorHandling": false,
+        "hasValidation": false,
+        "hasLoading": false,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "Ward List",
+      "path": "src/hospitalPages/wards/pages/WardList.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 6245,
+        "hasEssentialFeatures": [
+          "useState",
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 179,
+        "hasErrorHandling": false,
+        "hasValidation": false,
+        "hasLoading": true,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "Bed Allocation",
+      "path": "src/hospitalPages/wards/pages/BedAllocation.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 11482,
+        "hasEssentialFeatures": [
+          "useState",
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 284,
+        "hasErrorHandling": true,
+        "hasValidation": true,
+        "hasLoading": true,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "ICU Management",
+      "path": "src/hospitalPages/wards/pages/ICUManagement.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 9084,
+        "hasEssentialFeatures": [
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 247,
+        "hasErrorHandling": true,
+        "hasValidation": false,
+        "hasLoading": true,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "Hospital Report Dashboard",
+      "path": "src/hospitalPages/reports/pages/HospitalReportDashboard.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 10127,
+        "hasEssentialFeatures": [
+          "useState",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "doctor",
+          "billing",
+          "medical",
+          "hospital",
+          "dashboard"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 242,
+        "hasErrorHandling": true,
+        "hasValidation": false,
+        "hasLoading": true,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "Financial Reports",
+      "path": "src/hospitalPages/reports/pages/FinancialReports.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 13875,
+        "hasEssentialFeatures": [
+          "useState",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 268,
+        "hasErrorHandling": true,
+        "hasValidation": false,
+        "hasLoading": true,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "Patient Reports",
+      "path": "src/hospitalPages/reports/pages/PatientReports.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 11307,
+        "hasEssentialFeatures": [
+          "useState",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 233,
+        "hasErrorHandling": true,
+        "hasValidation": false,
+        "hasLoading": true,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "User Management",
+      "path": "src/hospitalPages/admin/pages/UserManagement.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 92355,
+        "hasEssentialFeatures": [
+          "useState",
+          "useEffect",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "doctor",
+          "appointment",
+          "billing",
+          "medical",
+          "hospital",
+          "admin"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 2172,
+        "hasErrorHandling": true,
+        "hasValidation": true,
+        "hasLoading": true,
+        "hasAPI": true
+      }
+    },
+    {
+      "component": "System Settings",
+      "path": "src/hospitalPages/admin/pages/SystemSettings.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 568,
+        "hasEssentialFeatures": [
+          "export default",
+          "import React",
+          "const"
+        ],
+        "hasHospitalFeatures": [
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": false,
+        "hasJSX": true,
+        "linesOfCode": 19,
+        "hasErrorHandling": false,
+        "hasValidation": false,
+        "hasLoading": false,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "Audit Logs",
+      "path": "src/hospitalPages/admin/pages/AuditLogs.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 519,
+        "hasEssentialFeatures": [
+          "export default",
+          "import React",
+          "const"
+        ],
+        "hasHospitalFeatures": [
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": false,
+        "hasJSX": true,
+        "linesOfCode": 19,
+        "hasErrorHandling": false,
+        "hasValidation": false,
+        "hasLoading": false,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "Hospital Sidebar",
+      "path": "src/components/hospital/HospitalSidebar.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 6322,
+        "hasEssentialFeatures": [
+          "useState",
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "hospital",
+          "dashboard",
+          "admin"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": true,
+        "hasJSX": true,
+        "linesOfCode": 207,
+        "hasErrorHandling": false,
+        "hasValidation": false,
+        "hasLoading": false,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "Hospital Protected Route",
+      "path": "src/components/hospital/HospitalProtectedRoute.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 1670,
+        "hasEssentialFeatures": [
+          "export default",
+          "import React",
+          "function",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "hospital"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": false,
+        "hasJSX": true,
+        "linesOfCode": 45,
+        "hasErrorHandling": false,
+        "hasValidation": false,
+        "hasLoading": false,
+        "hasAPI": false
+      }
+    },
+    {
+      "component": "RBAC Component",
+      "path": "src/components/hospital/RBAC.jsx",
+      "critical": true,
+      "exists": true,
+      "analysis": {
+        "exists": true,
+        "fileSize": 12080,
+        "hasEssentialFeatures": [
+          "import React",
+          "const",
+          "return"
+        ],
+        "hasHospitalFeatures": [
+          "patient",
+          "doctor",
+          "appointment",
+          "billing",
+          "medical",
+          "hospital",
+          "admin"
+        ],
+        "hasImports": true,
+        "hasExports": true,
+        "hasReactHooks": false,
+        "hasJSX": true,
+        "linesOfCode": 359,
+        "hasErrorHandling": false,
+        "hasValidation": true,
+        "hasLoading": false,
+        "hasAPI": false
+      }
+    }
+  ],
+  "summary": {
+    "totalComponents": 41,
+    "existingComponents": 41,
+    "missingComponents": 0,
+    "criticalMissing": 0,
+    "completionRate": "100.00%"
+  },
+  "recommendations": [
+    "All components exist! Review functionality and features"
+  ]
+}

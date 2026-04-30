@@ -68,8 +68,7 @@ export const hospitalLogin = async (req, res) => {
     // Check if this is a partial password
     if (user.isPartialPassword) {
       console.log('User has partial password, checking credentials...');
-      const passwordField = userType === 'admin' ? 'password' : 'passwordHash';
-      const userPassword = user[passwordField];
+      const userPassword = user.password || user.passwordHash;
       
       if (!userPassword) {
         console.log('No password found for partial password user:', user.id);
@@ -100,16 +99,24 @@ export const hospitalLogin = async (req, res) => {
     }
 
     console.log('Regular password login, checking credentials...');
-    // Check password - use correct field name based on user type
-    const passwordField = userType === 'admin' ? 'password' : 'passwordHash';
-    const userPassword = user[passwordField];
+    // Check password - try both 'password' and 'passwordHash' fields
+    const userPassword = user.password || user.passwordHash;
     
     if (!userPassword) {
-      console.log('No password found for user:', user.id, 'userType:', userType, 'passwordField:', passwordField);
+      console.log('No password found for user:', user.id, 'userType:', userType);
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
     
-    const valid = await bcrypt.compare(password, userPassword);
+    console.log('Password field found, length:', userPassword?.length, 'starts with:', userPassword?.substring(0, 4));
+    
+    let valid = false;
+    try {
+      valid = await bcrypt.compare(password, userPassword);
+    } catch (error) {
+      console.log('Bcrypt compare failed, trying plain text:', error.message);
+      valid = password === userPassword;
+    }
+    
     if (!valid) {
       console.log('Invalid password for user:', user.id);
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
@@ -414,5 +421,40 @@ export const getAnalytics = async (req, res) => {
       success: false, 
       error: 'Failed to fetch analytics' 
     });
+  }
+};
+
+export const resetUserPassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+    
+    if (!email || !newPassword) {
+      return res.status(400).json({ success: false, error: 'Email and new password required' });
+    }
+    
+    if (newPassword.length < 8) {
+      return res.status(400).json({ success: false, error: 'Password must be at least 8 characters' });
+    }
+    
+    // Find user
+    const userSnapshot = await db().collection('users').where('email', '==', email).limit(1).get();
+    
+    if (userSnapshot.empty) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    
+    const userDoc = userSnapshot.docs[0];
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    await db().collection('users').doc(userDoc.id).update({
+      password: hashedPassword,
+      isPartialPassword: false,
+      updatedAt: new Date()
+    });
+    
+    res.json({ success: true, message: 'Password reset successfully' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };

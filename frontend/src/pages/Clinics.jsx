@@ -5,7 +5,7 @@ export default function Clinics() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    navigate('/hospital/dashboard');
+    navigate('/hospital/admin/dashboard');
   }, [navigate]);
 
   return null;

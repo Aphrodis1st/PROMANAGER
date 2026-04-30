@@ -8,17 +8,52 @@ import { useAdmissions } from "../../../hooks/useAdmissions";
 
 export default function AdmissionList() {
   const navigate = useNavigate();
-  const { admissions, loading, fetchAdmissions } = useAdmissions();
   const [filter, setFilter] = useState('all');
+  
+  // Add error boundary
+  const [error, setError] = useState(null);
+  
+  let admissions = [];
+  let loading = false;
+  let fetchAdmissions = () => {};
+  
+  try {
+    const admissionContext = useAdmissions();
+    admissions = admissionContext.admissions || [];
+    loading = admissionContext.loading;
+    fetchAdmissions = admissionContext.fetchAdmissions;
+  } catch (err) {
+    console.error('Error using admissions context:', err);
+    setError(err.message);
+  }
 
   useEffect(() => {
     console.log('AdmissionList mounted, fetching admissions...');
-    fetchAdmissions();
+    if (fetchAdmissions) {
+      fetchAdmissions();
+    }
   }, []);
 
   useEffect(() => {
     console.log('Admissions updated:', admissions);
   }, [admissions]);
+  
+  if (error) {
+    return (
+      <>
+        <PageHeader title="Hospital Admissions" />
+        <Card>
+          <div style={{ padding: "2rem", textAlign: "center", color: "#ef4444" }}>
+            <h3>Error Loading Admissions</h3>
+            <p>{error}</p>
+            <p style={{ fontSize: "0.875rem", color: "#6b7280", marginTop: "1rem" }}>
+              The AdmissionProvider context is not available. Please check App.jsx configuration.
+            </p>
+          </div>
+        </Card>
+      </>
+    );
+  }
 
   const filteredAdmissions = admissions.filter(admission => {
     if (filter === 'all') return true;
@@ -35,21 +70,21 @@ export default function AdmissionList() {
     { 
       key: "admitDate", 
       label: "Admitted On",
-      render: (value) => value ? new Date(value).toLocaleDateString() : 'N/A'
+      render: (row) => row.admitDate ? new Date(row.admitDate).toLocaleDateString() : 'N/A'
     },
     { 
       key: "status", 
       label: "Status",
-      render: (value) => (
+      render: (row) => (
         <span style={{
           padding: '4px 12px',
           borderRadius: '12px',
           fontSize: '12px',
           fontWeight: '500',
-          backgroundColor: value === 'Active' ? '#dcfce7' : '#fee2e2',
-          color: value === 'Active' ? '#166534' : '#991b1b'
+          backgroundColor: row.status === 'Active' ? '#dcfce7' : '#fee2e2',
+          color: row.status === 'Active' ? '#166534' : '#991b1b'
         }}>
-          {value}
+          {row.status}
         </span>
       )
     },

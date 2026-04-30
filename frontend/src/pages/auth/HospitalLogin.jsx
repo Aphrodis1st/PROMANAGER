@@ -21,7 +21,7 @@ export default function HospitalLogin() {
     switch (user.role) {
       case 'admin':
       case 'hospital_admin':
-        return '/hospital/dashboard';
+        return '/hospital/admin/dashboard';
       case 'doctor':
         return '/hospital/doctor/dashboard';
       case 'nurse':
@@ -30,7 +30,7 @@ export default function HospitalLogin() {
         return '/hospital/receptionist/dashboard';
       default:
         console.log('Unknown role, defaulting to main dashboard');
-        return '/hospital/dashboard';
+        return '/hospital/admin/dashboard';
     }
   };
 

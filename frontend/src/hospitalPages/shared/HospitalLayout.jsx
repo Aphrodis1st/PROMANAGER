@@ -59,7 +59,7 @@ const HospitalLayout = () => {
     const baseItems = [
       {
         name: 'Dashboard',
-        href: '/hospital/dashboard',
+        href: '/hospital/admin/dashboard',
         icon: LayoutDashboard,
         roles: ['admin', 'doctor', 'nurse', 'receptionist']
       },

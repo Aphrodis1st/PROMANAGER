@@ -1,232 +1,188 @@
-import React, { useState } from "react";
-import PageHeader from "../../../components/hospital/PageHeader";
-import Card from "../../../components/hospital/card";
-import Button from "../../../components/hospital/Button";
-import { useReports } from "../../../hooks/useReports";
+import React, { useState, useEffect } from 'react';
+import { Card } from '../../../components/hospital/card';
+import { Button } from '../../../components/hospital/Button';
+import { LoadingSpinner } from '../../../components/hospital/LoadingSpinner';
 
-export default function PatientReports() {
+const PatientReports = () => {
+  const [reportData, setReportData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [dateRange, setDateRange] = useState({
-    startDate: new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0],
+    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0]
   });
-  const [comments, setComments] = useState("");
-  const [error, setError] = useState(null);
 
-  // Safe access to patient stats
-  let patientStats = {
-    total: 0,
-    newThisMonth: 0,
-    active: 0,
-    admitted: 0,
-    ageDistribution: [],
-    gender: { male: 0, female: 0, other: 0 }
-  };
-
-  try {
-    const reports = useReports();
-    patientStats = reports?.patientStats || patientStats;
-  } catch (err) {
-    console.error('Reports context error:', err);
-    setError('Failed to load patient reports data');
-  }
-
-  const exportToCSV = () => {
-    const csvData = [
-      ['Metric', 'Value'],
-      ['Total Patients', patientStats.total],
-      ['New This Month', patientStats.newThisMonth],
-      ['Active Patients', patientStats.active],
-      ['Admitted Patients', patientStats.admitted],
-      ['Male Patients', patientStats.gender.male],
-      ['Female Patients', patientStats.gender.female],
-      ['Other Gender', patientStats.gender.other],
-      ...patientStats.ageDistribution.map(age => [`Age ${age.range}`, age.count])
-    ];
+  const generateReport = async () => {
+    setLoading(true);
+    setError(null);
     
-    const csvContent = csvData.map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `patient-report-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const exportToPDF = () => {
-    window.print();
-  };
-
-  const shareReport = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: 'Patient Report',
-        text: `Patient Statistics Report - Total: ${patientStats.total} patients`,
-        url: window.location.href
+    try {
+      const token = localStorage.getItem('hospitalToken');
+      const params = new URLSearchParams({
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate
       });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert('Report link copied to clipboard!');
+      
+      const response = await fetch(`/api/v1/hospital/reports/patients?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) throw new Error('Failed to generate patient report');
+      const data = await response.json();
+      setReportData(data.report);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (error) {
-    return (
-      <>
-        <PageHeader title="Patient Reports" />
-        <Card>
-          <div style={{ textAlign: "center", padding: "2rem", color: "#ef4444" }}>
-            <h3>Error Loading Patient Reports</h3>
-            <p>{error}</p>
-            <Button onClick={() => window.location.reload()} style={{ marginTop: "1rem" }}>
-              Retry
-            </Button>
-          </div>
-        </Card>
-      </>
-    );
-  }
+  const downloadReport = () => {
+    if (!reportData) return;
+    const dataStr = JSON.stringify(reportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `patient-report-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+  };
 
   return (
-    <>
-      <PageHeader 
-        title="Patient Reports" 
-        action={
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <Button size="sm" variant="secondary" onClick={exportToCSV}>📊 CSV</Button>
-            <Button size="sm" variant="secondary" onClick={exportToPDF}>🖨️ PDF</Button>
-            <Button size="sm" variant="secondary" onClick={shareReport}>🔗 Share</Button>
-          </div>
-        }
-      />
-
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", alignItems: "center" }}>
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-          <label style={{ fontSize: "0.875rem", fontWeight: "500" }}>Report Period:</label>
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Patient Analytics Report</h1>
+        <div className="flex space-x-4">
           <input
             type="date"
             value={dateRange.startDate}
             onChange={(e) => setDateRange({...dateRange, startDate: e.target.value})}
-            style={{ padding: "0.375rem", border: "1px solid #e5e7eb", borderRadius: "0.375rem", fontSize: "0.875rem" }}
+            className="border rounded px-3 py-2"
           />
-          <span>to</span>
           <input
             type="date"
             value={dateRange.endDate}
             onChange={(e) => setDateRange({...dateRange, endDate: e.target.value})}
-            style={{ padding: "0.375rem", border: "1px solid #e5e7eb", borderRadius: "0.375rem", fontSize: "0.875rem" }}
+            className="border rounded px-3 py-2"
           />
+          <Button onClick={generateReport} disabled={loading}>
+            {loading ? 'Generating...' : 'Generate Report'}
+          </Button>
+          {reportData && (
+            <Button onClick={downloadReport} variant="outline">Download</Button>
+          )}
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
-        <Card>
-          <div style={{ padding: "1.5rem", textAlign: "center" }}>
-            <div style={{ fontSize: "0.875rem", color: "#6b7280", marginBottom: "0.5rem" }}>Total Patients</div>
-            <div style={{ fontSize: "2.5rem", fontWeight: "bold", color: "#3b82f6" }}>{patientStats.total}</div>
-            <div style={{ fontSize: "0.75rem", color: "#10b981", marginTop: "0.25rem" }}>+{patientStats.newThisMonth} this month</div>
-          </div>
-        </Card>
-        <Card>
-          <div style={{ padding: "1.5rem", textAlign: "center" }}>
-            <div style={{ fontSize: "0.875rem", color: "#6b7280", marginBottom: "0.5rem" }}>Active Patients</div>
-            <div style={{ fontSize: "2.5rem", fontWeight: "bold", color: "#10b981" }}>{patientStats.active}</div>
-            <div style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.25rem" }}>{((patientStats.active/patientStats.total)*100).toFixed(1)}% of total</div>
-          </div>
-        </Card>
-        <Card>
-          <div style={{ padding: "1.5rem", textAlign: "center" }}>
-            <div style={{ fontSize: "0.875rem", color: "#6b7280", marginBottom: "0.5rem" }}>Admitted</div>
-            <div style={{ fontSize: "2.5rem", fontWeight: "bold", color: "#f59e0b" }}>{patientStats.admitted}</div>
-            <div style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.25rem" }}>Currently in hospital</div>
-          </div>
-        </Card>
-        <Card>
-          <div style={{ padding: "1.5rem", textAlign: "center" }}>
-            <div style={{ fontSize: "0.875rem", color: "#6b7280", marginBottom: "0.5rem" }}>New This Month</div>
-            <div style={{ fontSize: "2.5rem", fontWeight: "bold", color: "#8b5cf6" }}>{patientStats.newThisMonth}</div>
-            <div style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.25rem" }}>Registration growth</div>
-          </div>
-        </Card>
-      </div>
+      {loading && <div className="flex justify-center"><LoadingSpinner /></div>}
+      {error && <Card className="p-4 border-red-200 bg-red-50"><p className="text-red-600">Error: {error}</p></Card>}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "1.5rem", marginBottom: "1.5rem" }}>
-        <Card>
-          <div style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem", color: "#374151" }}>Age Distribution</h3>
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+      {reportData && (
+        <div className="space-y-6">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card className="p-4">
+              <h3 className="font-semibold text-gray-600">Total Patients</h3>
+              <p className="text-2xl font-bold text-blue-600">{reportData.summary.totalPatients}</p>
+            </Card>
+            <Card className="p-4">
+              <h3 className="font-semibold text-gray-600">Active Patients</h3>
+              <p className="text-2xl font-bold text-green-600">{reportData.summary.activePatients}</p>
+            </Card>
+            <Card className="p-4">
+              <h3 className="font-semibold text-gray-600">Average Age</h3>
+              <p className="text-2xl font-bold text-purple-600">{reportData.summary.averageAge.toFixed(1)} years</p>
+            </Card>
+            <Card className="p-4">
+              <h3 className="font-semibold text-gray-600">Total Admissions</h3>
+              <p className="text-2xl font-bold text-orange-600">{reportData.summary.totalAdmissions}</p>
+            </Card>
+          </div>
+
+          {/* Demographics */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="p-4">
+              <h3 className="text-lg font-semibold mb-3">Age Distribution</h3>
+              <div className="space-y-2">
+                {Object.entries(reportData.demographics.ageGroups).map(([age, count]) => (
+                  <div key={age} className="flex justify-between">
+                    <span>{age} years</span>
+                    <span className="font-semibold">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card className="p-4">
+              <h3 className="text-lg font-semibold mb-3">Gender Distribution</h3>
+              <div className="space-y-2">
+                {Object.entries(reportData.demographics.genderDistribution).map(([gender, count]) => (
+                  <div key={gender} className="flex justify-between">
+                    <span className="capitalize">{gender}</span>
+                    <span className="font-semibold">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          {/* Department Distribution */}
+          <Card className="p-4">
+            <h3 className="text-lg font-semibold mb-3">Department-wise Patient Distribution</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Object.entries(reportData.demographics.departmentDistribution).map(([dept, count]) => (
+                <div key={dept} className="bg-gray-50 p-3 rounded">
+                  <div className="font-medium">{dept}</div>
+                  <div className="text-xl font-bold text-blue-600">{count} patients</div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Recent Patients */}
+          <Card className="p-4">
+            <h3 className="text-lg font-semibold mb-3">Recent Patients</h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full table-auto">
                 <thead>
-                  <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
-                    <th style={{ padding: "0.75rem", textAlign: "left", fontWeight: "600", fontSize: "0.875rem" }}>Age Range</th>
-                    <th style={{ padding: "0.75rem", textAlign: "right", fontWeight: "600", fontSize: "0.875rem" }}>Count</th>
-                    <th style={{ padding: "0.75rem", textAlign: "right", fontWeight: "600", fontSize: "0.875rem" }}>Percentage</th>
+                  <tr className="bg-gray-50">
+                    <th className="px-4 py-2 text-left">Name</th>
+                    <th className="px-4 py-2 text-left">Age</th>
+                    <th className="px-4 py-2 text-left">Gender</th>
+                    <th className="px-4 py-2 text-left">Phone</th>
+                    <th className="px-4 py-2 text-left">Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {patientStats.ageDistribution.map((age, i) => (
-                    <tr key={age.range} style={{ borderBottom: "1px solid #e5e7eb" }}>
-                      <td style={{ padding: "0.75rem", fontWeight: "500" }}>{age.range} years</td>
-                      <td style={{ padding: "0.75rem", textAlign: "right", fontSize: "1.125rem", fontWeight: "600", color: "#3b82f6" }}>{age.count}</td>
-                      <td style={{ padding: "0.75rem", textAlign: "right", color: "#6b7280" }}>{((age.count/patientStats.total)*100).toFixed(1)}%</td>
+                  {reportData.detailedData.patients.slice(0, 10).map((patient, index) => (
+                    <tr key={index} className="border-t">
+                      <td className="px-4 py-2">{patient.firstName} {patient.lastName}</td>
+                      <td className="px-4 py-2">
+                        {patient.dateOfBirth ? 
+                          new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear() : 'N/A'}
+                      </td>
+                      <td className="px-4 py-2 capitalize">{patient.gender || 'N/A'}</td>
+                      <td className="px-4 py-2">{patient.phone}</td>
+                      <td className="px-4 py-2">
+                        <span className={`px-2 py-1 rounded text-sm ${
+                          patient.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {patient.status || 'Unknown'}
+                        </span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </div>
-        </Card>
-
-        <Card>
-          <div style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem", color: "#374151" }}>Gender Distribution</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", textAlign: "center" }}>
-              <div style={{ padding: "1rem", backgroundColor: "#dbeafe", borderRadius: "0.5rem" }}>
-                <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#3b82f6" }}>{patientStats.gender.male}</div>
-                <div style={{ fontSize: "0.875rem", color: "#6b7280", marginTop: "0.25rem" }}>Male</div>
-                <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>{((patientStats.gender.male/patientStats.total)*100).toFixed(1)}%</div>
-              </div>
-              <div style={{ padding: "1rem", backgroundColor: "#fce7f3", borderRadius: "0.5rem" }}>
-                <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#ec4899" }}>{patientStats.gender.female}</div>
-                <div style={{ fontSize: "0.875rem", color: "#6b7280", marginTop: "0.25rem" }}>Female</div>
-                <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>{((patientStats.gender.female/patientStats.total)*100).toFixed(1)}%</div>
-              </div>
-              <div style={{ padding: "1rem", backgroundColor: "#f3f4f6", borderRadius: "0.5rem" }}>
-                <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#6b7280" }}>{patientStats.gender.other}</div>
-                <div style={{ fontSize: "0.875rem", color: "#6b7280", marginTop: "0.25rem" }}>Other</div>
-                <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>{((patientStats.gender.other/patientStats.total)*100).toFixed(1)}%</div>
-              </div>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      <Card>
-        <div style={{ padding: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem", color: "#374151" }}>Report Comments & Notes</h3>
-          <textarea
-            value={comments}
-            onChange={(e) => setComments(e.target.value)}
-            placeholder="Add your analysis, observations, or recommendations for this patient report..."
-            style={{
-              width: "100%",
-              minHeight: "100px",
-              padding: "0.75rem",
-              border: "1px solid #e5e7eb",
-              borderRadius: "0.375rem",
-              fontSize: "0.875rem",
-              resize: "vertical"
-            }}
-          />
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.75rem" }}>
-            <Button size="sm" onClick={() => alert('Comments saved!')}>Save Comments</Button>
-          </div>
+          </Card>
         </div>
-      </Card>
-
-      <div style={{ marginTop: "1.5rem", padding: "1rem", backgroundColor: "#f9fafb", borderRadius: "0.5rem", fontSize: "0.75rem", color: "#6b7280" }}>
-        Report generated on {new Date().toLocaleString()} | Data range: {dateRange.startDate} to {dateRange.endDate} | Total records: {patientStats.total}
-      </div>
-    </>
+      )}
+    </div>
   );
-}
+};
+
+export default PatientReports;

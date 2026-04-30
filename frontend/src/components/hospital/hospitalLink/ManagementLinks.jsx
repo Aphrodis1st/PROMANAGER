@@ -47,7 +47,7 @@ export default function ManagementLinks() {
               <ListItemButton component={Link} to="/hospital/admin/appointments" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
                 <ListItemText primary="Appointment System" />
               </ListItemButton>
-              <ListItemButton component={Link} to="/hospital/admin/sub-admin" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+              <ListItemButton component={Link} to="/hospital/admin/sub-admins" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
                 <ListItemText primary="Sub Admin Management" />
               </ListItemButton>
               <ListItemButton component={Link} to="/hospital/admin/access-control" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
