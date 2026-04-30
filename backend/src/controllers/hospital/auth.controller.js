@@ -68,7 +68,15 @@ export const hospitalLogin = async (req, res) => {
     // Check if this is a partial password
     if (user.isPartialPassword) {
       console.log('User has partial password, checking credentials...');
-      const valid = await bcrypt.compare(password, user.password);
+      const passwordField = userType === 'admin' ? 'password' : 'passwordHash';
+      const userPassword = user[passwordField];
+      
+      if (!userPassword) {
+        console.log('No password found for partial password user:', user.id);
+        return res.status(401).json({ success: false, error: 'Invalid credentials' });
+      }
+      
+      const valid = await bcrypt.compare(password, userPassword);
       if (!valid) {
         console.log('Invalid partial password for user:', user.id);
         return res.status(401).json({ success: false, error: 'Invalid credentials' });
@@ -92,7 +100,16 @@ export const hospitalLogin = async (req, res) => {
     }
 
     console.log('Regular password login, checking credentials...');
-    const valid = await bcrypt.compare(password, user.password);
+    // Check password - use correct field name based on user type
+    const passwordField = userType === 'admin' ? 'password' : 'passwordHash';
+    const userPassword = user[passwordField];
+    
+    if (!userPassword) {
+      console.log('No password found for user:', user.id, 'userType:', userType, 'passwordField:', passwordField);
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+    
+    const valid = await bcrypt.compare(password, userPassword);
     if (!valid) {
       console.log('Invalid password for user:', user.id);
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
