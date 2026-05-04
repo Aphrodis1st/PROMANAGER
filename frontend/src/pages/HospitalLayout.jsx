@@ -7,14 +7,13 @@ const drawerWidth = 320;
 
 export default function HospitalLayout({ children }) {
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex' }}>
       <HospitalSidebar />
       <Box
         component="main"
         sx={{
-          flexGrow: 1,
-          p: 3,
-          ml: `${drawerWidth}px`,
+           width: `calc(100% - ${drawerWidth}px)`,
+           p: 0,
           bgcolor: '#f5f5f5',
           minHeight: '100vh',
         }}

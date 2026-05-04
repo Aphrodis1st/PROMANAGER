@@ -22,9 +22,9 @@ const DashboardOverview = () => {
   const totalRevenue = bills?.reduce((sum, b) => sum + (b.amount || 0), 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 -ml-3 -mt-3">
       {/* Hospital Banner */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl p-6 text-white flex items-center justify-between">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-6 text-white flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{hospital?.name || 'Hospital Dashboard'}</h1>
           <p className="text-blue-200 text-sm mt-1">
