@@ -24,8 +24,23 @@ const ProductSettingForm = ({ initialData, onSave, onCancel, saving }) => {
     quality: "High",
     tax: 0,
     openingStock: 0,
+    reorderLevel: 0,
     unit: "Piece",
     status: "Draft",
+    // Pricing & Defaults
+    defaultSellingPrice: 0,
+    defaultBuyingPrice: 0,
+    defaultDiscount: 0,
+    defaultDiscountType: "Percentage", // Percentage or Fixed
+    // Tracking fields
+    trackBatchNumber: false,
+    trackSerialNumber: false,
+    trackExpiryDate: false,
+    trackWarranty: false,
+    defaultWarrantyPeriod: "",
+    defaultWarrantyUnit: "Months",
+    defaultShelfLife: "", // For expiry calculation
+    defaultShelfLifeUnit: "Months",
   });
 
   const storeOptions = ["Main Store", "Sub Store", "Add New"];
@@ -35,7 +50,9 @@ const ProductSettingForm = ({ initialData, onSave, onCancel, saving }) => {
   const productCategories = ["Food", "Drink", "Equipment", "Electronics", "Service Categories", "Add New"];
   const qualityOptions = ["High", "Medium", "Low"];
   const statusOptions = ["Draft", "Active", "Inactive"];
-  const unitOptions = ["Piece", "Kg", "Gram", "Liter", "Pack", "Box", "Meter", "Botle", "Cas", "stal"];
+  const unitOptions = ["Piece", "Kg", "Gram", "Liter", "Pack", "Box", "Meter", "Bottle", "Case", "Carton", "Dozen"];
+  const warrantyUnitOptions = ["Days", "Months", "Years"];
+  const discountTypeOptions = ["Percentage", "Fixed"];
 
   const [newStore, setNewStore] = useState("");
   const [newLocationGroup, setNewLocationGroup] = useState("");
@@ -348,23 +365,65 @@ const ProductSettingForm = ({ initialData, onSave, onCancel, saving }) => {
         {/* ==================== SECTION 3 ==================== */}
         <div>
           <h3 className="text-lg font-semibold text-gray-700 mb-4">
-            Stock & Pricing
+            Pricing & Defaults
           </h3>
+          <p className="text-sm text-gray-600 mb-6">
+            Set default prices and discounts. These will auto-fill in sales but can be modified.
+          </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 
-            {/* Quality */}
+            {/* Default Buying Price */}
+            <TextField
+              fullWidth
+              name="defaultBuyingPrice"
+              label="Default Buying Price"
+              type="number"
+              value={formData.defaultBuyingPrice}
+              onChange={handleChange}
+              inputProps={{ min: 0, step: 0.01 }}
+              sx={inputStyle}
+              helperText="Cost price for purchases"
+            />
+
+            {/* Default Selling Price */}
+            <TextField
+              fullWidth
+              name="defaultSellingPrice"
+              label="Default Selling Price"
+              type="number"
+              value={formData.defaultSellingPrice}
+              onChange={handleChange}
+              inputProps={{ min: 0, step: 0.01 }}
+              sx={inputStyle}
+              helperText="Suggested retail price"
+            />
+
+            {/* Default Discount */}
+            <TextField
+              fullWidth
+              name="defaultDiscount"
+              label="Default Discount"
+              type="number"
+              value={formData.defaultDiscount}
+              onChange={handleChange}
+              inputProps={{ min: 0, step: 0.01 }}
+              sx={inputStyle}
+              helperText="Default discount amount"
+            />
+
+            {/* Discount Type */}
             <FormControl fullWidth>
-              <InputLabel>Quality</InputLabel>
+              <InputLabel>Discount Type</InputLabel>
               <Select
-                name="quality"
-                value={formData.quality}
+                name="defaultDiscountType"
+                value={formData.defaultDiscountType}
                 onChange={handleChange}
-                label="Quality"
+                label="Discount Type"
                 sx={inputStyle}
               >
-                {qualityOptions.map((opt) => (
-                  <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                {discountTypeOptions.map((type) => (
+                  <MenuItem key={type} value={type}>{type}</MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -379,7 +438,37 @@ const ProductSettingForm = ({ initialData, onSave, onCancel, saving }) => {
               onChange={handleChange}
               inputProps={{ min: 0, step: 0.01 }}
               sx={inputStyle}
+              helperText="Tax percentage"
             />
+
+          </div>
+        </div>
+
+        <div className="h-px bg-gray-200" />
+
+        {/* ==================== SECTION 4 ==================== */}
+        <div>
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">
+            Stock & Inventory
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+            {/* Quality */}
+            <FormControl fullWidth>
+              <InputLabel>Quality Grade</InputLabel>
+              <Select
+                name="quality"
+                value={formData.quality}
+                onChange={handleChange}
+                label="Quality Grade"
+                sx={inputStyle}
+              >
+                {qualityOptions.map((opt) => (
+                  <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
             {/* Opening Stock */}
             <TextField
@@ -393,14 +482,26 @@ const ProductSettingForm = ({ initialData, onSave, onCancel, saving }) => {
               sx={inputStyle}
             />
 
+            {/* Reorder Level */}
+            <TextField
+              fullWidth
+              name="reorderLevel"
+              label="Reorder Level"
+              type="number"
+              value={formData.reorderLevel}
+              onChange={handleChange}
+              inputProps={{ min: 0 }}
+              sx={inputStyle}
+            />
+
             {/* Unit */}
             <FormControl fullWidth>
-              <InputLabel>Unit</InputLabel>
+              <InputLabel>Unit of Measurement</InputLabel>
               <Select
                 name="unit"
                 value={formData.unit}
                 onChange={handleChange}
-                label="Unit"
+                label="Unit of Measurement"
                 sx={inputStyle}
               >
                 {unitOptions.map((u) => (
@@ -426,6 +527,186 @@ const ProductSettingForm = ({ initialData, onSave, onCancel, saving }) => {
             </FormControl>
 
           </div>
+        </div>
+
+        <div className="h-px bg-gray-200" />
+
+        {/* ==================== SECTION 4: TRACKING SETTINGS ==================== */}
+        <div>
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">
+            Product Tracking Settings
+          </h3>
+          <p className="text-sm text-gray-600 mb-6">
+            Enable tracking for specific product attributes. These will be required when purchasing or selling this product.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Track Batch Number */}
+            <div className="flex items-start gap-3 p-4 border border-gray-200 rounded-xl hover:border-teal-400 transition-colors">
+              <input
+                type="checkbox"
+                id="trackBatchNumber"
+                name="trackBatchNumber"
+                checked={formData.trackBatchNumber}
+                onChange={(e) => setFormData(prev => ({ ...prev, trackBatchNumber: e.target.checked }))}
+                className="mt-1 w-5 h-5 text-teal-600 rounded focus:ring-teal-500"
+              />
+              <div className="flex-1">
+                <label htmlFor="trackBatchNumber" className="font-medium text-gray-800 cursor-pointer">
+                  Track Batch Number
+                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  Require batch number for inventory tracking and traceability
+                </p>
+              </div>
+            </div>
+
+            {/* Track Serial Number */}
+            <div className="flex items-start gap-3 p-4 border border-gray-200 rounded-xl hover:border-teal-400 transition-colors">
+              <input
+                type="checkbox"
+                id="trackSerialNumber"
+                name="trackSerialNumber"
+                checked={formData.trackSerialNumber}
+                onChange={(e) => setFormData(prev => ({ ...prev, trackSerialNumber: e.target.checked }))}
+                className="mt-1 w-5 h-5 text-teal-600 rounded focus:ring-teal-500"
+              />
+              <div className="flex-1">
+                <label htmlFor="trackSerialNumber" className="font-medium text-gray-800 cursor-pointer">
+                  Track Serial Number
+                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  Require unique serial number for each unit (ideal for electronics, equipment)
+                </p>
+              </div>
+            </div>
+
+            {/* Track Expiry Date */}
+            <div className="flex items-start gap-3 p-4 border border-gray-200 rounded-xl hover:border-teal-400 transition-colors">
+              <input
+                type="checkbox"
+                id="trackExpiryDate"
+                name="trackExpiryDate"
+                checked={formData.trackExpiryDate}
+                onChange={(e) => setFormData(prev => ({ ...prev, trackExpiryDate: e.target.checked }))}
+                className="mt-1 w-5 h-5 text-teal-600 rounded focus:ring-teal-500"
+              />
+              <div className="flex-1">
+                <label htmlFor="trackExpiryDate" className="font-medium text-gray-800 cursor-pointer">
+                  Track Expiration Date
+                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  Require expiry date (essential for food, medicine, perishables)
+                </p>
+              </div>
+            </div>
+
+            {/* Track Warranty */}
+            <div className="flex items-start gap-3 p-4 border border-gray-200 rounded-xl hover:border-teal-400 transition-colors">
+              <input
+                type="checkbox"
+                id="trackWarranty"
+                name="trackWarranty"
+                checked={formData.trackWarranty}
+                onChange={(e) => setFormData(prev => ({ ...prev, trackWarranty: e.target.checked }))}
+                className="mt-1 w-5 h-5 text-teal-600 rounded focus:ring-teal-500"
+              />
+              <div className="flex-1">
+                <label htmlFor="trackWarranty" className="font-medium text-gray-800 cursor-pointer">
+                  Track Warranty
+                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  Require warranty information for products with guarantees
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Default Shelf Life (for expiry calculation) */}
+          {formData.trackExpiryDate && (
+            <div className="mt-6 p-4 bg-orange-50 border border-orange-200 rounded-xl">
+              <h4 className="font-medium text-gray-800 mb-3 flex items-center gap-2">
+                <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Default Shelf Life
+              </h4>
+              <div className="grid grid-cols-2 gap-4">
+                <TextField
+                  fullWidth
+                  name="defaultShelfLife"
+                  label="Shelf Life Duration"
+                  type="number"
+                  value={formData.defaultShelfLife}
+                  onChange={handleChange}
+                  placeholder="e.g., 6"
+                  inputProps={{ min: 0 }}
+                  sx={inputStyle}
+                />
+                <FormControl fullWidth>
+                  <InputLabel>Unit</InputLabel>
+                  <Select
+                    name="defaultShelfLifeUnit"
+                    value={formData.defaultShelfLifeUnit}
+                    onChange={handleChange}
+                    label="Unit"
+                    sx={inputStyle}
+                  >
+                    {warrantyUnitOptions.map((u) => (
+                      <MenuItem key={u} value={u}>{u}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </div>
+              <p className="text-xs text-gray-600 mt-2">
+                Expiry date will be auto-calculated from purchase date + shelf life
+              </p>
+            </div>
+          )}
+
+          {/* Default Warranty Period */}
+          {formData.trackWarranty && (
+            <div className="mt-6 p-4 bg-teal-50 border border-teal-200 rounded-xl">
+              <h4 className="font-medium text-gray-800 mb-3 flex items-center gap-2">
+                <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                Default Warranty Period
+              </h4>
+              <div className="grid grid-cols-2 gap-4">
+                <TextField
+                  fullWidth
+                  name="defaultWarrantyPeriod"
+                  label="Warranty Duration"
+                  type="number"
+                  value={formData.defaultWarrantyPeriod}
+                  onChange={handleChange}
+                  placeholder="e.g., 12"
+                  inputProps={{ min: 0 }}
+                  sx={inputStyle}
+                />
+                <FormControl fullWidth>
+                  <InputLabel>Unit</InputLabel>
+                  <Select
+                    name="defaultWarrantyUnit"
+                    value={formData.defaultWarrantyUnit}
+                    onChange={handleChange}
+                    label="Unit"
+                    sx={inputStyle}
+                  >
+                    {warrantyUnitOptions.map((u) => (
+                      <MenuItem key={u} value={u}>{u}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </div>
+              <p className="text-xs text-gray-600 mt-2">
+                This will be the default warranty period when purchasing this product
+              </p>
+            </div>
+          )}
         </div>
 
         {/* ==================== BUTTONS ==================== */}

@@ -519,7 +519,7 @@ export default function ServiceSelection() {
                 <Button
                   variant="contained"
                   size="large"
-                  onClick={() => navigate('/stock/dashboard')}
+                  onClick={() => navigate('/stock/login')}
                   sx={{
                     bgcolor: '#1976d2',
                     py: 2,
@@ -1231,7 +1231,7 @@ export default function ServiceSelection() {
                 <Button 
                   variant="text" 
                   sx={{ justifyContent: 'flex-start', color: '#666' }}
-                  onClick={() => navigate('/stock/dashboard')}
+                  onClick={() => navigate('/stock/login')}
                 >
                   Stock Management
                 </Button>

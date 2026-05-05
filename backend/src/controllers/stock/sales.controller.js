@@ -6,47 +6,46 @@ export const SalesController = {
   // CREATE SALE
   async create(req, res) {
     try {
-      const { productId, quantity, unitPrice, discount = 0, tax = 0 } = req.body;
-
-      // Calculate total price
-      const subtotal = Number(quantity) * Number(unitPrice);
-      const discountAmount = discount > 1 ? discount : subtotal * (discount / 100);
-      const taxAmount = tax > 1 ? tax : subtotal * (tax / 100);
-      const totalPrice = subtotal - discountAmount + taxAmount;
-
-      // ✅ Try to find product in ProductModel first
-      let product = await ProductModel.findById(productId);
-
-      // ✅ If not found, try ProductSettingModel instead
-      if (!product) {
-        product = await ProductSettingModel.getById(productId);
-        if (!product) {
-          return res.status(404).json({ message: "Product not found in Products or Product Settings" });
-        }
-      }
-
-      // ✅ If product exists but has no stock, initialize quantity = 0
-      const availableQty = Number(product.quantity || product.openingStock || 0);
-      if (quantity > availableQty) {
-        return res.status(400).json({ message: "Not enough stock available." });
-      }
-
-      // Save sale
-      const sale = await SalesModel.create({
+      console.log('📥 Creating sale with data:', JSON.stringify(req.body, null, 2));
+      
+      const saleData = {
         ...req.body,
-        totalPrice,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      });
+      };
 
-      // ✅ Reduce stock only if product found in ProductModel
-      if (await ProductModel.findById(productId)) {
-        await ProductModel.update(productId, { quantity: availableQty - Number(quantity) });
+      console.log('💾 Sale data to save:', JSON.stringify(saleData, null, 2));
+      
+      const sale = await SalesModel.create(saleData);
+      
+      console.log('✅ Sale created:', JSON.stringify(sale, null, 2));
+      
+      // Update product stock (reduce)
+      if (sale.items && Array.isArray(sale.items)) {
+        for (const item of sale.items) {
+          if (item.productId && item.quantity) {
+            console.log(`📉 Reducing stock for product ${item.productId} by ${item.quantity}`);
+            try {
+              await ProductSettingModel.updateStock(item.productId, -Number(item.quantity));
+              console.log(`✅ Stock updated for product ${item.productId}`);
+            } catch (stockError) {
+              console.error(`❌ Error updating stock for product ${item.productId}:`, stockError);
+            }
+          }
+        }
+      } else if (sale.productId && sale.quantity) {
+        console.log(`📉 Reducing stock for product ${sale.productId} by ${sale.quantity}`);
+        try {
+          await ProductSettingModel.updateStock(sale.productId, -Number(sale.quantity));
+          console.log(`✅ Stock updated for product ${sale.productId}`);
+        } catch (stockError) {
+          console.error(`❌ Error updating stock for product ${sale.productId}:`, stockError);
+        }
       }
-
+      
       res.status(201).json({ message: "Sale created successfully", sale });
     } catch (err) {
-      console.error("Error creating sale:", err);
+      console.error("❌ Error creating sale:", err);
       res.status(500).json({ error: err.message });
     }
   },

@@ -1,5 +1,6 @@
 import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
+import { ProductSettingModel } from './productSetting.model.js';
 
 const getSalesCollection = () => db().collection("sales");
 
@@ -8,14 +9,29 @@ export const SalesModel = {
   async create(data) {
     const salesCollection = getSalesCollection();
     const newDoc = salesCollection.doc();
+    
+    console.log('💾 [SalesModel] Creating sale with data:', JSON.stringify(data, null, 2));
+    
     const payload = {
       ...data,
       id: newDoc.id,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     };
+    
+    console.log('💾 [SalesModel] Payload to save:', JSON.stringify(payload, null, 2));
+    
     await newDoc.set(payload);
-    return { id: newDoc.id, ...data };
+    
+    console.log('✅ [SalesModel] Sale saved with ID:', newDoc.id);
+    
+    // Return the data with the ID (timestamps will be set by Firestore)
+    return { 
+      id: newDoc.id, 
+      ...data,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
   },
 
   // FIND ALL SALES
@@ -56,6 +72,19 @@ export const SalesModel = {
     const ref = salesCollection.doc(id);
     const doc = await ref.get();
     if (!doc.exists) return false;
+    
+    const data = doc.data();
+    // Reverse stock update (add back)
+    if (data.items && Array.isArray(data.items)) {
+      for (const item of data.items) {
+        if (item.productId && item.quantity) {
+          await ProductSettingModel.updateStock(item.productId, Number(item.quantity));
+        }
+      }
+    } else if (data.productId && data.quantity) {
+      await ProductSettingModel.updateStock(data.productId, Number(data.quantity));
+    }
+    
     await ref.delete();
     return true;
   },

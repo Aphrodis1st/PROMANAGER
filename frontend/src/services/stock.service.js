@@ -315,6 +315,26 @@ export const reportsService = {
   },
 };
 // ================================
+// ✅ Inventory Service
+// ================================
+export const inventoryService = {
+  getReport: async (date) => {
+    console.log("📥 Fetching inventory report...");
+    const params = date ? `?date=${date}` : '';
+    const res = await axios.get(`${API_URL}/inventory/report${params}`, getAuthHeader());
+    console.log("✅ Inventory report fetched:", res.data);
+    return res.data;
+  },
+
+  updateOpeningStocks: async () => {
+    console.log("📥 Updating opening stocks...");
+    const res = await axios.post(`${API_URL}/inventory/update-opening-stocks`, {}, getAuthHeader());
+    console.log("✅ Opening stocks updated:", res.data);
+    return res.data;
+  },
+};
+
+// ================================
 // ✅ SUPPLIER SERVICE
 // ================================
 export const supplierService = {

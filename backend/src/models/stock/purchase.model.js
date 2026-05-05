@@ -1,6 +1,7 @@
 // backend/src/models/stock/purchase.model.js
 import { db } from '../../../utils/firebase.js';
 import admin from 'firebase-admin';
+import { ProductSettingModel } from './productSetting.model.js';
 
 // Lazy-loaded collection
 const getPurchaseCollection = () => db().collection('purchases');
@@ -9,17 +10,24 @@ export const PurchaseModel = {
   async create(data) {
     const purchaseCollection = getPurchaseCollection();
     const newDoc = purchaseCollection.doc();
-    await newDoc.set({
+    const purchaseData = {
       ...data,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    };
+    await newDoc.set(purchaseData);
+    
+    // Update product stock
+    if (data.productId && data.quantity) {
+      await ProductSettingModel.updateStock(data.productId, Number(data.quantity));
+    }
+    
     return { id: newDoc.id, ...data };
   },
 
   async findAll() {
     const purchaseCollection = getPurchaseCollection();
-    const snapshot = await purchaseCollection.get();
+    const snapshot = await purchaseCollection.orderBy('createdAt', 'desc').get();
     return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
   },
 
@@ -43,22 +51,15 @@ export const PurchaseModel = {
   async remove(id) {
     const purchaseCollection = getPurchaseCollection();
     const ref = purchaseCollection.doc(id);
+    const doc = await ref.get();
+    if (doc.exists) {
+      const data = doc.data();
+      // Reverse stock update
+      if (data.productId && data.quantity) {
+        await ProductSettingModel.updateStock(data.productId, -Number(data.quantity));
+      }
+    }
     await ref.delete();
     return { id };
-  },
-
-  // --- New method to adjust stock for a purchase ---
-  async adjustStock(id, qtyChange) {
-    const purchaseCollection = getPurchaseCollection();
-    const ref = purchaseCollection.doc(id);
-    const doc = await ref.get();
-    if (!doc.exists) throw new Error("Purchase not found");
-
-    const currentStock = doc.data().currentStock || 0;
-    const newStock = currentStock + qtyChange;
-
-    await ref.update({ currentStock: newStock, updatedAt: admin.firestore.FieldValue.serverTimestamp() });
-
-    return { id, currentStock: newStock };
   },
 };

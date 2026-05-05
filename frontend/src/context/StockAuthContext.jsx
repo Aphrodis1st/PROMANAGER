@@ -115,13 +115,29 @@ export function StockAuthProvider({ children }) {
 
   const hasRole = (roles) => {
     if (!user) return false;
-    if (Array.isArray(roles)) return roles.includes(user.role);
-    return user.role === roles;
+    const userRole = (user.role || "").toUpperCase();
+    
+    // ADMIN, SUPER_ADMIN, and DIRECTOR_MANAGER have access to everything
+    if (userRole === "ADMIN" || userRole === "SUPER_ADMIN" || userRole === "DIRECTOR_MANAGER") {
+      return true;
+    }
+    
+    if (Array.isArray(roles)) {
+      const normalizedRoles = roles.map(r => (r || "").toUpperCase());
+      return normalizedRoles.includes(userRole);
+    }
+    return userRole === (roles || "").toUpperCase();
   };
 
   const inDepartment = (departments) => {
     if (!user) return false;
-    if (["ADMIN", "MANAGER"].includes(user.role)) return true;
+    const userRole = (user.role || "").toUpperCase();
+    
+    // ADMIN, SUPER_ADMIN, and DIRECTOR_MANAGER have access to all departments
+    if (userRole === "ADMIN" || userRole === "SUPER_ADMIN" || userRole === "DIRECTOR_MANAGER") {
+      return true;
+    }
+    
     if (!departments) return true;
     if (Array.isArray(departments)) return departments.includes(user.department);
     return user.department === departments;

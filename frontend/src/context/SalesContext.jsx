@@ -25,23 +25,36 @@ export const SalesProvider = ({ children }) => {
   };
 
   const addSale = async (data) => {
+    console.log('📥 Adding sale with data:', data);
     const saved = await stockService.add("sales", data);
+    console.log('✅ Sale saved:', saved);
 
     const normalizedSale = {
       ...saved,
       items: Array.isArray(saved.items)
         ? saved.items.map((item) => ({
-            ...item,
+            productId: item.productId || '',
+            productName: item.productName || '',
+            description: item.description || '',
             quantity: Number(item.quantity) || 0,
+            unit: item.unit || '',
             unitPrice: Number(item.unitPrice) || 0,
             discount: Number(item.discount) || 0,
             tax: Number(item.tax) || 0,
             totalPrice: Number(item.totalPrice) || 0,
+            batchNumber: item.batchNumber || '',
+            expirationDate: item.expirationDate || '',
+            qualityGrade: item.qualityGrade || '',
+            warranty: item.warranty || '',
+            serialNumber: item.serialNumber || '',
+            storeLocation: item.storeLocation || '',
+            productCategory: item.productCategory || '',
           }))
         : [],
       totalPrice: Number(saved.totalPrice) || 0,
     };
 
+    console.log('✅ Normalized sale:', normalizedSale);
     setSales((prev) => [...prev, normalizedSale]);
     return normalizedSale;
   };

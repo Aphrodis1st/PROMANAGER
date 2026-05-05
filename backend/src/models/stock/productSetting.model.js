@@ -21,10 +21,24 @@ export const ProductSettingModel = {
       quality: data.quality || "Medium",
       tax: Number(data.tax) || 0,
       openingStock: Number(data.openingStock) || 0,
-      currentStock: Number(data.openingStock) || 0, // track stock movement
+      currentStock: Number(data.openingStock) || 0,
       reorderLevel: Number(data.reorderLevel) || 0,
       unit: data.unit || "pcs",
       status: data.status || "Active",
+      // Pricing & Defaults
+      defaultSellingPrice: Number(data.defaultSellingPrice) || 0,
+      defaultBuyingPrice: Number(data.defaultBuyingPrice) || 0,
+      defaultDiscount: Number(data.defaultDiscount) || 0,
+      defaultDiscountType: data.defaultDiscountType || "Percentage",
+      // Tracking settings
+      trackBatchNumber: Boolean(data.trackBatchNumber),
+      trackSerialNumber: Boolean(data.trackSerialNumber),
+      trackExpiryDate: Boolean(data.trackExpiryDate),
+      trackWarranty: Boolean(data.trackWarranty),
+      defaultWarrantyPeriod: data.defaultWarrantyPeriod || "",
+      defaultWarrantyUnit: data.defaultWarrantyUnit || "Months",
+      defaultShelfLife: data.defaultShelfLife || "",
+      defaultShelfLifeUnit: data.defaultShelfLifeUnit || "Months",
       createdAt: timestamp,
       updatedAt: timestamp,
     };
@@ -65,7 +79,7 @@ export const ProductSettingModel = {
     return { id, ...updatedData };
   },
 
-  // UPDATE STOCK QUANTITY (used by sales/returns)
+  // UPDATE STOCK QUANTITY (used by sales/purchases)
   async updateStock(id, quantityChange) {
     const collection = getCollection();
     const ref = collection.doc(id);
@@ -82,6 +96,14 @@ export const ProductSettingModel = {
     });
 
     return { id, newStock };
+  },
+
+  // GET STOCK MOVEMENTS FOR A PRODUCT
+  async getStockMovements(productId, startDate, endDate) {
+    const collection = getCollection();
+    const doc = await collection.doc(productId).get();
+    if (!doc.exists) return null;
+    return { id: doc.id, ...doc.data() };
   },
 
   // DELETE PRODUCT SETTING

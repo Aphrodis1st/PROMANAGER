@@ -29,8 +29,32 @@ export const requireRole = (...roles) => (req, res, next) => {
   if (!req.user) return res.status(401).json({ message: "Unauthorized" });
   const userRole = (req.user.role || "").toUpperCase();
   const normalizedRoles = roles.map((r) => (r || "").toUpperCase());
+  
+  // ADMIN and SUPER_ADMIN have access to everything
+  if (userRole === "ADMIN" || userRole === "SUPER_ADMIN" || userRole === "DIRECTOR_MANAGER") {
+    return next();
+  }
+  
   if (!normalizedRoles.includes(userRole)) {
     return res.status(403).json({ message: "Forbidden: insufficient role" });
+  }
+  next();
+};
+
+export const requireDepartment = (...departments) => (req, res, next) => {
+  if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+  const userRole = (req.user.role || "").toUpperCase();
+  
+  // ADMIN and SUPER_ADMIN have access to all departments
+  if (userRole === "ADMIN" || userRole === "SUPER_ADMIN" || userRole === "DIRECTOR_MANAGER") {
+    return next();
+  }
+  
+  const userDept = req.user.department;
+  const normalizedDepts = departments.map((d) => d);
+  
+  if (!userDept || !normalizedDepts.includes(userDept)) {
+    return res.status(403).json({ message: "Forbidden: insufficient department access" });
   }
   next();
 };

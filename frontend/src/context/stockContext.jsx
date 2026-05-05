@@ -189,9 +189,34 @@ const StockProviderCore = ({ children }) => {
             : []
         );
 
-        salesContext.setSales(
-          stockRes.sales && Array.isArray(stockRes.sales) ? stockRes.sales : []
-        );
+        const salesRaw = stockRes.sales && Array.isArray(stockRes.sales) ? stockRes.sales : [];
+        const normalizedSales = salesRaw.map((sale) => ({
+          ...sale,
+          items: Array.isArray(sale.items)
+            ? sale.items.map((item) => ({
+                productId: item.productId || '',
+                productName: item.productName || '',
+                description: item.description || '',
+                quantity: Number(item.quantity) || 0,
+                unit: item.unit || '',
+                unitPrice: Number(item.unitPrice) || 0,
+                discount: Number(item.discount) || 0,
+                tax: Number(item.tax) || 0,
+                totalPrice: Number(item.totalPrice) || Number(item.total) || 0,
+                batchNumber: item.batchNumber || '',
+                expirationDate: item.expirationDate || '',
+                qualityGrade: item.qualityGrade || '',
+                warranty: item.warranty || '',
+                serialNumber: item.serialNumber || '',
+                storeLocation: item.storeLocation || '',
+                productCategory: item.productCategory || '',
+              }))
+            : [],
+          totalPrice: Number(sale.totalPrice) || 0,
+        }));
+        
+        console.log('✅ Normalized sales:', normalizedSales);
+        salesContext.setSales(normalizedSales);
 
         setDispenses(
           stockRes.dispenses && Array.isArray(stockRes.dispenses)
