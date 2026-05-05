@@ -113,6 +113,7 @@ import hrContractRoutes from './routes/hr/contract.routes.js';
 import hrPerformanceRoutes from './routes/hr/performance.routes.js';
 import hrDashboardRoutes from './routes/hr/dashboard.routes.js';
 import hrAuthRoutes from './routes/hr/auth.routes.js';
+import currencyRoutes from './routes/currency.routes.js';
 
 // Middlewares
 app.use(
@@ -227,6 +228,9 @@ app.use('/api/v1/super-admin/stocks', superAdminStockRoutes);
 app.use('/api/v1/super-admin/pharmacies', superAdminPharmacyRoutes);
 app.use('/api/v1/super-admin/hr-organizations', superAdminHROrganizationRoutes);
 app.use('/api/v1/super-admin/payroll', superAdminPayrollRoutes);
+
+// Currency routes
+app.use('/api/v1/currency', currencyRoutes);
 
 // HR routes
 app.use('/api/v1/hr/auth', hrAuthRoutes);

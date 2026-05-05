@@ -1,17 +1,17 @@
 import express from "express";
 import { GLAccountController } from "../../controllers/stock/glAccount.controller.js";
-import { stockAuth } from "../../middleware/stock/auth.js";
+import { requireAuth } from "../../middleware/stock/auth.js";
 
 const router = express.Router();
 
 // GL Account Routes
-router.post("/", stockAuth, GLAccountController.createGLAccount);
-router.get("/", stockAuth, GLAccountController.getAllGLAccounts);
-router.get("/code/:code", stockAuth, GLAccountController.getGLAccountByCode);
-router.get("/:id", stockAuth, GLAccountController.getGLAccountById);
-router.put("/:id", stockAuth, GLAccountController.updateGLAccount);
-router.delete("/:id", stockAuth, GLAccountController.deleteGLAccount);
-router.post("/initialize-defaults", stockAuth, GLAccountController.initializeDefaultAccounts);
-router.put("/:id/balance", stockAuth, GLAccountController.updateBalance);
+router.post("/", requireAuth, GLAccountController.createGLAccount);
+router.get("/", requireAuth, GLAccountController.getAllGLAccounts);
+router.get("/code/:code", requireAuth, GLAccountController.getGLAccountByCode);
+router.get("/:id", requireAuth, GLAccountController.getGLAccountById);
+router.put("/:id", requireAuth, GLAccountController.updateGLAccount);
+router.delete("/:id", requireAuth, GLAccountController.deleteGLAccount);
+router.post("/initialize-defaults", requireAuth, GLAccountController.initializeDefaultAccounts);
+router.put("/:id/balance", requireAuth, GLAccountController.updateBalance);
 
 export default router;

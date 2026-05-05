@@ -39,6 +39,7 @@ import { ExpenseProvider } from './context/ExpenseContext';
 import { ReportsProvider } from './context/ReportsContext.jsx';
 import { FixedAssetProvider } from './context/FixedAssetContext.jsx';
 import { ProductionProvider } from './context/ProductionContext.jsx';
+import { CurrencyProvider } from './context/CurrencyContext.jsx';
 import { HospitalAuthProvider } from './context/HospitalAuthContext.jsx';
 import { HRAuthProvider } from './context/HRAuthContext.jsx';
 import HospitalProvider from './context/HospitalProvider.jsx';
@@ -144,10 +145,12 @@ import PrescriptionList from './pharmacy/pages/prescriptions/PrescriptionList.js
 import QuoteList from './pharmacy/pages/quotes/QuoteList.jsx';
 import OrderList from './pharmacy/pages/orders/OrderList.jsx';
 import CallCenter from './pharmacy/pages/callcenter/CallCenter.jsx';
+import PharmacySettings from './pharmacy/pages/settings/PharmacySettings.jsx';
 
 // HR Pages
 import HRLayout from './hrPages/HRLayout.jsx';
 import HRDashboard from './hrPages/HRDashboard.jsx';
+import HRSettings from './hrPages/HRSettings.jsx';
 import Employees from './hrPages/Employees.jsx';
 import Departments from './hrPages/Departments.jsx';
 import Attendance from './hrPages/Attendance.jsx';
@@ -176,6 +179,7 @@ import HospitalManagement from './pages/superAdmin/HospitalManagement.jsx';
 import HospitalAdminManagement from './pages/superAdmin/HospitalAdminManagement.jsx';
 import SystemActivity from './pages/superAdmin/SystemActivity.jsx';
 import SuperAdminSettings from './pages/superAdmin/SuperAdminSettings.jsx';
+import CurrencyManagement from './pages/superAdmin/CurrencyManagement.jsx';
 import StockManagement from './pages/superAdmin/StockManagement.jsx';
 import PharmacyManagement from './pages/superAdmin/PharmacyManagement.jsx';
 import HRManagement from './pages/superAdmin/HRManagement.jsx';
@@ -205,6 +209,7 @@ function AppContent() {
       <Route path='/super-admin/pharmacies' element={<PharmacyManagement />} />
       <Route path='/super-admin/hr' element={<HRManagement />} />
       <Route path='/super-admin/payroll' element={<PayrollManagement />} />
+      <Route path='/super-admin/currency' element={<CurrencyManagement />} />
       <Route path='/super-admin/activity' element={<SystemActivity />} />
       <Route path='/super-admin/settings' element={<SuperAdminSettings />} />
 
@@ -257,6 +262,7 @@ function AppContent() {
         <Route path='payments' element={<PharmacyDashboard />} />
         <Route path='payments/process' element={<PharmacyDashboard />} />
         <Route path='payments/reports' element={<PharmacyDashboard />} />
+        <Route path='settings' element={<PharmacySettings />} />
         <Route path='callcenter' element={<CallCenter />} />
       </Route>
 
@@ -275,7 +281,7 @@ function AppContent() {
         <Route path='documents' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
         <Route path='recruitment' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
         <Route path='reports' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
-        <Route path='settings' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
+        <Route path='settings' element={<HRProtectedRoute><HRSettings /></HRProtectedRoute>} />
         <Route path='organizations' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
       </Route>
     </Routes>
@@ -286,27 +292,29 @@ export default function App() {
   return (
     <AuthProvider>
       <AppProvider>
-        <HospitalAuthProvider>
-          <HospitalProvider>
-            <HRAuthProvider>
-              <StockAuthProvider>
-                <StockProvider>
-                  <JournalProvider>
-                    <ExpenseProvider>
-                      <ReportsProvider>
-                        <FixedAssetProvider>
-                          <ProductionProvider>
-                            <AppContent />
-                          </ProductionProvider>
-                        </FixedAssetProvider>
-                      </ReportsProvider>
-                    </ExpenseProvider>
-                  </JournalProvider>
-                </StockProvider>
-              </StockAuthProvider>
-            </HRAuthProvider>
-          </HospitalProvider>
-        </HospitalAuthProvider>
+        <CurrencyProvider>
+          <HospitalAuthProvider>
+            <HospitalProvider>
+              <HRAuthProvider>
+                <StockAuthProvider>
+                  <StockProvider>
+                    <JournalProvider>
+                      <ExpenseProvider>
+                        <ReportsProvider>
+                          <FixedAssetProvider>
+                            <ProductionProvider>
+                              <AppContent />
+                            </ProductionProvider>
+                          </FixedAssetProvider>
+                        </ReportsProvider>
+                      </ExpenseProvider>
+                    </JournalProvider>
+                  </StockProvider>
+                </StockAuthProvider>
+              </HRAuthProvider>
+            </HospitalProvider>
+          </HospitalAuthProvider>
+        </CurrencyProvider>
       </AppProvider>
     </AuthProvider>
   );

@@ -6,11 +6,17 @@ export const TaxController = {
   // Tax Configuration
   async createTax(req, res) {
     try {
+      console.log('Creating tax with data:', req.body);
       const tax = await TaxModel.create(req.body);
+      console.log('Tax created successfully:', tax);
       return res.status(201).json(tax);
     } catch (err) {
       console.error("Error creating tax:", err);
-      return res.status(500).json({ error: "Failed to create tax" });
+      return res.status(500).json({ 
+        error: "Failed to create tax",
+        message: err.message,
+        details: err.stack 
+      });
     }
   },
 

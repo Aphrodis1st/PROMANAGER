@@ -14,10 +14,12 @@ import {
   Phone,
   MapPin,
   Save,
-  RefreshCw
+  RefreshCw,
+  DollarSign
 } from 'lucide-react';
 import { useHospitalAuth } from '../../../context/HospitalAuthContext';
 import hospitalService from '../../../services/hospitalService';
+import CurrencySettings from '../../../components/CurrencySettings';
 
 const AdminSettings = () => {
   const { hospital, admin } = useHospitalAuth();
@@ -67,10 +69,31 @@ const AdminSettings = () => {
 
   const tabs = [
     { id: 'general', label: 'General', icon: Hospital },
+    { id: 'currency', label: 'Currency', icon: DollarSign },
     { id: 'system', label: 'System', icon: Settings },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'security', label: 'Security', icon: Shield }
   ];
+
+  const renderCurrencySettings = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Currency Configuration</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-gray-600 mb-4">
+            Select the currency to be used for all billing, invoices, and financial reports in your hospital.
+          </p>
+          <CurrencySettings 
+            organizationId={hospital?.id}
+            moduleType="hospital"
+            onSave={() => setMessage('Currency settings updated successfully')}
+          />
+        </CardContent>
+      </Card>
+    </div>
+  );
 
   const renderGeneralSettings = () => (
     <div className="space-y-6">
@@ -325,6 +348,7 @@ const AdminSettings = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'general': return renderGeneralSettings();
+      case 'currency': return renderCurrencySettings();
       case 'system': return renderSystemSettings();
       case 'notifications': return renderNotificationSettings();
       case 'security': return renderSecuritySettings();

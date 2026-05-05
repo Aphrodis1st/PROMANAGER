@@ -11,6 +11,7 @@ import RevenueStatistics from "./RevenueStatistics";
 import PatientFlow from "./PatientFlow";
 import BedOccupancy from "./BedOccupancy";
 import { useHospitalAuth } from "../../context/HospitalAuthContext";
+import { useOrganizationCurrency } from "../../hooks/useCurrencyFormat";
 
 const DashboardOverview = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const DashboardOverview = () => {
   const { patients } = usePatients();
   const { appointments } = useAppointments();
   const { bills } = useBilling();
+  const { formatAmount } = useOrganizationCurrency(hospital?.id, 'hospital');
 
   const totalRevenue = bills?.reduce((sum, b) => sum + (b.amount || 0), 0);
 
@@ -45,7 +47,7 @@ const DashboardOverview = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card title="Total Patients" value={patients?.length || 0} />
         <Card title="Appointments Today" value={appointments?.length || 0} />
-        <Card title="Total Revenue" value={`$${totalRevenue || 0}`} />
+        <Card title="Total Revenue" value={formatAmount(totalRevenue || 0)} />
         <Card title="Active Admissions" value="24" />
       </div>
 

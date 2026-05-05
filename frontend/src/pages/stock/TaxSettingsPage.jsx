@@ -7,8 +7,9 @@ import {
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import axios from 'axios';
+import { API_BASE_URL } from '../../constants/api';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+const API_URL = `${API_BASE_URL}/api/v1`;
 
 const TAX_TYPES = [
   { value: 'VAT', label: 'Value Added Tax (VAT)' },
@@ -69,7 +70,7 @@ export default function TaxSettingsPage() {
   const fetchTaxes = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('stockToken');
+      const token = localStorage.getItem('token');
       const res = await axios.get(`${API_URL}/stock/taxes`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -83,7 +84,7 @@ export default function TaxSettingsPage() {
 
   const fetchTaxGroups = async () => {
     try {
-      const token = localStorage.getItem('stockToken');
+      const token = localStorage.getItem('token');
       const res = await axios.get(`${API_URL}/stock/taxes/groups/all`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -95,7 +96,7 @@ export default function TaxSettingsPage() {
 
   const fetchGLAccounts = async () => {
     try {
-      const token = localStorage.getItem('stockToken');
+      const token = localStorage.getItem('token');
       const res = await axios.get(`${API_URL}/stock/gl-accounts`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -107,7 +108,7 @@ export default function TaxSettingsPage() {
 
   const initializeDefaultGLAccounts = async () => {
     try {
-      const token = localStorage.getItem('stockToken');
+      const token = localStorage.getItem('token');
       await axios.post(`${API_URL}/stock/gl-accounts/initialize-defaults`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -121,28 +122,55 @@ export default function TaxSettingsPage() {
 
   const handleSaveTax = async () => {
     try {
-      const token = localStorage.getItem('stockToken');
-      if (editingTax) {
-        await axios.put(`${API_URL}/stock/taxes/${editingTax.id}`, formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-      } else {
-        await axios.post(`${API_URL}/stock/taxes`, formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+      console.log('Saving tax with data:', formData);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        alert('Authentication token not found. Please login again.');
+        return;
       }
-      fetchTaxes();
+
+      // Validate required fields
+      if (!formData.taxName || !formData.taxCode) {
+        alert('Tax Name and Tax Code are required');
+        return;
+      }
+
+      const payload = {
+        ...formData,
+        rate: Number(formData.rate) || 0,
+        fixedAmount: Number(formData.fixedAmount) || 0,
+      };
+
+      console.log('Sending payload:', payload);
+
+      if (editingTax) {
+        const response = await axios.put(`${API_URL}/stock/taxes/${editingTax.id}`, payload, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log('Update response:', response.data);
+      } else {
+        const response = await axios.post(`${API_URL}/stock/taxes`, payload, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log('Create response:', response.data);
+      }
+      
+      await fetchTaxes();
       handleCloseDialog();
+      alert('Tax saved successfully!');
     } catch (err) {
       console.error('Error saving tax:', err);
-      alert('Failed to save tax');
+      console.error('Error response:', err.response?.data);
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to save tax';
+      alert(`Error: ${errorMessage}`);
     }
   };
 
   const handleDeleteTax = async (id) => {
     if (!confirm('Delete this tax?')) return;
     try {
-      const token = localStorage.getItem('stockToken');
+      const token = localStorage.getItem('token');
       await axios.delete(`${API_URL}/stock/taxes/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -155,7 +183,7 @@ export default function TaxSettingsPage() {
 
   const handleSaveGroup = async () => {
     try {
-      const token = localStorage.getItem('stockToken');
+      const token = localStorage.getItem('token');
       if (editingGroup) {
         await axios.put(`${API_URL}/stock/taxes/groups/${editingGroup.id}`, groupFormData, {
           headers: { Authorization: `Bearer ${token}` }
@@ -176,7 +204,7 @@ export default function TaxSettingsPage() {
   const handleDeleteGroup = async (id) => {
     if (!confirm('Delete this tax group?')) return;
     try {
-      const token = localStorage.getItem('stockToken');
+      const token = localStorage.getItem('token');
       await axios.delete(`${API_URL}/stock/taxes/groups/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });

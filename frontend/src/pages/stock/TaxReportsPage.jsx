@@ -6,8 +6,9 @@ import {
 } from '@mui/material';
 import { Download, Print } from '@mui/icons-material';
 import axios from 'axios';
+import { API_BASE_URL } from '../../constants/api';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+const API_URL = `${API_BASE_URL}/api/v1`;
 
 const TAX_TYPES = ['VAT', 'Sales Tax', 'Excise', 'WHT', 'Customs', 'Zero-Rated', 'Exempt'];
 
@@ -33,9 +34,13 @@ export default function TaxReportsPage() {
   const fetchTransactions = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('stockToken');
-      const params = new URLSearchParams(filters);
-      const res = await axios.get(`${API_URL}/stock/taxes/transactions/all?${params}`, {
+      const token = localStorage.getItem('token');
+      const params = [];
+      if (filters.startDate) params.push(`startDate=${filters.startDate}`);
+      if (filters.endDate) params.push(`endDate=${filters.endDate}`);
+      if (filters.taxType) params.push(`taxType=${filters.taxType}`);
+      const queryString = params.length > 0 ? `?${params.join('&')}` : '';
+      const res = await axios.get(`${API_URL}/stock/taxes/transactions/all${queryString}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTransactions(res.data);
@@ -49,12 +54,12 @@ export default function TaxReportsPage() {
   const fetchSummary = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('stockToken');
-      const params = new URLSearchParams({
-        startDate: filters.startDate,
-        endDate: filters.endDate,
-      });
-      const res = await axios.get(`${API_URL}/stock/taxes/reports/summary?${params}`, {
+      const token = localStorage.getItem('token');
+      const params = [];
+      if (filters.startDate) params.push(`startDate=${filters.startDate}`);
+      if (filters.endDate) params.push(`endDate=${filters.endDate}`);
+      const queryString = params.length > 0 ? `?${params.join('&')}` : '';
+      const res = await axios.get(`${API_URL}/stock/taxes/reports/summary${queryString}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSummary(res.data);

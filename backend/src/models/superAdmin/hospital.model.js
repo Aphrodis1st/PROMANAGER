@@ -8,6 +8,7 @@ export class Hospital {
     this.contactInfo = data.contactInfo;
     this.subscriptionPlan = data.subscriptionPlan;
     this.featuresEnabled = data.featuresEnabled || [];
+    this.currencyId = data.currencyId || null;
     this.status = data.status || 'active'; // active, suspended
     this.isDeleted = data.isDeleted || false;
     this.createdAt = data.createdAt || new Date();

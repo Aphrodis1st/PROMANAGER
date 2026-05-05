@@ -1,0 +1,130 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║              🚀 PROMANAGER STARTUP CHECKLIST 🚀                ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+FOLLOW THESE STEPS IN ORDER:
+
+┌────────────────────────────────────────────────────────────────┐
+│ STEP 1: START BACKEND SERVER                                  │
+└────────────────────────────────────────────────────────────────┘
+
+   □ Double-click: start-backend.bat
+   
+   □ Wait for this message:
+     "✅ Server ready to accept connections"
+   
+   □ Verify by opening browser:
+     http://localhost:5000
+     
+     Should show: {"message": "ProManager API Server", "status": "running"}
+
+┌────────────────────────────────────────────────────────────────┐
+│ STEP 2: INITIALIZE CURRENCIES (First Time Only)               │
+└────────────────────────────────────────────────────────────────┘
+
+   □ Double-click: initialize-currencies.bat
+   
+   □ Wait for success message
+   
+   □ This creates 10 default currencies in your system
+
+┌────────────────────────────────────────────────────────────────┐
+│ STEP 3: START FRONTEND (If Not Already Running)               │
+└────────────────────────────────────────────────────────────────┘
+
+   □ Open new terminal/command prompt
+   
+   □ Run:
+     cd frontend
+     npm run dev
+   
+   □ Access: http://localhost:5173
+
+┌────────────────────────────────────────────────────────────────┐
+│ STEP 4: VERIFY EVERYTHING WORKS                               │
+└────────────────────────────────────────────────────────────────┘
+
+   □ Backend running: http://localhost:5000 ✓
+   
+   □ Frontend running: http://localhost:5173 ✓
+   
+   □ Can login to Stock: http://localhost:5173/stock/login ✓
+   
+   □ Can login to Hospital: http://localhost:5173/hospital/login ✓
+   
+   □ No connection errors ✓
+
+═══════════════════════════════════════════════════════════════
+
+🎯 QUICK START (All-in-One):
+
+   Just double-click: start-all.bat
+   
+   This starts both backend and frontend automatically!
+
+═══════════════════════════════════════════════════════════════
+
+✅ SYSTEM READY INDICATORS:
+
+   Backend Ready:
+   ✓ Terminal shows: "✅ Server ready to accept connections"
+   ✓ http://localhost:5000 shows API message
+   
+   Frontend Ready:
+   ✓ Terminal shows: "Local: http://localhost:5173"
+   ✓ Browser opens automatically
+   
+   Currencies Ready:
+   ✓ initialize-currencies.bat completed successfully
+   ✓ 10 currencies created
+
+═══════════════════════════════════════════════════════════════
+
+❌ TROUBLESHOOTING:
+
+   Problem: Connection refused error
+   Solution: Backend not running → Run start-backend.bat
+   
+   Problem: Port already in use
+   Solution: Kill process or change port in .env files
+   
+   Problem: npm command not found
+   Solution: Install Node.js from https://nodejs.org
+   
+   Problem: Dependencies missing
+   Solution: Run "npm install" in backend and frontend folders
+
+═══════════════════════════════════════════════════════════════
+
+📚 NEED HELP?
+
+   See these files:
+   
+   ⭐ FIX_CONNECTION_ERROR.md        ← Start here for errors
+   ⭐ CURRENCY_README.md             ← Quick reference
+   ⭐ CURRENCY_SYSTEM_SETUP.md       ← Complete setup guide
+   ⭐ START_BACKEND_INSTRUCTIONS.txt ← Detailed instructions
+
+═══════════════════════════════════════════════════════════════
+
+🎉 ONCE EVERYTHING IS RUNNING:
+
+   Your application is ready to use!
+   
+   Access Points:
+   - Stock Management: /stock/login
+   - Hospital Management: /hospital/login
+   - Pharmacy Management: /pharmacy/login
+   - HR & Payroll: /hr/login
+   - Super Admin: /super-admin/login
+   
+   Currency System:
+   - Super Admin can manage currencies at: /super-admin/currency
+   - Each organization can select their currency in settings
+   - All amounts display in selected currency automatically
+
+═══════════════════════════════════════════════════════════════
+
+✨ ENJOY YOUR PROMANAGER SYSTEM! ✨

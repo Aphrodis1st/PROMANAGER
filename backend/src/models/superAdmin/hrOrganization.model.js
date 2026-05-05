@@ -4,6 +4,7 @@ export class HROrganization {
   static async create(data) {
     const docRef = await db().collection('hr_organizations').add({
       ...data,
+      currencyId: data.currencyId || null,
       isDeleted: false,
       status: 'active',
       createdAt: new Date(),
