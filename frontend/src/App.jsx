@@ -2,6 +2,8 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 import AppLayout from "./AppLayout.jsx";
+import StockLayout from './pages/stock/StockLayout.jsx';
+import StockDashboardOverview from './pages/stock/StockDashboardOverview.jsx';
 import InventoryPage from './pages/stock/ProductsPage.jsx';
 import PurchasesPage from './pages/stock/PurchasesPage.jsx';
 import DispensePage from './pages/stock/DispensePage.jsx';
@@ -35,9 +37,11 @@ import { ReportsProvider } from './context/ReportsContext.jsx';
 import { FixedAssetProvider } from './context/FixedAssetContext.jsx';
 import { ProductionProvider } from './context/ProductionContext.jsx';
 import { HospitalAuthProvider } from './context/HospitalAuthContext.jsx';
+import { HRAuthProvider } from './context/HRAuthContext.jsx';
 import HospitalProvider from './context/HospitalProvider.jsx';
 import StockProtectedRoute from './components/stock/StockProtectedRoute.jsx';
 import HospitalProtectedRoute from './components/hospital/HospitalProtectedRoute.jsx';
+import HRProtectedRoute from './components/hr/HRProtectedRoute.jsx';
 
 // Hospital Pages
 import HospitalRoutes from './hospitalPages/HospitalRoutes.jsx';
@@ -138,6 +142,16 @@ import QuoteList from './pharmacy/pages/quotes/QuoteList.jsx';
 import OrderList from './pharmacy/pages/orders/OrderList.jsx';
 import CallCenter from './pharmacy/pages/callcenter/CallCenter.jsx';
 
+// HR Pages
+import HRLayout from './hrPages/HRLayout.jsx';
+import HRDashboard from './hrPages/HRDashboard.jsx';
+import Employees from './hrPages/Employees.jsx';
+import Departments from './hrPages/Departments.jsx';
+import Attendance from './hrPages/Attendance.jsx';
+import LeaveManagement from './hrPages/LeaveManagement.jsx';
+import Payroll from './hrPages/Payroll.jsx';
+import Contracts from './hrPages/Contracts.jsx';
+
 // Service Selection and Dashboards
 import ServiceSelection from './pages/ServiceSelection.jsx';
 import StockDashboard from './pages/StockDashboard.jsx';
@@ -147,6 +161,7 @@ import PharmacyServicesDashboard from './pages/PharmacyServicesDashboard.jsx';
 import StockLogin from './pages/auth/StockLogin.jsx';
 import HospitalLogin from './pages/auth/HospitalLogin.jsx';
 import PharmacyLogin from './pages/auth/PharmacyLogin.jsx';
+import HRLogin from './pages/auth/HRLogin.jsx';
 import StockRegister from './pages/auth/StockRegister.jsx';
 import SuperAdminLogin from './pages/auth/SuperAdminLogin.jsx';
 import Unauthorized from './pages/Unauthorized.jsx';
@@ -158,6 +173,10 @@ import HospitalManagement from './pages/superAdmin/HospitalManagement.jsx';
 import HospitalAdminManagement from './pages/superAdmin/HospitalAdminManagement.jsx';
 import SystemActivity from './pages/superAdmin/SystemActivity.jsx';
 import SuperAdminSettings from './pages/superAdmin/SuperAdminSettings.jsx';
+import StockManagement from './pages/superAdmin/StockManagement.jsx';
+import PharmacyManagement from './pages/superAdmin/PharmacyManagement.jsx';
+import HRManagement from './pages/superAdmin/HRManagement.jsx';
+import PayrollManagement from './pages/superAdmin/PayrollManagement.jsx';
 
 function AppContent() {
   return (
@@ -173,6 +192,7 @@ function AppContent() {
       <Route path='/stock/login' element={<StockLogin />} />
       <Route path='/hospital/login' element={<HospitalLogin />} />
       <Route path='/pharmacy/login' element={<PharmacyLogin />} />
+      <Route path='/hr/login' element={<HRLogin />} />
       <Route path='/super-admin/login' element={<SuperAdminLogin />} />
       <Route path='/stock/register' element={<StockRegister />} />
       <Route path='/unauthorized' element={<Unauthorized />} />
@@ -182,11 +202,16 @@ function AppContent() {
       <Route path='/super-admin/dashboard' element={<SuperAdminDashboard />} />
       <Route path='/super-admin/hospitals' element={<HospitalManagement />} />
       <Route path='/super-admin/hospital-admins' element={<HospitalAdminManagement />} />
+      <Route path='/super-admin/stocks' element={<StockManagement />} />
+      <Route path='/super-admin/pharmacies' element={<PharmacyManagement />} />
+      <Route path='/super-admin/hr' element={<HRManagement />} />
+      <Route path='/super-admin/payroll' element={<PayrollManagement />} />
       <Route path='/super-admin/activity' element={<SystemActivity />} />
       <Route path='/super-admin/settings' element={<SuperAdminSettings />} />
 
       {/* Stock Routes */}
-      <Route path='/stock/*' element={<AppLayout />}>
+      <Route path='/stock/*' element={<StockLayout />}>
+        <Route index element={<StockProtectedRoute roles={["ADMIN","MANAGER","STOREKEEPER","ACCOUNTANT","PURCHASER","SALES","PRODUCTIONMANAGER"]}><StockDashboardOverview /></StockProtectedRoute>} />
         <Route path='inventory' element={<StockProtectedRoute roles={["ADMIN","MANAGER","STOREKEEPER","ACCOUNTANT"]} departments={["Warehouse","Finance"]}><InventoryPage /></StockProtectedRoute>} />
         <Route path='purchases' element={<StockProtectedRoute roles={["ADMIN","PURCHASER","MANAGER","ACCOUNTANT"]} departments={["Purchasing","Finance"]}><PurchasesPage /></StockProtectedRoute>} />
         <Route path='sales' element={<StockProtectedRoute roles={["ADMIN","SALES","MANAGER","ACCOUNTANT"]} departments={["Sales","Finance"]}><SalesPage /></StockProtectedRoute>} />
@@ -233,6 +258,25 @@ function AppContent() {
         <Route path='payments/reports' element={<PharmacyDashboard />} />
         <Route path='callcenter' element={<CallCenter />} />
       </Route>
+
+      {/* HR Routes */}
+      <Route path='/hr/*' element={<HRLayout />}>
+        <Route path='dashboard' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
+        <Route path='employees' element={<HRProtectedRoute><Employees /></HRProtectedRoute>} />
+        <Route path='departments' element={<HRProtectedRoute><Departments /></HRProtectedRoute>} />
+        <Route path='attendance' element={<HRProtectedRoute><Attendance /></HRProtectedRoute>} />
+        <Route path='leave' element={<HRProtectedRoute><LeaveManagement /></HRProtectedRoute>} />
+        <Route path='payroll' element={<HRProtectedRoute><Payroll /></HRProtectedRoute>} />
+        <Route path='contracts' element={<HRProtectedRoute><Contracts /></HRProtectedRoute>} />
+        <Route path='shifts' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
+        <Route path='payslips' element={<HRProtectedRoute><Payroll /></HRProtectedRoute>} />
+        <Route path='performance' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
+        <Route path='documents' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
+        <Route path='recruitment' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
+        <Route path='reports' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
+        <Route path='settings' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
+        <Route path='organizations' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
+      </Route>
     </Routes>
   );
 }
@@ -243,21 +287,23 @@ export default function App() {
       <AppProvider>
         <HospitalAuthProvider>
           <HospitalProvider>
-            <StockAuthProvider>
-              <StockProvider>
-                <JournalProvider>
-                  <ExpenseProvider>
-                    <ReportsProvider>
-                      <FixedAssetProvider>
-                        <ProductionProvider>
-                          <AppContent />
-                        </ProductionProvider>
-                      </FixedAssetProvider>
-                    </ReportsProvider>
-                  </ExpenseProvider>
-                </JournalProvider>
-              </StockProvider>
-            </StockAuthProvider>
+            <HRAuthProvider>
+              <StockAuthProvider>
+                <StockProvider>
+                  <JournalProvider>
+                    <ExpenseProvider>
+                      <ReportsProvider>
+                        <FixedAssetProvider>
+                          <ProductionProvider>
+                            <AppContent />
+                          </ProductionProvider>
+                        </FixedAssetProvider>
+                      </ReportsProvider>
+                    </ExpenseProvider>
+                  </JournalProvider>
+                </StockProvider>
+              </StockAuthProvider>
+            </HRAuthProvider>
           </HospitalProvider>
         </HospitalAuthProvider>
       </AppProvider>

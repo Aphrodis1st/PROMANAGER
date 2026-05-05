@@ -41,7 +41,8 @@ import {
   Architecture as ArchIcon,
   PlayArrow as PlayIcon,
   GetApp as DownloadIcon,
-  Explore as ExploreIcon
+  Explore as ExploreIcon,
+  People as HRIcon
 } from '@mui/icons-material';
 
 export default function ServiceSelection() {
@@ -809,6 +810,122 @@ export default function ServiceSelection() {
                   ))}
                 </List>
               </Paper>
+            </Grid>
+          </Grid>
+        </Paper>
+
+        {/* HR & Payroll System Section */}
+        <Paper 
+          elevation={12}
+          sx={{ 
+            p: 6, 
+            mb: 8, 
+            background: 'rgba(255,255,255,0.98)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: 4
+          }}
+        >
+          <Grid container spacing={6} alignItems="center">
+            <Grid item xs={12} md={6} order={{ xs: 2, md: 1 }}>
+              <Paper elevation={4} sx={{ p: 4, bgcolor: '#e8eaf6', borderRadius: 3 }}>
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, color: '#5e35b1', mb: 3 }}>
+                  HR Modules
+                </Typography>
+                <List>
+                  <ListItem sx={{ px: 0, py: 1 }}>
+                    <ListItemIcon sx={{ minWidth: 32 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Employee Management" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                  </ListItem>
+                  <ListItem sx={{ px: 0, py: 1 }}>
+                    <ListItemIcon sx={{ minWidth: 32 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Attendance & Shift Management" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                  </ListItem>
+                  <ListItem sx={{ px: 0, py: 1 }}>
+                    <ListItemIcon sx={{ minWidth: 32 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Leave Management & Approvals" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                  </ListItem>
+                  <ListItem sx={{ px: 0, py: 1 }}>
+                    <ListItemIcon sx={{ minWidth: 32 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Payroll Engine with Tax Calculation" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                  </ListItem>
+                  <ListItem sx={{ px: 0, py: 1 }}>
+                    <ListItemIcon sx={{ minWidth: 32 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Contract & Performance Management" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                  </ListItem>
+                  <ListItem sx={{ px: 0, py: 1 }}>
+                    <ListItemIcon sx={{ minWidth: 32 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Multi-Organization Support" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                  </ListItem>
+                </List>
+              </Paper>
+            </Grid>
+            
+            <Grid item xs={12} md={6} order={{ xs: 1, md: 2 }}>
+              <Box sx={{ textAlign: { xs: 'center', md: 'left' } }}>
+                <Avatar
+                  sx={{
+                    width: 120,
+                    height: 120,
+                    bgcolor: '#5e35b1',
+                    mx: { xs: 'auto', md: 0 },
+                    mb: 4
+                  }}
+                >
+                  <HRIcon sx={{ fontSize: 60 }} />
+                </Avatar>
+                
+                <Typography variant="h3" gutterBottom sx={{ fontWeight: 700, color: '#5e35b1' }}>
+                  HR & Payroll Management System
+                </Typography>
+                
+                <Typography variant="h6" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
+                  The PROMANAGER HR & Payroll System is an enterprise-level
+                  human resource management platform designed to streamline
+                  employee management, attendance tracking, and payroll processing.
+                </Typography>
+                
+                <Typography variant="body1" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
+                  From employee onboarding to payroll generation,
+                  the system automates HR workflows, manages leave requests,
+                  tracks performance, and ensures accurate salary calculations
+                  with tax and deduction support.
+                </Typography>
+                
+                <Typography variant="body1" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
+                  With multi-organization support, businesses can manage
+                  HR operations across multiple companies from a single platform.
+                </Typography>
+
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={() => navigate('/hr/dashboard')}
+                  sx={{
+                    bgcolor: '#5e35b1',
+                    py: 2,
+                    px: 4,
+                    fontSize: '1.1rem',
+                    fontWeight: 700,
+                    borderRadius: 3,
+                    textTransform: 'none',
+                    mt: 3
+                  }}
+                >
+                  Access HR System
+                </Button>
+              </Box>
             </Grid>
           </Grid>
         </Paper>

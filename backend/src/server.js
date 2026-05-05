@@ -93,6 +93,23 @@ import reportsRoutes from './routes/hospital/reports.routes.js';
 import superAdminHospitalRoutes from './routes/superAdmin/hospital.routes.js';
 import superAdminHospitalAdminRoutes from './routes/superAdmin/hospitalAdmin.routes.js';
 import superAdminDashboardRoutes from './routes/superAdmin/dashboard.routes.js';
+import superAdminStockRoutes from './routes/superAdmin/stock.routes.js';
+import superAdminPharmacyRoutes from './routes/superAdmin/pharmacy.routes.js';
+import superAdminHROrganizationRoutes from './routes/superAdmin/hrOrganization.routes.js';
+import superAdminPayrollRoutes from './routes/superAdmin/payroll.routes.js';
+
+// HR Routes
+import hrOrganizationRoutes from './routes/hr/organization.routes.js';
+import hrEmployeeRoutes from './routes/hr/employee.routes.js';
+import hrDepartmentRoutes from './routes/hr/department.routes.js';
+import hrAttendanceRoutes from './routes/hr/attendance.routes.js';
+import hrShiftRoutes from './routes/hr/shift.routes.js';
+import hrLeaveRoutes from './routes/hr/leave.routes.js';
+import hrPayrollRoutes from './routes/hr/payroll.routes.js';
+import hrContractRoutes from './routes/hr/contract.routes.js';
+import hrPerformanceRoutes from './routes/hr/performance.routes.js';
+import hrDashboardRoutes from './routes/hr/dashboard.routes.js';
+import hrAuthRoutes from './routes/hr/auth.routes.js';
 
 // Middlewares
 app.use(
@@ -200,6 +217,23 @@ app.use('/api/v1/hospital/reports', requireFirebase, reportsRoutes);
 app.use('/api/v1/super-admin/hospitals', superAdminHospitalRoutes);
 app.use('/api/v1/super-admin/hospital-admins', superAdminHospitalAdminRoutes);
 app.use('/api/v1/super-admin/dashboard', superAdminDashboardRoutes);
+app.use('/api/v1/super-admin/stocks', superAdminStockRoutes);
+app.use('/api/v1/super-admin/pharmacies', superAdminPharmacyRoutes);
+app.use('/api/v1/super-admin/hr-organizations', superAdminHROrganizationRoutes);
+app.use('/api/v1/super-admin/payroll', superAdminPayrollRoutes);
+
+// HR routes
+app.use('/api/v1/hr/auth', hrAuthRoutes);
+app.use('/api/v1/hr/organizations', hrOrganizationRoutes);
+app.use('/api/v1/hr/employees', hrEmployeeRoutes);
+app.use('/api/v1/hr/departments', hrDepartmentRoutes);
+app.use('/api/v1/hr/attendance', hrAttendanceRoutes);
+app.use('/api/v1/hr/shifts', hrShiftRoutes);
+app.use('/api/v1/hr/leaves', hrLeaveRoutes);
+app.use('/api/v1/hr/payroll', hrPayrollRoutes);
+app.use('/api/v1/hr/contracts', hrContractRoutes);
+app.use('/api/v1/hr/performance', hrPerformanceRoutes);
+app.use('/api/v1/hr/dashboard', hrDashboardRoutes);
 
 // Catch-all for debugging
 app.use('*', (req, res) => {

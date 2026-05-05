@@ -1,0 +1,8 @@
+import express from 'express';
+import * as dashboardController from '../../controllers/hr/dashboard.controller.js';
+
+const router = express.Router();
+
+router.get('/', dashboardController.getDashboard);
+
+export default router;

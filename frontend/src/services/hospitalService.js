@@ -727,6 +727,135 @@ export const superAdminService = {
     );
     return res.data;
   },
+
+  // Stock Management
+  getAllStocks: async () => {
+    const res = await axios.get(`${SUPER_ADMIN_API_URL}/stocks`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  getStock: async (id) => {
+    const res = await axios.get(`${SUPER_ADMIN_API_URL}/stocks/${id}`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  createStock: async (data) => {
+    const res = await axios.post(`${SUPER_ADMIN_API_URL}/stocks`, data, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  updateStock: async (id, data) => {
+    const res = await axios.put(`${SUPER_ADMIN_API_URL}/stocks/${id}`, data, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  updateStockStatus: async (id, status) => {
+    const res = await axios.patch(`${SUPER_ADMIN_API_URL}/stocks/${id}/status`, { status }, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  updateStockFeatures: async (id, features) => {
+    const res = await axios.patch(`${SUPER_ADMIN_API_URL}/stocks/${id}/features`, { features }, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  softDeleteStock: async (id) => {
+    const res = await axios.patch(`${SUPER_ADMIN_API_URL}/stocks/${id}/soft-delete`, {}, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  hardDeleteStock: async (id) => {
+    const res = await axios.delete(`${SUPER_ADMIN_API_URL}/stocks/${id}`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  // Pharmacy Management
+  getAllPharmacies: async () => {
+    const res = await axios.get(`${SUPER_ADMIN_API_URL}/pharmacies`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  getPharmacy: async (id) => {
+    const res = await axios.get(`${SUPER_ADMIN_API_URL}/pharmacies/${id}`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  createPharmacy: async (data) => {
+    const res = await axios.post(`${SUPER_ADMIN_API_URL}/pharmacies`, data, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  updatePharmacy: async (id, data) => {
+    const res = await axios.put(`${SUPER_ADMIN_API_URL}/pharmacies/${id}`, data, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  updatePharmacyStatus: async (id, status) => {
+    const res = await axios.patch(`${SUPER_ADMIN_API_URL}/pharmacies/${id}/status`, { status }, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  updatePharmacyFeatures: async (id, features) => {
+    const res = await axios.patch(`${SUPER_ADMIN_API_URL}/pharmacies/${id}/features`, { features }, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  softDeletePharmacy: async (id) => {
+    const res = await axios.patch(`${SUPER_ADMIN_API_URL}/pharmacies/${id}/soft-delete`, {}, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  hardDeletePharmacy: async (id) => {
+    const res = await axios.delete(`${SUPER_ADMIN_API_URL}/pharmacies/${id}`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  // HR Organization Management
+  getAllHROrganizations: async () => {
+    const res = await axios.get(`${SUPER_ADMIN_API_URL}/hr-organizations`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  getHROrganization: async (id) => {
+    const res = await axios.get(`${SUPER_ADMIN_API_URL}/hr-organizations/${id}`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  createHROrganization: async (data) => {
+    const res = await axios.post(`${SUPER_ADMIN_API_URL}/hr-organizations`, data, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  updateHROrganization: async (id, data) => {
+    const res = await axios.put(`${SUPER_ADMIN_API_URL}/hr-organizations/${id}`, data, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  updateHROrganizationStatus: async (id, status) => {
+    const res = await axios.patch(`${SUPER_ADMIN_API_URL}/hr-organizations/${id}/status`, { status }, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  updateHROrganizationFeatures: async (id, features) => {
+    const res = await axios.patch(`${SUPER_ADMIN_API_URL}/hr-organizations/${id}/features`, { features }, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  deleteHROrganization: async (id) => {
+    const res = await axios.delete(`${SUPER_ADMIN_API_URL}/hr-organizations/${id}`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  // Payroll Management
+  getAllPayrollData: async () => {
+    const res = await axios.get(`${SUPER_ADMIN_API_URL}/payroll`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  getPayrollByOrganization: async (organizationId) => {
+    const res = await axios.get(`${SUPER_ADMIN_API_URL}/payroll/organization/${organizationId}`, getSuperAdminAuthHeader());
+    return res.data;
+  },
 };
 
 export default hospitalService;

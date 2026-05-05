@@ -5,6 +5,8 @@ import { superAdminService } from '../../services/hospitalService';
 const HospitalAdminManagement = () => {
   const [admins, setAdmins] = useState([]);
   const [hospitals, setHospitals] = useState([]);
+  const [stocks, setStocks] = useState([]);
+  const [pharmacies, setPharmacies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -12,11 +14,13 @@ const HospitalAdminManagement = () => {
   const [selectedAdmin, setSelectedAdmin] = useState(null);
   const [newPassword, setNewPassword] = useState('');
   const [reassignHospitalId, setReassignHospitalId] = useState('');
+  const [entityType, setEntityType] = useState('hospital');
 
   const [newAdmin, setNewAdmin] = useState({
     email: '',
     password: '',
-    hospitalId: ''
+    hospitalId: '',
+    entityType: 'hospital'
   });
 
   useEffect(() => {
@@ -25,13 +29,17 @@ const HospitalAdminManagement = () => {
 
   const fetchData = async () => {
     try {
-      const [adminsRes, hospitalsRes] = await Promise.all([
+      const [adminsRes, hospitalsRes, stocksRes, pharmaciesRes] = await Promise.all([
         superAdminService.getAllHospitalAdmins(),
-        superAdminService.getAllHospitals()
+        superAdminService.getAllHospitals(),
+        superAdminService.getAllStocks(),
+        superAdminService.getAllPharmacies()
       ]);
       
       if (adminsRes.success) setAdmins(adminsRes.data);
       if (hospitalsRes.success) setHospitals(hospitalsRes.data);
+      if (stocksRes.success) setStocks(stocksRes.data);
+      if (pharmaciesRes.success) setPharmacies(pharmaciesRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -46,7 +54,7 @@ const HospitalAdminManagement = () => {
       if (response.success) {
         setAdmins([...admins, response.data]);
         setShowCreateModal(false);
-        setNewAdmin({ email: '', password: '', hospitalId: '' });
+        setNewAdmin({ email: '', password: '', hospitalId: '', entityType: 'hospital' });
       }
     } catch (error) {
       console.error('Error creating admin:', error);
@@ -114,7 +122,9 @@ const HospitalAdminManagement = () => {
 
   const getHospitalName = (hospitalId) => {
     const hospital = hospitals.find(h => h.id === hospitalId);
-    return hospital ? hospital.name : 'Unknown Hospital';
+    const stock = stocks.find(s => s.id === hospitalId);
+    const pharmacy = pharmacies.find(p => p.id === hospitalId);
+    return hospital ? hospital.name : stock ? stock.name : pharmacy ? pharmacy.name : 'Unknown Entity';
   };
 
   if (loading) {
@@ -132,8 +142,8 @@ const HospitalAdminManagement = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">Hospital Admin Management</h1>
-            <p className="text-gray-600 mt-1">Manage hospital administrators and their access</p>
+            <h1 className="text-3xl font-bold text-gray-800">Admin Management</h1>
+            <p className="text-gray-600 mt-1">Manage hospital, stock, and pharmacy administrators</p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
@@ -188,7 +198,7 @@ const HospitalAdminManagement = () => {
 
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-800">Hospital Administrators</h2>
+            <h2 className="text-xl font-bold text-gray-800">Administrators</h2>
           </div>
           
           <div className="overflow-x-auto">
@@ -199,7 +209,7 @@ const HospitalAdminManagement = () => {
                     Admin Details
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Hospital
+                    Entity
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
@@ -307,7 +317,7 @@ const HospitalAdminManagement = () => {
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Add New Hospital Admin</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Add New Admin</h2>
             <form onSubmit={handleCreateAdmin} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -317,7 +327,7 @@ const HospitalAdminManagement = () => {
                   value={newAdmin.email}
                   onChange={(e) => setNewAdmin({...newAdmin, email: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="admin@hospital.com"
+                  placeholder="admin@entity.com"
                 />
               </div>
               
@@ -334,26 +344,47 @@ const HospitalAdminManagement = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Hospital</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Entity Type</label>
+                <select
+                  required
+                  value={newAdmin.entityType}
+                  onChange={(e) => setNewAdmin({...newAdmin, entityType: e.target.value, hospitalId: ''})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="hospital">Hospital</option>
+                  <option value="stock">Stock</option>
+                  <option value="pharmacy">Pharmacy</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {newAdmin.entityType === 'hospital' ? 'Hospital' : newAdmin.entityType === 'stock' ? 'Stock' : 'Pharmacy'}
+                </label>
                 <select
                   required
                   value={newAdmin.hospitalId}
                   onChange={(e) => setNewAdmin({...newAdmin, hospitalId: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">Select Hospital</option>
-                  {hospitals.filter(h => h.status !== 'deleted').map(hospital => (
-                    <option key={hospital.id} value={hospital.id}>
-                      {hospital.name} {hospital.status && hospital.status !== 'active' ? `(${hospital.status})` : ''}
-                    </option>
-                  ))}
+                  <option value="">Select {newAdmin.entityType === 'hospital' ? 'Hospital' : newAdmin.entityType === 'stock' ? 'Stock' : 'Pharmacy'}</option>
+                  {(newAdmin.entityType === 'hospital' ? hospitals : newAdmin.entityType === 'stock' ? stocks : pharmacies)
+                    .filter(e => e.status !== 'deleted')
+                    .map(entity => (
+                      <option key={entity.id} value={entity.id}>
+                        {entity.name} {entity.status && entity.status !== 'active' ? `(${entity.status})` : ''}
+                      </option>
+                    ))}
                 </select>
               </div>
               
               <div className="flex space-x-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setNewAdmin({ email: '', password: '', hospitalId: '', entityType: 'hospital' });
+                  }}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
                 >
                   Cancel
@@ -373,20 +404,34 @@ const HospitalAdminManagement = () => {
       {showReassignModal && selectedAdmin && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Reassign Hospital</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Reassign Entity</h2>
             <p className="text-gray-600 mb-4">Admin: <strong>{selectedAdmin.email}</strong></p>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Select Hospital</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Entity Type</label>
+                <select
+                  value={entityType}
+                  onChange={(e) => { setEntityType(e.target.value); setReassignHospitalId(''); }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="hospital">Hospital</option>
+                  <option value="stock">Stock</option>
+                  <option value="pharmacy">Pharmacy</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select {entityType === 'hospital' ? 'Hospital' : entityType === 'stock' ? 'Stock' : 'Pharmacy'}</label>
                 <select
                   value={reassignHospitalId}
                   onChange={(e) => setReassignHospitalId(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Select Hospital</option>
-                  {hospitals.filter(h => h.status !== 'deleted').map(h => (
-                    <option key={h.id} value={h.id}>{h.name}</option>
-                  ))}
+                  <option value="">Select {entityType === 'hospital' ? 'Hospital' : entityType === 'stock' ? 'Stock' : 'Pharmacy'}</option>
+                  {(entityType === 'hospital' ? hospitals : entityType === 'stock' ? stocks : pharmacies)
+                    .filter(e => e.status !== 'deleted')
+                    .map(entity => (
+                      <option key={entity.id} value={entity.id}>{entity.name}</option>
+                    ))}
                 </select>
               </div>
               <div className="flex space-x-3 pt-2">

@@ -43,11 +43,11 @@ const SuperAdminDashboard = () => {
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
           <h1 className="text-3xl font-bold mb-2">Welcome to Super Admin Dashboard</h1>
-          <p className="text-blue-100">Manage multiple hospitals and monitor system-wide activities</p>
+          <p className="text-blue-100">Manage hospitals, stocks, pharmacies, and monitor system-wide activities</p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
           <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
@@ -68,7 +68,58 @@ const SuperAdminDashboard = () => {
           <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Hospital Admins</p>
+                <p className="text-gray-600 text-sm font-medium">Total Stocks</p>
+                <p className="text-3xl font-bold text-gray-800">{stats?.totalStocks || 0}</p>
+              </div>
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl font-bold text-orange-600">S</span>
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <span className="text-green-600 font-medium">{stats?.activeStocks || 0} Active</span>
+              <span className="text-gray-400 mx-2">•</span>
+              <span className="text-red-600 font-medium">{stats?.suspendedStocks || 0} Suspended</span>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">Total Pharmacies</p>
+                <p className="text-3xl font-bold text-gray-800">{stats?.totalPharmacies || 0}</p>
+              </div>
+              <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl font-bold text-teal-600">P</span>
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <span className="text-green-600 font-medium">{stats?.activePharmacies || 0} Active</span>
+              <span className="text-gray-400 mx-2">•</span>
+              <span className="text-red-600 font-medium">{stats?.suspendedPharmacies || 0} Suspended</span>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">HR Organizations</p>
+                <p className="text-3xl font-bold text-gray-800">{stats?.totalHROrganizations || 0}</p>
+              </div>
+              <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                <span className="text-xl font-bold text-indigo-600">HR</span>
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <span className="text-green-600 font-medium">{stats?.activeHROrganizations || 0} Active</span>
+              <span className="text-gray-400 mx-2">•</span>
+              <span className="text-red-600 font-medium">{stats?.suspendedHROrganizations || 0} Suspended</span>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">All Admins</p>
                 <p className="text-3xl font-bold text-gray-800">{stats?.totalAdmins || 0}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -85,35 +136,23 @@ const SuperAdminDashboard = () => {
           <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Premium Plans</p>
-                <p className="text-3xl font-bold text-gray-800">{stats?.subscriptionPlans?.premium || 0}</p>
+                <p className="text-gray-600 text-sm font-medium">System Entities</p>
+                <p className="text-3xl font-bold text-gray-800">
+                  {(stats?.totalHospitals || 0) + (stats?.totalStocks || 0) + (stats?.totalPharmacies || 0) + (stats?.totalHROrganizations || 0)}
+                </p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl font-bold text-purple-600">P</span>
+                <span className="text-2xl font-bold text-purple-600">E</span>
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
-              <span className="text-blue-600 font-medium">{stats?.subscriptionPlans?.basic || 0} Basic</span>
+              <span className="text-blue-600 font-medium">{stats?.totalHospitals || 0}H</span>
               <span className="text-gray-400 mx-2">•</span>
-              <span className="text-purple-600 font-medium">{stats?.subscriptionPlans?.enterprise || 0} Enterprise</span>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">System Status</p>
-                <p className="text-lg font-bold text-green-600">Operational</p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl font-bold text-green-600">✓</span>
-              </div>
-            </div>
-            <div className="mt-4">
-              <div className="flex items-center text-sm text-green-600">
-                <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-                All systems running
-              </div>
+              <span className="text-orange-600 font-medium">{stats?.totalStocks || 0}S</span>
+              <span className="text-gray-400 mx-2">•</span>
+              <span className="text-teal-600 font-medium">{stats?.totalPharmacies || 0}P</span>
+              <span className="text-gray-400 mx-2">•</span>
+              <span className="text-indigo-600 font-medium">{stats?.totalHROrganizations || 0}HR</span>
             </div>
           </div>
         </div>
@@ -131,13 +170,19 @@ const SuperAdminDashboard = () => {
                   <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-sm font-bold text-blue-600">
-                        {activity.type === 'hospital_created' ? 'H' : 'A'}
+                        {activity.type === 'hospital_created' ? 'H' : 
+                         activity.type === 'stock_created' ? 'S' :
+                         activity.type === 'pharmacy_created' ? 'P' : 'A'}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-800">
                         {activity.type === 'hospital_created' 
                           ? `New hospital "${activity.data?.name}" created`
+                          : activity.type === 'stock_created'
+                          ? `New stock "${activity.data?.name}" created`
+                          : activity.type === 'pharmacy_created'
+                          ? `New pharmacy "${activity.data?.name}" created`
                           : 'Admin login activity'
                         }
                       </p>
@@ -166,22 +211,28 @@ const SuperAdminDashboard = () => {
                 <div className="text-xs text-gray-500">Create new hospital</div>
               </button>
               
+              <button className="p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors text-left">
+                <div className="text-2xl mb-2 font-bold text-orange-600">S</div>
+                <div className="text-sm font-medium text-gray-800">Add Stock</div>
+                <div className="text-xs text-gray-500">Create new stock</div>
+              </button>
+              
+              <button className="p-4 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors text-left">
+                <div className="text-2xl mb-2 font-bold text-teal-600">P</div>
+                <div className="text-sm font-medium text-gray-800">Add Pharmacy</div>
+                <div className="text-xs text-gray-500">Create new pharmacy</div>
+              </button>
+              
+              <button className="p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors text-left">
+                <div className="text-xl mb-2 font-bold text-indigo-600">HR</div>
+                <div className="text-sm font-medium text-gray-800">Add HR Org</div>
+                <div className="text-xs text-gray-500">Create HR organization</div>
+              </button>
+              
               <button className="p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors text-left">
                 <div className="text-2xl mb-2 font-bold text-green-600">A</div>
                 <div className="text-sm font-medium text-gray-800">Add Admin</div>
-                <div className="text-xs text-gray-500">Create hospital admin</div>
-              </button>
-              
-              <button className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-left">
-                <div className="text-2xl mb-2 font-bold text-purple-600">R</div>
-                <div className="text-sm font-medium text-gray-800">View Reports</div>
-                <div className="text-xs text-gray-500">System analytics</div>
-              </button>
-              
-              <button className="p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors text-left">
-                <div className="text-2xl mb-2 font-bold text-orange-600">S</div>
-                <div className="text-sm font-medium text-gray-800">Settings</div>
-                <div className="text-xs text-gray-500">System configuration</div>
+                <div className="text-xs text-gray-500">Create admin</div>
               </button>
             </div>
           </div>

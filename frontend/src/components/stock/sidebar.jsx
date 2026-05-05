@@ -11,6 +11,8 @@ import {
   Palette as PaletteIcon,
 } from "@mui/icons-material";
 import { useStockAuth } from "../../context/StockAuthContext";
+import { useNavigate } from "react-router-dom";
+import DashboardLinks from "./DashboardLinks";
 import StockLinks from "./stockLinks";
 import SettingsLinks from "./SettingsLinks";
 import ReportLinks from "./ReportsLinks";
@@ -20,7 +22,8 @@ const drawerWidth = 320;
 
 export default function Sidebar() {
   const [theme, setTheme] = useState("teal");
-  const { user } = useStockAuth();
+  const { user, logout } = useStockAuth();
+  const navigate = useNavigate();
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === "teal" ? "cyan" : "teal"));
@@ -81,16 +84,16 @@ export default function Sidebar() {
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
             <PharmacyIcon sx={{ fontSize: 32, color: "white" }} />
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 700,
-                letterSpacing: "0.5px",
-                color: "white",
-              }}
-            >
-              E-Pharmacy
-            </Typography>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2, color: "white" }}>
+                E-Pharmacy
+              </Typography>
+              {user?.email && (
+                <Typography variant="caption" sx={{ opacity: 0.75, color: "white" }}>
+                  {user.email}
+                </Typography>
+              )}
+            </Box>
           </Box>
           <Tooltip title={`Switch to ${theme === "teal" ? "Cyan" : "Teal"} theme`}>
             <IconButton
@@ -133,6 +136,7 @@ export default function Sidebar() {
           }}
         >
           <Box component="ul" sx={{ listStyle: "none", p: 0, m: 0, display: "flex", flexDirection: "column", gap: 1.5 }}>
+            <DashboardLinks themeColors={currentTheme} />
             <SettingsLinks theme={theme} themeColors={currentTheme} />
             <StockLinks theme={theme} themeColors={currentTheme} />
             <Production theme={theme} themeColors={currentTheme} />
@@ -146,16 +150,25 @@ export default function Sidebar() {
             p: 2,
             textAlign: "center",
             borderTop: "1px solid rgba(255, 255, 255, 0.1)",
-            background: "rgba(255, 255, 255, 0.05)",
           }}
         >
-          <Typography
-            variant="caption"
-            sx={{
-              color: "rgba(255, 255, 255, 0.7)",
-              fontSize: "0.75rem",
+          <button
+            onClick={logout}
+            style={{
+              background: 'rgba(255,255,255,0.15)',
+              border: 'none',
+              color: 'white',
+              borderRadius: 8,
+              padding: '8px 20px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              width: '100%',
+              marginBottom: 8
             }}
           >
+            Logout
+          </button>
+          <Typography variant="caption" sx={{ opacity: 0.7, color: "white" }}>
             © 2025 E-Pharmacy System
           </Typography>
         </Box>

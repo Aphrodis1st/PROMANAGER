@@ -62,12 +62,25 @@ export const register = async (req, res) => {
  */
 export const login = async (req, res) => {
   try {
+    console.log('Login request body:', req.body);
     const { email, password } = req.body;
+    
+    if (!email || !password) {
+      console.log('Missing email or password');
+      return res.status(400).json({ message: "Email and password are required" });
+    }
+    
     const user = await getUserByEmail(email);
-    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+    if (!user) {
+      console.log('User not found:', email);
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
     const match = await comparePassword(password, user.passwordHash);
-    if (!match) return res.status(400).json({ message: "Invalid credentials" });
+    if (!match) {
+      console.log('Password mismatch for user:', email);
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
     const token = signToken({ id: user.id, role: user.role });
 
@@ -76,6 +89,7 @@ export const login = async (req, res) => {
 
     await logAudit({ actorId: user.id, action: "USER_LOGIN", meta: { email: user.email, role: user.role } });
 
+    console.log('Login successful for user:', email);
     res.json({
       token,
       user: { ...user, role: user.role },

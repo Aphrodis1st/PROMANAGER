@@ -24,8 +24,32 @@ const SuperAdminSidebar = () => {
       active: location.pathname.includes('/super-admin/hospital-admins')
     },
     {
-      title: 'System Activity',
+      title: 'Stock Management',
       icon: 'S',
+      path: '/super-admin/stocks',
+      active: location.pathname.includes('/super-admin/stocks')
+    },
+    {
+      title: 'Pharmacy Management',
+      icon: 'P',
+      path: '/super-admin/pharmacies',
+      active: location.pathname.includes('/super-admin/pharmacies')
+    },
+    {
+      title: 'HR Management',
+      icon: 'HR',
+      path: '/super-admin/hr',
+      active: location.pathname.includes('/super-admin/hr')
+    },
+    {
+      title: 'Payroll Management',
+      icon: '$',
+      path: '/super-admin/payroll',
+      active: location.pathname.includes('/super-admin/payroll')
+    },
+    {
+      title: 'System Activity',
+      icon: 'Y',
       path: '/super-admin/activity',
       active: location.pathname === '/super-admin/activity'
     },

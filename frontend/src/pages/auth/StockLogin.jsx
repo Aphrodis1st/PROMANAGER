@@ -32,7 +32,7 @@ export default function StockLogin() {
     
     try {
       await login(formData.email, formData.password);
-      navigate('/stock/dashboard');
+      navigate('/stock');
     } catch (err) {
       setError(err.message || 'Login failed. Please check your credentials.');
     } finally {
