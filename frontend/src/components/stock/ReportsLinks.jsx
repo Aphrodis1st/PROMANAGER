@@ -13,6 +13,7 @@ import {
   Dashboard as DashboardIcon,
   Balance as TrialBalanceIcon,
   AccountBalance as FinancialIcon,
+  Receipt as TaxReportIcon,
   ExpandLess,
   ExpandMore,
 } from "@mui/icons-material";
@@ -22,6 +23,7 @@ const iconMap = {
   "Reports Dashboard": DashboardIcon,
   "Trial Balance": TrialBalanceIcon,
   "Financial Reports": FinancialIcon,
+  "Tax Reports": TaxReportIcon,
 };
 
 export default function ReportLinks({ theme, themeColors }) {
@@ -30,6 +32,7 @@ export default function ReportLinks({ theme, themeColors }) {
 
   const reportLinks = [
     { to: "/stock/reports-dashboard", label: "Reports Dashboard", roles: ["ADMIN", "MANAGER", "ACCOUNTANT"], icon: "Reports Dashboard" },
+    { to: "/stock/tax-reports", label: "Tax Reports", roles: ["ADMIN", "ACCOUNTANT", "MANAGER"], icon: "Tax Reports" },
     { to: "/stock/trialbalance", label: "Trial Balance", roles: ["ADMIN", "ACCOUNTANT", "MANAGER"], icon: "Trial Balance" },
     { to: "/stock/financial", label: "Financial Reports", roles: ["ADMIN", "ACCOUNTANT", "MANAGER"], icon: "Financial Reports" },
   ];

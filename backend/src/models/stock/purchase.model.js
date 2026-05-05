@@ -2,6 +2,7 @@
 import { db } from '../../../utils/firebase.js';
 import admin from 'firebase-admin';
 import { ProductSettingModel } from './productSetting.model.js';
+import { TaxTransactionModel } from './taxTransaction.model.js';
 
 // Lazy-loaded collection
 const getPurchaseCollection = () => db().collection('purchases');
@@ -20,6 +21,27 @@ export const PurchaseModel = {
     // Update product stock
     if (data.productId && data.quantity) {
       await ProductSettingModel.updateStock(data.productId, Number(data.quantity));
+    }
+    
+    // Record tax transactions
+    if (data.taxes && Array.isArray(data.taxes)) {
+      for (const tax of data.taxes) {
+        await TaxTransactionModel.create({
+          transactionType: "Purchase",
+          transactionId: newDoc.id,
+          transactionDate: data.date || new Date().toISOString(),
+          taxId: tax.taxId,
+          taxName: tax.taxName,
+          taxCode: tax.taxCode,
+          taxType: tax.taxType,
+          taxableAmount: Number(tax.taxableAmount) || 0,
+          taxAmount: Number(tax.taxAmount) || 0,
+          taxRate: Number(tax.taxRate) || 0,
+          supplierId: data.supplierId,
+          invoiceNumber: data.invoiceNumber,
+          description: `Purchase - ${data.invoiceNumber || newDoc.id}`,
+        });
+      }
     }
     
     return { id: newDoc.id, ...data };

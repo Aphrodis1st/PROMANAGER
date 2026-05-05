@@ -1,6 +1,7 @@
 import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
 import { ProductSettingModel } from './productSetting.model.js';
+import { TaxTransactionModel } from './taxTransaction.model.js';
 
 const getSalesCollection = () => db().collection("sales");
 
@@ -22,6 +23,27 @@ export const SalesModel = {
     console.log('💾 [SalesModel] Payload to save:', JSON.stringify(payload, null, 2));
     
     await newDoc.set(payload);
+    
+    // Record tax transactions
+    if (data.taxes && Array.isArray(data.taxes)) {
+      for (const tax of data.taxes) {
+        await TaxTransactionModel.create({
+          transactionType: "Sale",
+          transactionId: newDoc.id,
+          transactionDate: data.date || new Date().toISOString(),
+          taxId: tax.taxId,
+          taxName: tax.taxName,
+          taxCode: tax.taxCode,
+          taxType: tax.taxType,
+          taxableAmount: Number(tax.taxableAmount) || 0,
+          taxAmount: Number(tax.taxAmount) || 0,
+          taxRate: Number(tax.taxRate) || 0,
+          customerId: data.customerId,
+          invoiceNumber: data.invoiceNumber,
+          description: `Sale - ${data.invoiceNumber || newDoc.id}`,
+        });
+      }
+    }
     
     console.log('✅ [SalesModel] Sale saved with ID:', newDoc.id);
     

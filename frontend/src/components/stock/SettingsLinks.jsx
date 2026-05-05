@@ -14,6 +14,7 @@ import {
   AccountTree as ChartIcon,
   Business as FixedAssetsIcon,
   Person as UserIcon,
+  Receipt as TaxIcon,
   ExpandLess,
   ExpandMore,
 } from "@mui/icons-material";
@@ -24,6 +25,7 @@ const iconMap = {
   "Chart of Accounts": ChartIcon,
   "Fixed Assets": FixedAssetsIcon,
   "User Settings": UserIcon,
+  "Tax Settings": TaxIcon,
 };
 
 export default function SettingsLinks({ theme, themeColors }) {
@@ -33,6 +35,7 @@ export default function SettingsLinks({ theme, themeColors }) {
   const settingsLinks = [
     { to: "/stock/product-settings", label: "Product Settings", roles: ["ADMIN", "MANAGER"], icon: "Product Settings" },
     { to: "/stock/charts-of-accounts", label: "Chart of Accounts", roles: ["ADMIN", "ACCOUNTANT"], icon: "Chart of Accounts" },
+    { to: "/stock/tax-settings", label: "Tax Settings", roles: ["ADMIN", "ACCOUNTANT", "MANAGER"], icon: "Tax Settings" },
     { to: "/stock/fixed-assets", label: "Fixed Assets", roles: ["ADMIN", "ACCOUNTANT", "MANAGER"], icon: "Fixed Assets" },
     { to: "/stock/user-settings", label: "User Settings", roles: ["ADMIN", "MANAGER"], icon: "User Settings" },
   ];

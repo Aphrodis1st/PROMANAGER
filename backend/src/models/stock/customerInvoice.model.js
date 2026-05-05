@@ -1,5 +1,6 @@
 import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
+import { TaxTransactionModel } from './taxTransaction.model.js';
 
 const getCustomerInvoiceCollection = () => db().collection("customerInvoices");
 
@@ -12,6 +13,28 @@ export const CustomerInvoiceModel = {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
+    
+    // Record tax transactions
+    if (data.taxes && Array.isArray(data.taxes)) {
+      for (const tax of data.taxes) {
+        await TaxTransactionModel.create({
+          transactionType: "Sale",
+          transactionId: newDoc.id,
+          transactionDate: data.invoiceDate || new Date().toISOString(),
+          taxId: tax.taxId,
+          taxName: tax.taxName,
+          taxCode: tax.taxCode,
+          taxType: tax.taxType,
+          taxableAmount: Number(tax.taxableAmount) || 0,
+          taxAmount: Number(tax.taxAmount) || 0,
+          taxRate: Number(tax.taxRate) || 0,
+          customerId: data.customerId,
+          invoiceNumber: data.invoiceNumber,
+          description: `Customer Invoice - ${data.invoiceNumber}`,
+        });
+      }
+    }
+    
     return { id: newDoc.id, ...data };
   },
 

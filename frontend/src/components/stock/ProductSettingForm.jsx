@@ -6,11 +6,16 @@ import {
   FormControl,
   InputLabel,
   Button,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import {
   Save as SaveIcon,
   Cancel as CancelIcon,
 } from "@mui/icons-material";
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
 
 const ProductSettingForm = ({ initialData, onSave, onCancel, saving }) => {
   const [formData, setFormData] = useState({
@@ -23,6 +28,9 @@ const ProductSettingForm = ({ initialData, onSave, onCancel, saving }) => {
     name: "",
     quality: "High",
     tax: 0,
+    taxId: "",
+    taxGroupId: "",
+    taxExempt: false,
     openingStock: 0,
     reorderLevel: 0,
     unit: "Piece",
@@ -58,6 +66,37 @@ const ProductSettingForm = ({ initialData, onSave, onCancel, saving }) => {
   const [newLocationGroup, setNewLocationGroup] = useState("");
   const [newStoreCategory, setNewStoreCategory] = useState("");
   const [newProductCategory, setNewProductCategory] = useState("");
+  const [taxes, setTaxes] = useState([]);
+  const [taxGroups, setTaxGroups] = useState([]);
+
+  useEffect(() => {
+    fetchTaxes();
+    fetchTaxGroups();
+  }, []);
+
+  const fetchTaxes = async () => {
+    try {
+      const token = localStorage.getItem('stockToken');
+      const res = await axios.get(`${API_URL}/stock/taxes/active`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTaxes(res.data || []);
+    } catch (err) {
+      console.error('Error fetching taxes:', err);
+    }
+  };
+
+  const fetchTaxGroups = async () => {
+    try {
+      const token = localStorage.getItem('stockToken');
+      const res = await axios.get(`${API_URL}/stock/taxes/groups/all`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTaxGroups(res.data?.filter(g => g.isActive) || []);
+    } catch (err) {
+      console.error('Error fetching tax groups:', err);
+    }
+  };
 
   useEffect(() => {
     if (initialData) {
@@ -431,16 +470,185 @@ const ProductSettingForm = ({ initialData, onSave, onCancel, saving }) => {
             {/* Tax */}
             <TextField
               fullWidth
-              name="tax"
-              label="Tax (%)"
               type="number"
+              name="tax"
+              label="Tax (%) - Legacy"
               value={formData.tax}
               onChange={handleChange}
               inputProps={{ min: 0, step: 0.01 }}
               sx={inputStyle}
-              helperText="Tax percentage"
+              helperText="Legacy tax percentage (use Tax Configuration below for professional setup)"
             />
 
+          </div>
+        </div>
+
+        <div className="h-px bg-gray-200" />
+
+        {/* ==================== SECTION: TAX CONFIGURATION ==================== */}
+        <div>
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">
+            Tax Configuration
+          </h3>
+          <p className="text-sm text-gray-600 mb-6">
+            Configure professional tax settings for this product. Select a tax or tax group, or mark as tax exempt.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            {/* Tax Exempt Checkbox */}
+            <div className="col-span-2">
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.taxExempt}
+                    onChange={(e) => {
+                      const isExempt = e.target.checked;
+                      setFormData({
+                        ...formData,
+                        taxExempt: isExempt,
+                        taxId: isExempt ? "" : formData.taxId,
+                        taxGroupId: isExempt ? "" : formData.taxGroupId,
+                      });
+                    }}
+                    sx={{
+                      color: '#0d9488',
+                      '&.Mui-checked': {
+                        color: '#0d9488',
+                      },
+                    }}
+                  />
+                }
+                label={
+                  <span className="font-medium text-gray-800">
+                    Tax Exempt Product
+                    <span className="block text-xs text-gray-500 mt-1">
+                      Check this if the product is exempt from all taxes
+                    </span>
+                  </span>
+                }
+              />
+            </div>
+
+            {!formData.taxExempt && (
+              <>
+                {/* Individual Tax Selection */}
+                <FormControl fullWidth>
+                  <InputLabel>Select Tax</InputLabel>
+                  <Select
+                    name="taxId"
+                    value={formData.taxId}
+                    onChange={(e) => {
+                      setFormData({
+                        ...formData,
+                        taxId: e.target.value,
+                        taxGroupId: e.target.value ? "" : formData.taxGroupId,
+                      });
+                    }}
+                    label="Select Tax"
+                    sx={inputStyle}
+                  >
+                    <MenuItem value="">
+                      <em>No Tax</em>
+                    </MenuItem>
+                    {taxes.map((tax) => (
+                      <MenuItem key={tax.id} value={tax.id}>
+                        {tax.taxName} ({tax.taxCode}) - {tax.calculationType === 'Percentage' ? `${tax.rate}%` : `$${tax.fixedAmount}`}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  <span className="text-xs text-gray-500 mt-1">
+                    Select a single tax to apply to this product
+                  </span>
+                </FormControl>
+
+                {/* Tax Group Selection */}
+                <FormControl fullWidth>
+                  <InputLabel>Or Select Tax Group</InputLabel>
+                  <Select
+                    name="taxGroupId"
+                    value={formData.taxGroupId}
+                    onChange={(e) => {
+                      setFormData({
+                        ...formData,
+                        taxGroupId: e.target.value,
+                        taxId: e.target.value ? "" : formData.taxId,
+                      });
+                    }}
+                    label="Or Select Tax Group"
+                    sx={inputStyle}
+                    disabled={!!formData.taxId}
+                  >
+                    <MenuItem value="">
+                      <em>No Tax Group</em>
+                    </MenuItem>
+                    {taxGroups.map((group) => (
+                      <MenuItem key={group.id} value={group.id}>
+                        {group.groupName} ({group.taxIds?.length || 0} taxes)
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  <span className="text-xs text-gray-500 mt-1">
+                    Select a tax group for multiple taxes (e.g., VAT + Excise)
+                  </span>
+                </FormControl>
+
+                {/* Tax Summary Display */}
+                {(formData.taxId || formData.taxGroupId) && (
+                  <div className="col-span-2 p-4 bg-teal-50 border border-teal-200 rounded-xl">
+                    <h4 className="font-medium text-gray-800 mb-2 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Tax Configuration Applied
+                    </h4>
+                    {formData.taxId && (
+                      <div className="text-sm text-gray-700">
+                        {(() => {
+                          const tax = taxes.find(t => t.id === formData.taxId);
+                          return tax ? (
+                            <div>
+                              <strong>{tax.taxName}</strong> ({tax.taxCode})<br />
+                              Type: {tax.taxType}<br />
+                              Rate: {tax.calculationType === 'Percentage' ? `${tax.rate}%` : `$${tax.fixedAmount} fixed`}<br />
+                              Price Type: {tax.priceType}
+                            </div>
+                          ) : 'Tax not found';
+                        })()}
+                      </div>
+                    )}
+                    {formData.taxGroupId && (
+                      <div className="text-sm text-gray-700">
+                        {(() => {
+                          const group = taxGroups.find(g => g.id === formData.taxGroupId);
+                          return group ? (
+                            <div>
+                              <strong>{group.groupName}</strong><br />
+                              Includes {group.taxIds?.length || 0} taxes<br />
+                              <span className="text-xs text-gray-600">Multiple taxes will be applied to this product</span>
+                            </div>
+                          ) : 'Tax group not found';
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+
+            {formData.taxExempt && (
+              <div className="col-span-2 p-4 bg-orange-50 border border-orange-200 rounded-xl">
+                <h4 className="font-medium text-orange-800 mb-1 flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  Tax Exempt Product
+                </h4>
+                <p className="text-sm text-orange-700">
+                  This product is marked as tax exempt. No taxes will be applied during sales or purchases.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
