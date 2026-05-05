@@ -18,8 +18,24 @@ const StockManagement = () => {
   });
 
   const availableFeatures = [
-    'inventory', 'purchases', 'sales', 'dispense', 'transfers',
-    'adjustments', 'returns', 'general_journal', 'expenses', 'fixed_assets'
+    { id: 'inventory', name: 'Inventory Management', category: 'Stock Management' },
+    { id: 'purchases', name: 'Purchases', category: 'Stock Management' },
+    { id: 'sales', name: 'Customer/Sales', category: 'Stock Management' },
+    { id: 'dispense', name: 'Dispense', category: 'Stock Management' },
+    { id: 'transfers', name: 'Transfers', category: 'Stock Management' },
+    { id: 'adjustments', name: 'Stock Adjustments', category: 'Stock Management' },
+    { id: 'returns', name: 'Returns', category: 'Stock Management' },
+    { id: 'general_journal', name: 'General Journal', category: 'Accounting' },
+    { id: 'expenses', name: 'Expenses', category: 'Accounting' },
+    { id: 'fixed_assets', name: 'Fixed Assets', category: 'Accounting' },
+    { id: 'chart_of_accounts', name: 'Chart of Accounts', category: 'Accounting' },
+    { id: 'reports_dashboard', name: 'Reports Dashboard', category: 'Reports' },
+    { id: 'trial_balance', name: 'Trial Balance', category: 'Reports' },
+    { id: 'financial_reports', name: 'Financial Reports', category: 'Reports' },
+    { id: 'stock_reports', name: 'Stock Reports', category: 'Reports' },
+    { id: 'product_settings', name: 'Product Settings', category: 'Settings' },
+    { id: 'user_settings', name: 'User Settings', category: 'Settings' },
+    { id: 'invoice', name: 'Invoice Management', category: 'Stock Management' }
   ];
 
   const subscriptionPlans = [
@@ -176,11 +192,14 @@ const StockManagement = () => {
                   <div>
                     <p className="text-sm text-gray-600 mb-2">Features ({stock.featuresEnabled?.length || 0}):</p>
                     <div className="flex flex-wrap gap-1">
-                      {stock.featuresEnabled?.slice(0, 3).map((feature) => (
-                        <span key={feature} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded">
-                          {feature}
-                        </span>
-                      ))}
+                      {stock.featuresEnabled?.slice(0, 3).map((featureId) => {
+                        const feature = availableFeatures.find(f => f.id === featureId);
+                        return (
+                          <span key={featureId} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded">
+                            {feature?.name || featureId}
+                          </span>
+                        );
+                      })}
                       {stock.featuresEnabled?.length > 3 && (
                         <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
                           +{stock.featuresEnabled.length - 3} more
@@ -332,33 +351,83 @@ const StockManagement = () => {
       )}
 
       {showFeaturesModal && selectedStock && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Manage Features</h2>
-            <p className="text-gray-600 mb-4">{selectedStock.name}</p>
-            
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {availableFeatures.map((feature) => (
-                <label key={feature} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
-                  <input
-                    type="checkbox"
-                    checked={selectedStock.featuresEnabled?.includes(feature) || false}
-                    onChange={(e) => {
-                      const updatedFeatures = e.target.checked
-                        ? [...(selectedStock.featuresEnabled || []), feature]
-                        : (selectedStock.featuresEnabled || []).filter(f => f !== feature);
-                      setSelectedStock({...selectedStock, featuresEnabled: updatedFeatures});
-                    }}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm font-medium text-gray-700 capitalize">
-                    {feature.replace('_', ' ')}
-                  </span>
-                </label>
-              ))}
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl p-6 w-full max-w-4xl mx-4 my-8">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">Manage Features</h2>
+                <p className="text-gray-600 mt-1">{selectedStock.name}</p>
+              </div>
+              <button
+                onClick={() => setShowFeaturesModal(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
             </div>
             
-            <div className="flex space-x-3 pt-4">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                {selectedStock.featuresEnabled?.length || 0} of {availableFeatures.length} features enabled
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSelectedStock({
+                    ...selectedStock,
+                    featuresEnabled: availableFeatures.map(f => f.id)
+                  })}
+                  className="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
+                >
+                  Select All
+                </button>
+                <button
+                  onClick={() => setSelectedStock({
+                    ...selectedStock,
+                    featuresEnabled: []
+                  })}
+                  className="px-3 py-1 text-xs bg-gray-50 text-gray-600 rounded hover:bg-gray-100"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+
+            <div className="max-h-96 overflow-y-auto">
+              {['Stock Management', 'Accounting', 'Reports', 'Settings'].map(category => {
+                const categoryFeatures = availableFeatures.filter(f => f.category === category);
+                if (categoryFeatures.length === 0) return null;
+                
+                return (
+                  <div key={category} className="mb-4">
+                    <h3 className="text-sm font-bold text-gray-700 mb-2 px-2 py-1 bg-gray-100 rounded">
+                      {category}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {categoryFeatures.map((feature) => (
+                        <label key={feature.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedStock.featuresEnabled?.includes(feature.id) || false}
+                            onChange={(e) => {
+                              const updatedFeatures = e.target.checked
+                                ? [...(selectedStock.featuresEnabled || []), feature.id]
+                                : (selectedStock.featuresEnabled || []).filter(f => f !== feature.id);
+                              setSelectedStock({...selectedStock, featuresEnabled: updatedFeatures});
+                            }}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm font-medium text-gray-700">
+                            {feature.name}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="flex space-x-3 pt-4 border-t mt-4">
               <button
                 onClick={() => setShowFeaturesModal(false)}
                 className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"

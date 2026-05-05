@@ -18,8 +18,44 @@ const HospitalManagement = () => {
   });
 
   const availableFeatures = [
-    'appointments', 'billing', 'lab', 'pharmacy', 'medical_records',
-    'vital_signs', 'prescriptions', 'surgery_records', 'treatment_plans', 'admissions'
+    { id: 'patients', name: 'Patient Management', category: 'Core' },
+    { id: 'appointments', name: 'Appointments', category: 'Core' },
+    { id: 'doctors', name: 'Doctor Management', category: 'Core' },
+    { id: 'billing', name: 'Billing & Invoicing', category: 'Financial' },
+    { id: 'insurance', name: 'Insurance Claims', category: 'Financial' },
+    { id: 'revenue_reports', name: 'Revenue Reports', category: 'Financial' },
+    { id: 'lab', name: 'Laboratory', category: 'Clinical' },
+    { id: 'lab_orders', name: 'Lab Orders', category: 'Clinical' },
+    { id: 'lab_results', name: 'Lab Results', category: 'Clinical' },
+    { id: 'medical_records', name: 'Medical Records', category: 'Clinical' },
+    { id: 'vital_signs', name: 'Vital Signs', category: 'Clinical' },
+    { id: 'prescriptions', name: 'Prescriptions', category: 'Clinical' },
+    { id: 'diagnosis', name: 'Diagnosis Entry', category: 'Clinical' },
+    { id: 'surgery_records', name: 'Surgery Records', category: 'Clinical' },
+    { id: 'treatment_plans', name: 'Treatment Plans', category: 'Clinical' },
+    { id: 'admissions', name: 'Patient Admissions', category: 'Operations' },
+    { id: 'discharge', name: 'Patient Discharge', category: 'Operations' },
+    { id: 'transfer', name: 'Patient Transfer', category: 'Operations' },
+    { id: 'wards', name: 'Ward Management', category: 'Operations' },
+    { id: 'bed_allocation', name: 'Bed Allocation', category: 'Operations' },
+    { id: 'icu', name: 'ICU Management', category: 'Operations' },
+    { id: 'departments', name: 'Department Management', category: 'Administration' },
+    { id: 'staff', name: 'Staff Management', category: 'Administration' },
+    { id: 'user_management', name: 'User Management', category: 'Administration' },
+    { id: 'sub_admins', name: 'Sub-Admin Management', category: 'Administration' },
+    { id: 'access_control', name: 'Access Control', category: 'Administration' },
+    { id: 'reports', name: 'Reports Dashboard', category: 'Analytics' },
+    { id: 'patient_reports', name: 'Patient Reports', category: 'Analytics' },
+    { id: 'financial_reports', name: 'Financial Reports', category: 'Analytics' },
+    { id: 'department_reports', name: 'Department Reports', category: 'Analytics' },
+    { id: 'audit_logs', name: 'Audit Logs', category: 'Analytics' },
+    { id: 'analytics', name: 'Analytics Dashboard', category: 'Analytics' },
+    { id: 'system_settings', name: 'System Settings', category: 'Settings' },
+    { id: 'appointment_calendar', name: 'Appointment Calendar', category: 'Core' },
+    { id: 'queue_management', name: 'Queue Management', category: 'Operations' },
+    { id: 'receptionist', name: 'Receptionist Module', category: 'Operations' },
+    { id: 'nurse', name: 'Nurse Module', category: 'Operations' },
+    { id: 'doctor_portal', name: 'Doctor Portal', category: 'Core' }
   ];
 
   const subscriptionPlans = [
@@ -176,11 +212,14 @@ const HospitalManagement = () => {
                   <div>
                     <p className="text-sm text-gray-600 mb-2">Features ({hospital.featuresEnabled?.length || 0}):</p>
                     <div className="flex flex-wrap gap-1">
-                      {hospital.featuresEnabled?.slice(0, 3).map((feature) => (
-                        <span key={feature} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded">
-                          {feature}
-                        </span>
-                      ))}
+                      {hospital.featuresEnabled?.slice(0, 3).map((featureId) => {
+                        const feature = availableFeatures.find(f => f.id === featureId);
+                        return (
+                          <span key={featureId} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded">
+                            {feature?.name || featureId}
+                          </span>
+                        );
+                      })}
                       {hospital.featuresEnabled?.length > 3 && (
                         <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
                           +{hospital.featuresEnabled.length - 3} more
@@ -332,33 +371,83 @@ const HospitalManagement = () => {
       )}
 
       {showFeaturesModal && selectedHospital && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Manage Features</h2>
-            <p className="text-gray-600 mb-4">{selectedHospital.name}</p>
-            
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {availableFeatures.map((feature) => (
-                <label key={feature} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
-                  <input
-                    type="checkbox"
-                    checked={selectedHospital.featuresEnabled?.includes(feature) || false}
-                    onChange={(e) => {
-                      const updatedFeatures = e.target.checked
-                        ? [...(selectedHospital.featuresEnabled || []), feature]
-                        : (selectedHospital.featuresEnabled || []).filter(f => f !== feature);
-                      setSelectedHospital({...selectedHospital, featuresEnabled: updatedFeatures});
-                    }}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm font-medium text-gray-700 capitalize">
-                    {feature.replace('_', ' ')}
-                  </span>
-                </label>
-              ))}
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl p-6 w-full max-w-4xl mx-4 my-8">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">Manage Features</h2>
+                <p className="text-gray-600 mt-1">{selectedHospital.name}</p>
+              </div>
+              <button
+                onClick={() => setShowFeaturesModal(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
             </div>
             
-            <div className="flex space-x-3 pt-4">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                {selectedHospital.featuresEnabled?.length || 0} of {availableFeatures.length} features enabled
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSelectedHospital({
+                    ...selectedHospital,
+                    featuresEnabled: availableFeatures.map(f => f.id)
+                  })}
+                  className="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
+                >
+                  Select All
+                </button>
+                <button
+                  onClick={() => setSelectedHospital({
+                    ...selectedHospital,
+                    featuresEnabled: []
+                  })}
+                  className="px-3 py-1 text-xs bg-gray-50 text-gray-600 rounded hover:bg-gray-100"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+
+            <div className="max-h-96 overflow-y-auto">
+              {['Core', 'Clinical', 'Financial', 'Operations', 'Administration', 'Analytics', 'Settings'].map(category => {
+                const categoryFeatures = availableFeatures.filter(f => f.category === category);
+                if (categoryFeatures.length === 0) return null;
+                
+                return (
+                  <div key={category} className="mb-4">
+                    <h3 className="text-sm font-bold text-gray-700 mb-2 px-2 py-1 bg-gray-100 rounded">
+                      {category}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {categoryFeatures.map((feature) => (
+                        <label key={feature.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedHospital.featuresEnabled?.includes(feature.id) || false}
+                            onChange={(e) => {
+                              const updatedFeatures = e.target.checked
+                                ? [...(selectedHospital.featuresEnabled || []), feature.id]
+                                : (selectedHospital.featuresEnabled || []).filter(f => f !== feature.id);
+                              setSelectedHospital({...selectedHospital, featuresEnabled: updatedFeatures});
+                            }}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm font-medium text-gray-700">
+                            {feature.name}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="flex space-x-3 pt-4 border-t mt-4">
               <button
                 onClick={() => setShowFeaturesModal(false)}
                 className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"

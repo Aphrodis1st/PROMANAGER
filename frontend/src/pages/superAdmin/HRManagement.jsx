@@ -18,8 +18,41 @@ const HRManagement = () => {
   });
 
   const availableFeatures = [
-    'employees', 'departments', 'attendance', 'leave', 'payroll',
-    'contracts', 'shifts', 'payslips', 'performance', 'documents', 'recruitment', 'reports'
+    { id: 'employees', name: 'Employee Management', category: 'Core HR' },
+    { id: 'departments', name: 'Department Management', category: 'Core HR' },
+    { id: 'attendance', name: 'Attendance Tracking', category: 'Core HR' },
+    { id: 'check_in_out', name: 'Check In/Out System', category: 'Core HR' },
+    { id: 'leave', name: 'Leave Management', category: 'Core HR' },
+    { id: 'leave_requests', name: 'Leave Requests', category: 'Core HR' },
+    { id: 'leave_approval', name: 'Leave Approval', category: 'Core HR' },
+    { id: 'contracts', name: 'Contract Management', category: 'Core HR' },
+    { id: 'contract_expiry', name: 'Contract Expiry Tracking', category: 'Core HR' },
+    { id: 'payroll', name: 'Payroll Management', category: 'Payroll' },
+    { id: 'payroll_generation', name: 'Payroll Generation', category: 'Payroll' },
+    { id: 'salary_calculation', name: 'Salary Calculation', category: 'Payroll' },
+    { id: 'payslips', name: 'Payslip Generation', category: 'Payroll' },
+    { id: 'allowances', name: 'Allowances Management', category: 'Payroll' },
+    { id: 'deductions', name: 'Deductions Management', category: 'Payroll' },
+    { id: 'overtime', name: 'Overtime Tracking', category: 'Payroll' },
+    { id: 'tax_management', name: 'Tax Management', category: 'Payroll' },
+    { id: 'shifts', name: 'Shift Management', category: 'Operations' },
+    { id: 'shift_scheduling', name: 'Shift Scheduling', category: 'Operations' },
+    { id: 'performance', name: 'Performance Management', category: 'Operations' },
+    { id: 'performance_reviews', name: 'Performance Reviews', category: 'Operations' },
+    { id: 'documents', name: 'Document Management', category: 'Operations' },
+    { id: 'employee_documents', name: 'Employee Documents', category: 'Operations' },
+    { id: 'recruitment', name: 'Recruitment', category: 'Recruitment' },
+    { id: 'job_postings', name: 'Job Postings', category: 'Recruitment' },
+    { id: 'applicant_tracking', name: 'Applicant Tracking', category: 'Recruitment' },
+    { id: 'onboarding', name: 'Employee Onboarding', category: 'Recruitment' },
+    { id: 'reports', name: 'HR Reports', category: 'Reports' },
+    { id: 'attendance_reports', name: 'Attendance Reports', category: 'Reports' },
+    { id: 'payroll_reports', name: 'Payroll Reports', category: 'Reports' },
+    { id: 'leave_reports', name: 'Leave Reports', category: 'Reports' },
+    { id: 'employee_reports', name: 'Employee Reports', category: 'Reports' },
+    { id: 'dashboard', name: 'HR Dashboard', category: 'Analytics' },
+    { id: 'analytics', name: 'HR Analytics', category: 'Analytics' },
+    { id: 'workforce_analytics', name: 'Workforce Analytics', category: 'Analytics' }
   ];
 
   const subscriptionPlans = [
@@ -165,11 +198,14 @@ const HRManagement = () => {
                   <div>
                     <p className="text-sm text-gray-600 mb-2">Features ({org.featuresEnabled?.length || 0}):</p>
                     <div className="flex flex-wrap gap-1">
-                      {org.featuresEnabled?.slice(0, 3).map((feature) => (
-                        <span key={feature} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded">
-                          {feature}
-                        </span>
-                      ))}
+                      {org.featuresEnabled?.slice(0, 3).map((featureId) => {
+                        const feature = availableFeatures.find(f => f.id === featureId);
+                        return (
+                          <span key={featureId} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded">
+                            {feature?.name || featureId}
+                          </span>
+                        );
+                      })}
                       {org.featuresEnabled?.length > 3 && (
                         <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
                           +{org.featuresEnabled.length - 3} more
@@ -314,33 +350,83 @@ const HRManagement = () => {
       )}
 
       {showFeaturesModal && selectedOrg && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Manage Features</h2>
-            <p className="text-gray-600 mb-4">{selectedOrg.name}</p>
-            
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {availableFeatures.map((feature) => (
-                <label key={feature} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
-                  <input
-                    type="checkbox"
-                    checked={selectedOrg.featuresEnabled?.includes(feature) || false}
-                    onChange={(e) => {
-                      const updatedFeatures = e.target.checked
-                        ? [...(selectedOrg.featuresEnabled || []), feature]
-                        : (selectedOrg.featuresEnabled || []).filter(f => f !== feature);
-                      setSelectedOrg({...selectedOrg, featuresEnabled: updatedFeatures});
-                    }}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm font-medium text-gray-700 capitalize">
-                    {feature.replace('_', ' ')}
-                  </span>
-                </label>
-              ))}
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl p-6 w-full max-w-4xl mx-4 my-8">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">Manage Features</h2>
+                <p className="text-gray-600 mt-1">{selectedOrg.name}</p>
+              </div>
+              <button
+                onClick={() => setShowFeaturesModal(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
             </div>
             
-            <div className="flex space-x-3 pt-4">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                {selectedOrg.featuresEnabled?.length || 0} of {availableFeatures.length} features enabled
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSelectedOrg({
+                    ...selectedOrg,
+                    featuresEnabled: availableFeatures.map(f => f.id)
+                  })}
+                  className="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
+                >
+                  Select All
+                </button>
+                <button
+                  onClick={() => setSelectedOrg({
+                    ...selectedOrg,
+                    featuresEnabled: []
+                  })}
+                  className="px-3 py-1 text-xs bg-gray-50 text-gray-600 rounded hover:bg-gray-100"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+
+            <div className="max-h-96 overflow-y-auto">
+              {['Core HR', 'Payroll', 'Operations', 'Recruitment', 'Reports', 'Analytics'].map(category => {
+                const categoryFeatures = availableFeatures.filter(f => f.category === category);
+                if (categoryFeatures.length === 0) return null;
+                
+                return (
+                  <div key={category} className="mb-4">
+                    <h3 className="text-sm font-bold text-gray-700 mb-2 px-2 py-1 bg-gray-100 rounded">
+                      {category}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {categoryFeatures.map((feature) => (
+                        <label key={feature.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedOrg.featuresEnabled?.includes(feature.id) || false}
+                            onChange={(e) => {
+                              const updatedFeatures = e.target.checked
+                                ? [...(selectedOrg.featuresEnabled || []), feature.id]
+                                : (selectedOrg.featuresEnabled || []).filter(f => f !== feature.id);
+                              setSelectedOrg({...selectedOrg, featuresEnabled: updatedFeatures});
+                            }}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm font-medium text-gray-700">
+                            {feature.name}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="flex space-x-3 pt-4 border-t mt-4">
               <button
                 onClick={() => setShowFeaturesModal(false)}
                 className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"

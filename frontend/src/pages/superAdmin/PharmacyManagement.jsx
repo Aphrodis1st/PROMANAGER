@@ -18,7 +18,40 @@ const PharmacyManagement = () => {
   });
 
   const availableFeatures = [
-    'prescriptions', 'quotes', 'orders', 'doctors', 'branding', 'payments', 'callcenter', 'inventory'
+    { id: 'prescriptions', name: 'Prescription Management', category: 'Core Pharmacy' },
+    { id: 'prescription_list', name: 'Prescription List', category: 'Core Pharmacy' },
+    { id: 'prescription_create', name: 'Create Prescription', category: 'Core Pharmacy' },
+    { id: 'prescription_verify', name: 'Verify Prescription', category: 'Core Pharmacy' },
+    { id: 'orders', name: 'Order Management', category: 'Core Pharmacy' },
+    { id: 'order_list', name: 'Order List', category: 'Core Pharmacy' },
+    { id: 'order_create', name: 'Create Order', category: 'Core Pharmacy' },
+    { id: 'order_tracking', name: 'Order Tracking', category: 'Core Pharmacy' },
+    { id: 'quotes', name: 'Quote Management', category: 'Sales' },
+    { id: 'quote_list', name: 'Quote List', category: 'Sales' },
+    { id: 'quote_create', name: 'Create Quote', category: 'Sales' },
+    { id: 'pending_quotes', name: 'Pending Quotes', category: 'Sales' },
+    { id: 'inventory', name: 'Inventory Management', category: 'Inventory' },
+    { id: 'stock_management', name: 'Stock Management', category: 'Inventory' },
+    { id: 'stock_alerts', name: 'Stock Alerts', category: 'Inventory' },
+    { id: 'expiry_tracking', name: 'Expiry Tracking', category: 'Inventory' },
+    { id: 'doctors', name: 'Doctor Network', category: 'Network' },
+    { id: 'pharmacies', name: 'Pharmacy Network', category: 'Network' },
+    { id: 'doctor_collaboration', name: 'Doctor Collaboration', category: 'Network' },
+    { id: 'payments', name: 'Payment Management', category: 'Financial' },
+    { id: 'payment_list', name: 'Payment List', category: 'Financial' },
+    { id: 'payment_process', name: 'Process Payment', category: 'Financial' },
+    { id: 'payment_reports', name: 'Payment Reports', category: 'Financial' },
+    { id: 'revenue_tracking', name: 'Revenue Tracking', category: 'Financial' },
+    { id: 'branding', name: 'Brand Management', category: 'Marketing' },
+    { id: 'marketing_campaigns', name: 'Marketing Campaigns', category: 'Marketing' },
+    { id: 'promotions', name: 'Promotions', category: 'Marketing' },
+    { id: 'callcenter', name: 'Call Center', category: 'Customer Service' },
+    { id: 'call_queue', name: 'Call Queue Management', category: 'Customer Service' },
+    { id: 'customer_support', name: 'Customer Support', category: 'Customer Service' },
+    { id: 'dashboard', name: 'Pharmacy Dashboard', category: 'Analytics' },
+    { id: 'analytics', name: 'Pharmacy Analytics', category: 'Analytics' },
+    { id: 'sales_reports', name: 'Sales Reports', category: 'Analytics' },
+    { id: 'inventory_reports', name: 'Inventory Reports', category: 'Analytics' }
   ];
 
   const subscriptionPlans = [
@@ -175,11 +208,14 @@ const PharmacyManagement = () => {
                   <div>
                     <p className="text-sm text-gray-600 mb-2">Features ({pharmacy.featuresEnabled?.length || 0}):</p>
                     <div className="flex flex-wrap gap-1">
-                      {pharmacy.featuresEnabled?.slice(0, 3).map((feature) => (
-                        <span key={feature} className="px-2 py-1 bg-teal-50 text-teal-700 text-xs rounded">
-                          {feature}
-                        </span>
-                      ))}
+                      {pharmacy.featuresEnabled?.slice(0, 3).map((featureId) => {
+                        const feature = availableFeatures.find(f => f.id === featureId);
+                        return (
+                          <span key={featureId} className="px-2 py-1 bg-teal-50 text-teal-700 text-xs rounded">
+                            {feature?.name || featureId}
+                          </span>
+                        );
+                      })}
                       {pharmacy.featuresEnabled?.length > 3 && (
                         <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
                           +{pharmacy.featuresEnabled.length - 3} more
@@ -331,33 +367,83 @@ const PharmacyManagement = () => {
       )}
 
       {showFeaturesModal && selectedPharmacy && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Manage Features</h2>
-            <p className="text-gray-600 mb-4">{selectedPharmacy.name}</p>
-            
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {availableFeatures.map((feature) => (
-                <label key={feature} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
-                  <input
-                    type="checkbox"
-                    checked={selectedPharmacy.featuresEnabled?.includes(feature) || false}
-                    onChange={(e) => {
-                      const updatedFeatures = e.target.checked
-                        ? [...(selectedPharmacy.featuresEnabled || []), feature]
-                        : (selectedPharmacy.featuresEnabled || []).filter(f => f !== feature);
-                      setSelectedPharmacy({...selectedPharmacy, featuresEnabled: updatedFeatures});
-                    }}
-                    className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-                  />
-                  <span className="text-sm font-medium text-gray-700 capitalize">
-                    {feature.replace('_', ' ')}
-                  </span>
-                </label>
-              ))}
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl p-6 w-full max-w-4xl mx-4 my-8">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">Manage Features</h2>
+                <p className="text-gray-600 mt-1">{selectedPharmacy.name}</p>
+              </div>
+              <button
+                onClick={() => setShowFeaturesModal(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
             </div>
             
-            <div className="flex space-x-3 pt-4">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                {selectedPharmacy.featuresEnabled?.length || 0} of {availableFeatures.length} features enabled
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSelectedPharmacy({
+                    ...selectedPharmacy,
+                    featuresEnabled: availableFeatures.map(f => f.id)
+                  })}
+                  className="px-3 py-1 text-xs bg-teal-50 text-teal-600 rounded hover:bg-teal-100"
+                >
+                  Select All
+                </button>
+                <button
+                  onClick={() => setSelectedPharmacy({
+                    ...selectedPharmacy,
+                    featuresEnabled: []
+                  })}
+                  className="px-3 py-1 text-xs bg-gray-50 text-gray-600 rounded hover:bg-gray-100"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+
+            <div className="max-h-96 overflow-y-auto">
+              {['Core Pharmacy', 'Sales', 'Inventory', 'Network', 'Financial', 'Marketing', 'Customer Service', 'Analytics'].map(category => {
+                const categoryFeatures = availableFeatures.filter(f => f.category === category);
+                if (categoryFeatures.length === 0) return null;
+                
+                return (
+                  <div key={category} className="mb-4">
+                    <h3 className="text-sm font-bold text-gray-700 mb-2 px-2 py-1 bg-gray-100 rounded">
+                      {category}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {categoryFeatures.map((feature) => (
+                        <label key={feature.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedPharmacy.featuresEnabled?.includes(feature.id) || false}
+                            onChange={(e) => {
+                              const updatedFeatures = e.target.checked
+                                ? [...(selectedPharmacy.featuresEnabled || []), feature.id]
+                                : (selectedPharmacy.featuresEnabled || []).filter(f => f !== feature.id);
+                              setSelectedPharmacy({...selectedPharmacy, featuresEnabled: updatedFeatures});
+                            }}
+                            className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                          />
+                          <span className="text-sm font-medium text-gray-700">
+                            {feature.name}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="flex space-x-3 pt-4 border-t mt-4">
               <button
                 onClick={() => setShowFeaturesModal(false)}
                 className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
