@@ -50,7 +50,8 @@ export default function InventoryPage() {
       // Process the data to add categoryType
       const processedData = data.map(item => ({
         ...item,
-        categoryType: getCategoryType(item.storeCategory)
+        categoryType: getCategoryType(item.storeCategory),
+        productionQty: item.productionQty || 0
       }));
       
       console.log('📈 Processed inventory data:', {
@@ -81,6 +82,9 @@ export default function InventoryPage() {
         .filter(p => p.productId === product.id && new Date(p.createdAt) <= new Date(selectedDate))
         .reduce((sum, p) => sum + (Number(p.quantity) || 0), 0);
       
+      // Calculate production quantity (for finished products)
+      // This would come from production cycles or finished goods records
+      // For now, we'll calculate it as: currentStock - openingStock - purchases + sales
       const soldQty = sales
         .filter(s => {
           if (s.items && Array.isArray(s.items)) {
@@ -96,7 +100,12 @@ export default function InventoryPage() {
           return sum + (Number(s.quantity) || 0);
         }, 0);
       
+      const currentStock = Number(product.currentStock) || 0;
       const closingStock = openingStock + purchasedQty - soldQty;
+      
+      // Calculate production: if closing stock doesn't match calculation, the difference is production
+      const calculatedStock = openingStock + purchasedQty - soldQty;
+      const productionQty = currentStock - calculatedStock;
       
       // Use productCategory for display, storeCategory for type detection
       const displayCategory = getDisplayCategory(product);
@@ -107,6 +116,7 @@ export default function InventoryPage() {
       console.log(`   - storeCategory (for filtering): "${product.storeCategory}"`);  
       console.log(`   - Display as: "${displayCategory}"`);  
       console.log(`   - Detected type: ${categoryType}`);
+      console.log(`   - Production: ${productionQty}`);
       console.log(`   ---`);
       
       return {
@@ -118,10 +128,11 @@ export default function InventoryPage() {
         unit: product.unit,
         openingStock,
         purchasedQty,
+        productionQty: productionQty > 0 ? productionQty : 0,
         soldQty,
-        closingStock,
+        closingStock: currentStock,
         reorderLevel: product.reorderLevel || 0,
-        status: closingStock <= (product.reorderLevel || 0) ? 'Low Stock' : 'In Stock'
+        status: currentStock <= (product.reorderLevel || 0) ? 'Low Stock' : 'In Stock'
       };
     });
     
@@ -334,6 +345,7 @@ export default function InventoryPage() {
                   <TableCell sx={{ color: 'white', fontWeight: 600 }}>Unit</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 600 }} align="right">Opening Stock</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 600 }} align="right">Purchases</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 600 }} align="right">Production</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 600 }} align="right">Sales</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 600 }} align="right">Closing Stock</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 600 }} align="right">Reorder Level</TableCell>
@@ -343,7 +355,7 @@ export default function InventoryPage() {
               <TableBody>
                 {filteredData.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
+                    <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
                       <Typography color="text.secondary">
                         No items found in this category
                       </Typography>
@@ -364,6 +376,7 @@ export default function InventoryPage() {
                       <TableCell>{item.unit}</TableCell>
                       <TableCell align="right">{item.openingStock}</TableCell>
                       <TableCell align="right" sx={{ color: 'green' }}>+{item.purchasedQty}</TableCell>
+                      <TableCell align="right" sx={{ color: '#0d9488', fontWeight: 600 }}>+{item.productionQty || 0}</TableCell>
                       <TableCell align="right" sx={{ color: 'red' }}>-{item.soldQty}</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 600 }}>{item.closingStock}</TableCell>
                       <TableCell align="right">{item.reorderLevel}</TableCell>

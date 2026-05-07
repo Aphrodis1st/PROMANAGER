@@ -164,7 +164,7 @@ export default function ProductionReportsPage() {
       const tableRows = [];
       filteredData.forEach((row) => {
         tableRows.push([
-          row.planId || '-',
+          row.batchNo?.replace(/[^0-9]/g, '') || row.name?.replace(/[^0-9]/g, '') || row.planId?.slice(-6) || row.id?.slice(-6) || '-',
           row.productName || '-',
           row.quantityPlanned || 0,
           row.quantityCompleted || 0,
@@ -196,7 +196,7 @@ export default function ProductionReportsPage() {
       doc.autoTable({
         head: [
           [
-            'Plan ID',
+            'Batch No',
             'Product Name',
             'Qty Planned',
             'Qty Completed',
@@ -234,9 +234,8 @@ export default function ProductionReportsPage() {
   // Get table columns based on filtered data
   const columns = useMemo(() => {
     if (!filteredData.length) return [];
-    const keys = Object.keys(filteredData[0]).filter((k) => k !== 'id' && k !== 'rawMaterials');
-    return ['planId', 'productName', 'quantityPlanned', 'quantityCompleted', 'status', 'laborCost', 'overheadCost', 'materialCost', 'totalCost', 'createdAt'].filter(
-      (key) => filteredData.some((row) => row.hasOwnProperty(key))
+    return ['batchNo', 'productName', 'quantityPlanned', 'quantityCompleted', 'status', 'laborCost', 'overheadCost', 'materialCost', 'totalCost', 'createdAt'].filter(
+      (key) => filteredData.some((row) => row.hasOwnProperty(key) || key === 'batchNo')
     );
   }, [filteredData]);
 
@@ -415,7 +414,9 @@ export default function ProductionReportsPage() {
                                 key={col}
                                 sx={{ color: 'grey.800', py: 1.5 }}
                               >
-                                {col === 'status' ? (
+                                {col === 'batchNo' ? (
+                                  row.batchNo?.replace(/[^0-9]/g, '') || row.name?.replace(/[^0-9]/g, '') || row.planId?.slice(-6) || row.id?.slice(-6) || '-'
+                                ) : col === 'status' ? (
                                   <Chip
                                     label={row[col] || '-'}
                                     size='small'

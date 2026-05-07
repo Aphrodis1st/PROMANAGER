@@ -117,6 +117,16 @@ export const productionService = {
     }
   },
 
+  migrateToInventory: async (cycleId) => {
+    if (!cycleId) throw new Error("Cycle ID is required for migrateToInventory");
+    try {
+      const res = await axios.post(`${PRODUCTION_API_URL}/cycles/migrate-to-inventory`, { cycleId }, getAuthHeader());
+      return res.data;
+    } catch (err) {
+      handleAxiosError(err, "migrateToInventory");
+    }
+  },
+
   updateCycle: async (id, data) => {
     if (!id) throw new Error("Cycle ID is required for updateCycle");
     try {

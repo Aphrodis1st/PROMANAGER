@@ -3,6 +3,7 @@
 // ========================================
 import React, { useMemo, useState } from "react";
 import { useProduction } from "../../context/ProductionContext";
+import { productionService } from "../../services/productionService";
 import { saveAs } from "file-saver";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
@@ -19,10 +20,14 @@ import {
   TablePagination,
   Button,
   InputAdornment,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import {
   Search as SearchIcon,
   GetApp as ExportIcon,
+  Inventory as InventoryIcon,
+  CheckCircle as CheckCircleIcon,
 } from "@mui/icons-material";
 
 export default function FinishedGoodsPage() {
@@ -32,6 +37,7 @@ export default function FinishedGoodsPage() {
   const [endDate, setEndDate] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [migrating, setMigrating] = useState({});
 
   // ✅ Filter only completed cycles
   const completedCycles = useMemo(() => {
@@ -44,15 +50,23 @@ export default function FinishedGoodsPage() {
     }
 
     if (startDate) {
-      filtered = filtered.filter(
-        (c) => new Date(c.updatedAt || c.completedAt) >= new Date(startDate)
-      );
+      filtered = filtered.filter((c) => {
+        const date = c.completedAt || c.updatedAt;
+        if (!date) return false;
+        const timestamp = date._seconds || date.seconds || date;
+        const dateObj = typeof timestamp === 'number' ? new Date(timestamp * 1000) : new Date(date);
+        return dateObj >= new Date(startDate);
+      });
     }
 
     if (endDate) {
-      filtered = filtered.filter(
-        (c) => new Date(c.updatedAt || c.completedAt) <= new Date(endDate)
-      );
+      filtered = filtered.filter((c) => {
+        const date = c.completedAt || c.updatedAt;
+        if (!date) return false;
+        const timestamp = date._seconds || date.seconds || date;
+        const dateObj = typeof timestamp === 'number' ? new Date(timestamp * 1000) : new Date(date);
+        return dateObj <= new Date(endDate);
+      });
     }
 
     return filtered;
@@ -73,12 +87,34 @@ export default function FinishedGoodsPage() {
   };
 
   // ==========================================
+  // 📦 MIGRATE TO INVENTORY
+  // ==========================================
+  const handleMigrateToInventory = async (cycle) => {
+    if (!window.confirm(`Migrate "${cycle.productName}" (Batch ${cycle.batchNo}) to inventory?\n\nThis will mark it as available for sale.`)) {
+      return;
+    }
+
+    setMigrating(prev => ({ ...prev, [cycle.id]: true }));
+    try {
+      await productionService.migrateToInventory(cycle.id);
+      alert(`✅ Successfully migrated ${cycle.productName} to inventory!`);
+      window.location.reload(); // Refresh to show updated status
+    } catch (error) {
+      console.error('Error migrating to inventory:', error);
+      alert(`❌ Failed to migrate: ${error.response?.data?.error || error.message}`);
+    } finally {
+      setMigrating(prev => ({ ...prev, [cycle.id]: false }));
+    }
+  };
+
+  // ==========================================
   // 🧾 EXPORT HANDLERS
   // ==========================================
   const handleExportCSV = () => {
     if (!completedCycles.length) return alert("No data to export.");
 
     const headers = [
+      "Batch Number",
       "Product Name",
       "Quantity Produced",
       "Material Cost",
@@ -94,6 +130,7 @@ export default function FinishedGoodsPage() {
       const qty = Number(c.quantityCompleted || 0);
       const unit = qty > 0 ? (total / qty).toFixed(2) : 0;
       return [
+        c.batchNo?.replace(/[^0-9]/g, '') || c.name?.replace(/[^0-9]/g, '') || c.id.slice(-6),
         c.productName,
         qty,
         c.materialCost,
@@ -101,7 +138,14 @@ export default function FinishedGoodsPage() {
         c.overheadCost,
         total,
         unit,
-        new Date(c.updatedAt).toLocaleString(),
+        (() => {
+          const date = c.completedAt || c.updatedAt;
+          if (!date) return "-";
+          const timestamp = date._seconds || date.seconds || date;
+          return typeof timestamp === 'number' 
+            ? new Date(timestamp * 1000).toLocaleString()
+            : new Date(date).toLocaleString();
+        })(),
       ];
     });
 
@@ -124,6 +168,7 @@ export default function FinishedGoodsPage() {
       const qty = Number(c.quantityCompleted || 0);
       const unit = qty > 0 ? (total / qty).toFixed(2) : 0;
       return [
+        c.batchNo?.replace(/[^0-9]/g, '') || c.name?.replace(/[^0-9]/g, '') || c.id.slice(-6),
         c.productName,
         qty.toLocaleString(),
         `$${c.materialCost}`,
@@ -131,7 +176,14 @@ export default function FinishedGoodsPage() {
         `$${c.overheadCost}`,
         `$${total}`,
         `$${unit}`,
-        new Date(c.updatedAt).toLocaleDateString(),
+        (() => {
+          const date = c.completedAt || c.updatedAt;
+          if (!date) return "-";
+          const timestamp = date._seconds || date.seconds || date;
+          return typeof timestamp === 'number'
+            ? new Date(timestamp * 1000).toLocaleDateString()
+            : new Date(date).toLocaleDateString();
+        })(),
       ];
     });
 
@@ -139,6 +191,7 @@ export default function FinishedGoodsPage() {
       startY: 25,
       head: [
         [
+          "Batch No",
           "Product Name",
           "Qty",
           "Material Cost",
@@ -257,10 +310,9 @@ export default function FinishedGoodsPage() {
                       fontWeight: 600,
                       fontSize: "0.95rem",
                       py: 1.5,
-                      width: 60,
                     }}
                   >
-                    #
+                    Batch No
                   </TableCell>
                   <TableCell
                     sx={{
@@ -356,6 +408,18 @@ export default function FinishedGoodsPage() {
                   >
                     Date Completed
                   </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      bgcolor: "#0d9488",
+                      color: "white",
+                      fontWeight: 600,
+                      fontSize: "0.95rem",
+                      py: 1.5,
+                    }}
+                  >
+                    Action
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -377,8 +441,8 @@ export default function FinishedGoodsPage() {
                         },
                       }}
                     >
-                      <TableCell sx={{ color: "grey.800", py: 1.5 }}>
-                        {actualIndex + 1}
+                      <TableCell sx={{ color: "grey.800", py: 1.5, fontWeight: 600 }}>
+                        {cycle.batchNo?.replace(/[^0-9]/g, '') || cycle.name?.replace(/[^0-9]/g, '') || cycle.id.slice(-6)}
                       </TableCell>
                       <TableCell sx={{ color: "grey.800", py: 1.5, fontWeight: 500 }}>
                         {cycle.productName}
@@ -405,9 +469,41 @@ export default function FinishedGoodsPage() {
                         {formatCurrency(unit)}
                       </TableCell>
                       <TableCell sx={{ color: "grey.800", py: 1.5 }}>
-                        {cycle.updatedAt
-                          ? new Date(cycle.updatedAt).toLocaleDateString()
-                          : "-"}
+                        {(() => {
+                          const date = cycle.completedAt || cycle.updatedAt;
+                          if (!date) return "-";
+                          // Handle Firestore timestamp
+                          if (date._seconds || date.seconds) {
+                            const timestamp = date._seconds || date.seconds;
+                            return new Date(timestamp * 1000).toLocaleDateString();
+                          }
+                          // Handle ISO string or Date object
+                          return new Date(date).toLocaleDateString();
+                        })()}
+                      </TableCell>
+                      <TableCell align="center" sx={{ py: 1.5 }}>
+                        {cycle.addedToInventory ? (
+                          <Tooltip title="Already in inventory">
+                            <CheckCircleIcon sx={{ color: "#059669", fontSize: 28 }} />
+                          </Tooltip>
+                        ) : (
+                          <Tooltip title="Migrate to inventory">
+                            <IconButton
+                              onClick={() => handleMigrateToInventory(cycle)}
+                              disabled={migrating[cycle.id]}
+                              sx={{
+                                color: "#0d9488",
+                                "&:hover": { bgcolor: "#e0f2f1" },
+                              }}
+                            >
+                              {migrating[cycle.id] ? (
+                                <CircularProgress size={24} />
+                              ) : (
+                                <InventoryIcon sx={{ fontSize: 28 }} />
+                              )}
+                            </IconButton>
+                          </Tooltip>
+                        )}
                       </TableCell>
                     </TableRow>
                   );

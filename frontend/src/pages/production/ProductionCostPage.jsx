@@ -264,7 +264,7 @@ export default function ProductionCostPage() {
                     </MenuItem>
                     {completedCycles.map((c) => (
                       <MenuItem key={c.id} value={c.id}>
-                        {c.productName} ({c.batchNo || c.name || c.id})
+                        {c.productName} ({c.batchNo?.replace(/[^0-9]/g, '') || c.name?.replace(/[^0-9]/g, '') || c.id.slice(-6)})
                       </MenuItem>
                     ))}
                   </Select>
@@ -499,7 +499,7 @@ export default function ProductionCostPage() {
                               }}
                             >
                               <TableCell sx={{ color: 'grey.800', py: 1.5 }}>
-                                {row.batchNo || row.name || row.id}
+                                {row.batchNo?.replace(/[^0-9]/g, '') || row.name?.replace(/[^0-9]/g, '') || row.id.slice(-6)}
                               </TableCell>
                               <TableCell sx={{ color: 'grey.800', py: 1.5 }}>
                                 {row.productName}

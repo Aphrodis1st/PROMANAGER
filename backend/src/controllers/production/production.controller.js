@@ -3,6 +3,7 @@ import { ProductionCycleModel } from "../../models/production/productionCycle.mo
 import { QualityInspectionModel } from "../../models/production/qualityInspection.model.js";
 import { FinishedGoodModel } from "../../models/production/finishedGood.model.js";
 import { MaterialConsumptionModel } from "../../models/production/materialConsumption.model.js";
+import { ProductionCounterModel } from "../../models/production/productionCounter.model.js";
 import { ProductModel } from "../../models/stock/product.model.js";
 import { ProductSettingModel } from "../../models/stock/productSetting.model.js";
 import JournalModel from "../../models/stock/journal.model.js";
@@ -13,7 +14,14 @@ export const ProductionController = {
   // --- 🧩 PLANS ---
   async createPlan(req, res) {
     try {
-      const plan = await ProductionPlanModel.create(req.body);
+      // Generate sequential plan number
+      const planCode = await ProductionCounterModel.getNextPlanNumber();
+      console.log("Generated plan number:", planCode);
+
+      const plan = await ProductionPlanModel.create({
+        ...req.body,
+        planCode,
+      });
       res.status(201).json({ success: true, data: { plan } });
     } catch (err) {
       console.error("❌ Error creating plan:", err);
@@ -100,7 +108,7 @@ export const ProductionController = {
   async startCycle(req, res) {
     console.log("🟢 startCycle called with body:", req.body);
     try {
-      const { planId, batchNo, plannedQtyOverride, consumedMaterials } = req.body;
+      const { planId, plannedQtyOverride, consumedMaterials } = req.body;
 
       if (!planId) {
         console.error("❌ planId is required");
@@ -118,6 +126,10 @@ export const ProductionController = {
 
       if (!plan.finishedProductId)
         return res.status(400).json({ success: false, error: "Finished product not set for this plan" });
+
+      // Generate sequential cycle/batch number
+      const batchNo = await ProductionCounterModel.getNextCycleNumber();
+      console.log("Generated cycle/batch number:", batchNo);
 
       const produceQty = plannedQtyOverride || plan.plannedQty;
       console.log("Produce quantity:", produceQty);
@@ -297,9 +309,19 @@ async completeCycle(req, res) {
         defaultSellingPrice: 0,
         type: "Product",
         status: "Active",
+        storeCategory: "Finished Products",
+        productCategory: "Finished Products",
       });
       productSource = "productSettings";
       console.log("Finished product created in productSettings:", finishedProduct);
+    } else if (productSource === "productSettings" && !finishedProduct.storeCategory) {
+      // Update existing product to set storeCategory if missing
+      await ProductSettingModel.update(finishedProduct.id, {
+        storeCategory: "Finished Products",
+        productCategory: finishedProduct.productCategory || "Finished Products",
+      });
+      finishedProduct.storeCategory = "Finished Products";
+      console.log("Updated product with storeCategory: Finished Products");
     }
 
     // --- Calculate total material cost from frontend-provided consumedMaterials ---
@@ -407,6 +429,16 @@ async completeCycle(req, res) {
     }
   },
 
+  async listFinishedGoods(req, res) {
+    try {
+      const finishedGoods = await FinishedGoodModel.findAll();
+      res.json({ success: true, data: { finishedGoods } });
+    } catch (err) {
+      console.error("❌ Error listing finished goods:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  },
+
   async getInspections(req, res) {
     try {
       const { cycleId } = req.query;
@@ -431,6 +463,115 @@ async completeCycle(req, res) {
       res.json({ success: true, data: { summary } });
     } catch (err) {
       console.error("❌ Error generating summary:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  },
+
+  // --- 📦 MIGRATE FINISHED GOODS TO INVENTORY ---
+  async migrateToInventory(req, res) {
+    console.log("🟢 migrateToInventory called with:", req.body);
+    try {
+      const { cycleId } = req.body;
+
+      if (!cycleId) {
+        return res.status(400).json({ success: false, error: "cycleId is required" });
+      }
+
+      // Find the cycle
+      const cycle = await ProductionCycleModel.findById(cycleId);
+      if (!cycle) {
+        return res.status(404).json({ success: false, error: "Cycle not found" });
+      }
+
+      if (cycle.status !== "completed") {
+        return res.status(400).json({ success: false, error: "Only completed cycles can be migrated to inventory" });
+      }
+
+      // Find the finished good record
+      const finishedGoods = await FinishedGoodModel.findByCycle(cycleId);
+      if (!finishedGoods || finishedGoods.length === 0) {
+        return res.status(404).json({ success: false, error: "Finished good record not found" });
+      }
+
+      const finishedGood = finishedGoods[0];
+
+      // Check if already migrated
+      if (finishedGood.addedToInventory) {
+        return res.status(400).json({ success: false, error: "This finished good has already been migrated to inventory" });
+      }
+
+      // Find the product in productSettings
+      let product = await ProductSettingModel.findById(finishedGood.productId);
+      let productSource = "productSettings";
+      
+      if (!product) {
+        // Try to find in products collection
+        product = await ProductModel.findById(finishedGood.productId);
+        productSource = "products";
+        
+        if (!product) {
+          return res.status(404).json({ success: false, error: "Product not found in inventory" });
+        }
+      }
+
+      // Ensure the product has the correct storeCategory
+      if (productSource === "productSettings") {
+        if (!product.storeCategory || product.storeCategory !== "Finished Products") {
+          await ProductSettingModel.update(product.id, {
+            storeCategory: "Finished Products",
+            productCategory: product.productCategory || "Finished Products",
+          });
+          console.log(`Updated product ${product.name} with storeCategory: Finished Products`);
+        }
+      }
+
+      // Update the finished good record
+      await FinishedGoodModel.update(finishedGood.id, {
+        addedToInventory: true,
+        migratedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      // Create journal entry for the migration
+      await JournalModel.create({
+        date: admin.firestore.Timestamp.now(),
+        description: `Finished goods migrated to inventory: ${finishedGood.productName}`,
+        lines: [
+          {
+            accountName: "Finished Goods Inventory",
+            type: "debit",
+            amount: finishedGood.totalCost,
+          },
+          {
+            accountName: "Production Account",
+            type: "credit",
+            amount: finishedGood.totalCost,
+          },
+        ],
+        source: { type: "production_migration", id: cycleId },
+        reference: cycle.batchNo,
+        meta: { 
+          productId: finishedGood.productId,
+          productName: finishedGood.productName,
+          quantity: finishedGood.quantityProduced,
+          unitCost: finishedGood.unitCost,
+        },
+      });
+
+      console.log("✅ Finished good migrated to inventory successfully");
+
+      res.json({
+        success: true,
+        message: "Finished good migrated to inventory successfully",
+        data: {
+          finishedGood: {
+            ...finishedGood,
+            addedToInventory: true,
+          },
+          product,
+        },
+      });
+    } catch (err) {
+      console.error("❌ Error migrating to inventory:", err);
       res.status(500).json({ success: false, error: err.message });
     }
   },

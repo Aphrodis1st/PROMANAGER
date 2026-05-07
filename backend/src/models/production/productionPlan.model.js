@@ -11,9 +11,7 @@ export const ProductionPlanModel = {
     const doc = collection.doc();
     const payload = {
       id: doc.id,
-      planCode:
-        data.planCode ||
-        `PP-${new Date().toISOString().slice(0, 10)}-${doc.id.slice(0, 6)}`,
+      planCode: data.planCode || doc.id.slice(0, 6),
       finishedProductId: data.finishedProductId,
       finishedProductName: data.finishedProductName,
       plannedQty: Number(data.plannedQty) || 0,

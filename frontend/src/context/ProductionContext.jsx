@@ -17,6 +17,7 @@ export const ProductionProvider = ({ children }) => {
   const [plans, setPlans] = useState([]);
   const [cycles, setCycles] = useState([]);
   const [inspections, setInspections] = useState([]);
+  const [finishedGoods, setFinishedGoods] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Fetch production data on mount
@@ -24,14 +25,16 @@ export const ProductionProvider = ({ children }) => {
     const loadProductionData = async () => {
       setLoading(true);
       try {
-        const [plansRes, cyclesRes] = await Promise.all([
+        const [plansRes, cyclesRes, finishedGoodsRes] = await Promise.all([
           productionService.getAllPlans(),
           productionService.getAllCycles(),
+          productionService.getAllFinishedGoods().catch(() => ({ data: { finishedGoods: [] } })),
         ]);
 
         const formattedPlans = (plansRes?.data?.plans || []).map((p) => ({
           id: p.id,
           planName: p.planCode || p.planName || `Plan-${p.id}`,
+          planCode: p.planCode || p.id.slice(0, 6),
           productName: p.finishedProductName || 'Unnamed Product',
           quantity: p.plannedQty || 0,
           status: p.status || 'draft',
@@ -40,13 +43,19 @@ export const ProductionProvider = ({ children }) => {
         }));
         setPlans(formattedPlans);
 
+        // Store finished goods data
+        const finishedGoodsData = finishedGoodsRes?.data?.finishedGoods || [];
+        setFinishedGoods(finishedGoodsData);
+
         const formattedCycles = (cyclesRes?.data?.cycles || []).map((c) => {
           const plan = formattedPlans.find((p) => p.id === c.planId);
           const cost = c.costSummary || {};
+          // Find if this cycle has been migrated to inventory
+          const finishedGood = finishedGoodsData.find(fg => fg.cycleId === c.id);
           return {
             id: c.id,
-            batchNo: c.batchNo || `BATCH-${c.id.slice(0, 6)}`,
-            name: plan?.planName || `Cycle-${c.id}`,
+            batchNo: c.batchNo?.replace('BATCH-', '').replace(/[^0-9]/g, '') || c.id.slice(-6),
+            name: c.batchNo?.replace('BATCH-', '').replace(/[^0-9]/g, '') || plan?.planName || `Cycle-${c.id}`,
             planId: c.planId,
             productId: c.productId,
             productName: plan?.productName || c.productName || 'Unknown',
@@ -59,6 +68,9 @@ export const ProductionProvider = ({ children }) => {
             totalCost: cost.totalCost || 0,
             rawMaterials: c.consumedMaterials || [],
             createdAt: c.createdAt || new Date().toISOString(),
+            completedAt: c.completedAt,
+            updatedAt: c.updatedAt,
+            addedToInventory: finishedGood?.addedToInventory || false,
           };
         });
         setCycles(formattedCycles);
@@ -79,7 +91,7 @@ export const ProductionProvider = ({ children }) => {
     () => cycles.filter((c) => c.status === 'in_progress'),
     [cycles]
   );
-  const finishedGoods = useMemo(
+  const finishedGoodsCycles = useMemo(
     () => cycles.filter((c) => c.status === 'completed'),
     [cycles]
   );
@@ -159,10 +171,10 @@ export const ProductionProvider = ({ children }) => {
         ...created,
         rawMaterials,
         id: created.id,
-        batchNo: created.batchNo || `BATCH-${created.id.slice(0, 6)}`,
+        batchNo: created.batchNo?.replace('BATCH-', '').replace(/[^0-9]/g, '') || created.id.slice(-6),
         planId,
         productId: created.productId,
-        name: plan.planName,
+        name: created.batchNo?.replace('BATCH-', '').replace(/[^0-9]/g, '') || plan.planName,
         productName: plan.productName,
         quantityPlanned: plan.quantity,
         quantityCompleted: 0,
@@ -228,7 +240,8 @@ export const ProductionProvider = ({ children }) => {
         quantityCompleted: Number(updated.producedQty ?? producedQty),
         status: 'completed',
         rawMaterials: existingCycle.rawMaterials,
-        updatedAt: new Date().toISOString(),
+        completedAt: updated.completedAt || new Date().toISOString(),
+        updatedAt: updated.updatedAt || new Date().toISOString(),
       };
 
       setCycles((prev) =>
@@ -286,7 +299,7 @@ export const ProductionProvider = ({ children }) => {
         inspections,
         loading,
         wipCycles,
-        finishedGoods,
+        finishedGoods: finishedGoodsCycles,
         damagedProducts,
         createPlan,
         updatePlan,

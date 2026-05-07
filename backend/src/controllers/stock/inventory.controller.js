@@ -1,6 +1,7 @@
 import { ProductSettingModel } from "../../models/stock/productSetting.model.js";
 import { PurchaseModel } from "../../models/stock/purchase.model.js";
 import { SalesModel } from "../../models/stock/sales.model.js";
+import { FinishedGoodModel } from "../../models/production/finishedGood.model.js";
 
 export const InventoryController = {
   // GET INVENTORY REPORT
@@ -12,6 +13,7 @@ export const InventoryController = {
       const products = await ProductSettingModel.getAll();
       const purchases = await PurchaseModel.findAll();
       const sales = await SalesModel.findAll();
+      const finishedGoods = await FinishedGoodModel.findAll();
 
       const inventoryData = products.map(product => {
         const openingStock = Number(product.openingStock) || 0;
@@ -23,6 +25,16 @@ export const InventoryController = {
             return p.productId === product.id && pDate <= targetDate;
           })
           .reduce((sum, p) => sum + (Number(p.quantity) || 0), 0);
+        
+        // Calculate production quantity from finished goods
+        const productionQty = finishedGoods
+          .filter(fg => {
+            const fgDate = fg.createdAt?.toDate ? fg.createdAt.toDate() : new Date(fg.createdAt);
+            return fg.productId === product.id && 
+                   fg.addedToInventory === true && 
+                   fgDate <= targetDate;
+          })
+          .reduce((sum, fg) => sum + (Number(fg.quantityProduced) || 0), 0);
         
         // Calculate sales up to target date
         const soldQty = sales
@@ -41,7 +53,7 @@ export const InventoryController = {
             return sum + (Number(s.quantity) || 0);
           }, 0);
         
-        const closingStock = openingStock + purchasedQty - soldQty;
+        const closingStock = openingStock + purchasedQty + productionQty - soldQty;
         
         return {
           id: product.id,
@@ -52,6 +64,7 @@ export const InventoryController = {
           unit: product.unit,
           openingStock,
           purchasedQty,
+          productionQty,
           soldQty,
           closingStock,
           currentStock: product.currentStock || closingStock,

@@ -15,7 +15,11 @@ router.put("/plans/:id/approve", ProductionController.approvePlan);
 router.get("/cycles", ProductionController.listCycles);
 router.post("/cycles/start", ProductionController.startCycle);
 router.post("/cycles/complete", ProductionController.completeCycle);
+router.post("/cycles/migrate-to-inventory", ProductionController.migrateToInventory);
 console.log("🔥 /cycles/complete route hit");
+
+// --- 📦 FINISHED GOODS ---
+router.get("/finished-goods", ProductionController.listFinishedGoods);
 
 // --- 🔍 QUALITY INSPECTION ---
 router.post("/inspections", ProductionController.createInspection);

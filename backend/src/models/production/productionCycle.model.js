@@ -12,8 +12,8 @@ export const ProductionCycleModel = {
     const payload = {
       id: doc.id,
       planId: data.planId,
-      name: data.name || `Cycle-${doc.id.slice(0, 6)}`,
-      batchNo: data.batchNo || `BATCH-${doc.id.slice(0, 6)}`,
+      name: data.name || data.batchNo || `Cycle-${doc.id.slice(0, 6)}`,
+      batchNo: data.batchNo || doc.id.slice(0, 6),
       startedAt: admin.firestore.FieldValue.serverTimestamp(),
       completedAt: null,
       consumedMaterials: data.consumedMaterials || [],

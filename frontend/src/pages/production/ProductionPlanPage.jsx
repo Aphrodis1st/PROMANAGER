@@ -187,7 +187,7 @@ export default function ProductionPlanPage() {
                       py: 1.5,
                     }}
                   >
-                    Plan Name
+                    Plan Code
                   </TableCell>
                   <TableCell
                     sx={{
@@ -253,8 +253,8 @@ export default function ProductionPlanPage() {
                         },
                       }}
                     >
-                      <TableCell sx={{ color: 'grey.800', py: 1.5 }}>
-                        {plan.planName || plan.planCode || 'Unnamed Plan'}
+                      <TableCell sx={{ color: 'grey.800', py: 1.5, fontWeight: 600 }}>
+                        {plan.planCode || plan.planName?.replace(/[^0-9]/g, '') || plan.id.slice(-6)}
                       </TableCell>
                       <TableCell sx={{ color: 'grey.800', py: 1.5 }}>
                         {plan.productName || plan.finishedProductName || 'Unknown Product'}
