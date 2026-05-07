@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStock } from '../../context/stockContext';
 import { useSales } from '../../context/SalesContext';
+import { usePurchase } from '../../context/PurchaseContext';
+import { inventoryService } from '../../services/stock.service';
 import StockTable from '../../components/stock/StockTable';
 
 export default function SalesPage() {
@@ -11,9 +13,12 @@ export default function SalesPage() {
     accountSettings,
     loading,
     getProductStock,
+    dispenses,
   } = useStock();
 
   const { sales, addSale } = useSales();
+  const { purchases } = usePurchase();
+  const [inventoryData, setInventoryData] = useState([]);
 
   const createJournalEntry = async (entry) => {
     // Journal entry logic moved to context
@@ -51,6 +56,18 @@ export default function SalesPage() {
   // Multi-item cart
   const [cartItems, setCartItems] = useState([]);
   const [editingCartIndex, setEditingCartIndex] = useState(null);
+
+  useEffect(() => {
+    const fetchInventory = async () => {
+      try {
+        const data = await inventoryService.getReport(new Date().toISOString().split('T')[0]);
+        setInventoryData(data);
+      } catch (error) {
+        console.error('Error fetching inventory:', error);
+      }
+    };
+    fetchInventory();
+  }, []);
 
   const resetForm = () => {
     setForm({
@@ -144,7 +161,17 @@ export default function SalesPage() {
   const addToCart = () => {
     if (!form.productId) return alert('Please select a product.');
 
+    // Check inventory availability
+    const availableStock = getProductStock(form.productId);
     const quantity = Number(form.quantity) || 0;
+    
+    if (availableStock <= 0) {
+      return alert('Cannot add to cart: Product is out of stock.');
+    }
+    
+    if (quantity > availableStock) {
+      return alert(`Cannot add to cart: Only ${availableStock} units available in inventory.`);
+    }
     const unitPrice = Number(form.unitPrice) || 0;
     const discount = Number(form.discount) || 0;
     const tax = Number(form.tax) || 0;
@@ -436,7 +463,7 @@ export default function SalesPage() {
 
           <form onSubmit={handleSubmit} className='grid grid-cols-3 gap-3'>
             {/* --- ALL YOUR ORIGINAL FORM FIELDS REMAIN EXACTLY --- */}
-            <div className='col-span-1'>
+            <div className='col-span-3'>
               <label className='block text-sm font-medium text-gray-700 mb-1'>Item / Service</label>
               <select
                 name='productId'
@@ -449,6 +476,179 @@ export default function SalesPage() {
                   <option key={ps.id} value={ps.id}>{ps.name}</option>
                 ))}
               </select>
+              
+              {/* Professional Inventory Information Display */}
+              {form.productId && (() => {
+                const selectedProduct = productSettings.find(p => p.id === form.productId);
+                const inventoryItem = inventoryData.find(i => i.id === form.productId);
+                const openingStock = Number(selectedProduct?.openingStock) || 0;
+                const currentStock = Number(selectedProduct?.currentStock) || 0;
+                const availableStock = getProductStock(form.productId);
+                const reorderLevel = Number(selectedProduct?.reorderLevel) || 10;
+                const isLowStock = availableStock < reorderLevel;
+                const isOutOfStock = availableStock <= 0;
+                
+                const purchased = inventoryItem?.purchasedQty || 0;
+                const sold = inventoryItem?.soldQty || 0;
+                const production = inventoryItem?.productionQty || 0;
+                const stockValue = availableStock * (Number(selectedProduct?.defaultSellingPrice) || 0);
+                
+                return (
+                  <div className='mt-3 p-4 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-300 rounded-xl shadow-lg'>
+                    {/* Header Section */}
+                    <div className='flex items-center justify-between mb-3 pb-3 border-b-2 border-blue-200'>
+                      <div className='flex items-center gap-3'>
+                        <div className='p-2 bg-blue-600 rounded-lg'>
+                          <svg className='w-6 h-6 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' />
+                          </svg>
+                        </div>
+                        <div>
+                          <h4 className='text-base font-bold text-gray-800'>Inventory Information</h4>
+                          <p className='text-xs text-gray-600'>Real-time stock data from inventory system</p>
+                        </div>
+                      </div>
+                      
+                      <div className={
+                        `px-4 py-2 rounded-full font-bold text-base shadow-md ${
+                          isOutOfStock 
+                            ? 'bg-red-500 text-white border-2 border-red-700'
+                            : isLowStock
+                            ? 'bg-orange-500 text-white border-2 border-orange-700'
+                            : 'bg-green-500 text-white border-2 border-green-700'
+                        }`
+                      }>
+                        {availableStock.toLocaleString()} {selectedProduct?.unit || 'Units'}
+                      </div>
+                    </div>
+                    
+                    {/* Stock Details Grid */}
+                    <div className='grid grid-cols-5 gap-3 mb-3'>
+                      <div className='bg-white p-3 rounded-lg border border-gray-200 shadow-sm'>
+                        <div className='flex items-center gap-2 mb-1'>
+                          <svg className='w-4 h-4 text-blue-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' />
+                          </svg>
+                          <span className='text-xs font-medium text-gray-600'>Opening Stock</span>
+                        </div>
+                        <p className='text-lg font-bold text-gray-800'>{openingStock.toLocaleString()}</p>
+                      </div>
+                      
+                      <div className='bg-white p-3 rounded-lg border border-gray-200 shadow-sm'>
+                        <div className='flex items-center gap-2 mb-1'>
+                          <svg className='w-4 h-4 text-green-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 6v6m0 0v6m0-6h6m-6 0H6' />
+                          </svg>
+                          <span className='text-xs font-medium text-gray-600'>Purchased</span>
+                        </div>
+                        <p className='text-lg font-bold text-green-600'>+{purchased.toLocaleString()}</p>
+                      </div>
+                      
+                      <div className='bg-white p-3 rounded-lg border border-gray-200 shadow-sm'>
+                        <div className='flex items-center gap-2 mb-1'>
+                          <svg className='w-4 h-4 text-teal-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z' />
+                          </svg>
+                          <span className='text-xs font-medium text-gray-600'>Production</span>
+                        </div>
+                        <p className='text-lg font-bold text-teal-600'>+{production.toLocaleString()}</p>
+                      </div>
+                      
+                      <div className='bg-white p-3 rounded-lg border border-gray-200 shadow-sm'>
+                        <div className='flex items-center gap-2 mb-1'>
+                          <svg className='w-4 h-4 text-red-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M20 12H4' />
+                          </svg>
+                          <span className='text-xs font-medium text-gray-600'>Sold</span>
+                        </div>
+                        <p className='text-lg font-bold text-red-600'>-{sold.toLocaleString()}</p>
+                      </div>
+                      
+                      <div className='bg-white p-3 rounded-lg border border-gray-200 shadow-sm'>
+                        <div className='flex items-center gap-2 mb-1'>
+                          <svg className='w-4 h-4 text-orange-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z' />
+                          </svg>
+                          <span className='text-xs font-medium text-gray-600'>Reorder Level</span>
+                        </div>
+                        <p className='text-lg font-bold text-orange-600'>{reorderLevel.toLocaleString()}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Additional Info */}
+                    <div className='grid grid-cols-3 gap-3 mb-3'>
+                      {selectedProduct?.defaultSellingPrice > 0 && (
+                        <div className='bg-white p-2 rounded-lg border border-gray-200 shadow-sm'>
+                          <div className='flex items-center gap-2'>
+                            <svg className='w-4 h-4 text-teal-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
+                            </svg>
+                            <div>
+                              <p className='text-xs text-gray-600'>Unit Price</p>
+                              <p className='text-sm font-bold text-teal-700'>RWF {Number(selectedProduct.defaultSellingPrice).toLocaleString()}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className='bg-white p-2 rounded-lg border border-gray-200 shadow-sm'>
+                        <div className='flex items-center gap-2'>
+                          <svg className='w-4 h-4 text-purple-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z' />
+                          </svg>
+                          <div>
+                            <p className='text-xs text-gray-600'>Stock Value</p>
+                            <p className='text-sm font-bold text-purple-700'>RWF {stockValue.toLocaleString()}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {selectedProduct?.storeLocation && (
+                        <div className='bg-white p-2 rounded-lg border border-gray-200 shadow-sm'>
+                          <div className='flex items-center gap-2'>
+                            <svg className='w-4 h-4 text-indigo-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' />
+                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' />
+                            </svg>
+                            <div>
+                              <p className='text-xs text-gray-600'>Location</p>
+                              <p className='text-sm font-bold text-indigo-700'>{selectedProduct.storeLocation}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Status Alerts */}
+                    {isOutOfStock && (
+                      <div className='flex items-center gap-2 text-sm text-white bg-red-600 px-3 py-2 rounded-lg shadow-md'>
+                        <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z' />
+                        </svg>
+                        <span className='font-bold'>⚠️ OUT OF STOCK - Cannot proceed with sale</span>
+                      </div>
+                    )}
+                    
+                    {!isOutOfStock && isLowStock && (
+                      <div className='flex items-center gap-2 text-sm text-white bg-orange-600 px-3 py-2 rounded-lg shadow-md'>
+                        <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z' />
+                        </svg>
+                        <span className='font-bold'>⚠️ LOW STOCK WARNING - Only {availableStock} units remaining (Reorder at {reorderLevel})</span>
+                      </div>
+                    )}
+                    
+                    {!isOutOfStock && !isLowStock && (
+                      <div className='flex items-center gap-2 text-sm text-white bg-green-600 px-3 py-2 rounded-lg shadow-md'>
+                        <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' />
+                        </svg>
+                        <span className='font-bold'>✓ STOCK AVAILABLE - Ready for sale</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
 
             <div className='col-span-1'>
@@ -653,9 +853,12 @@ export default function SalesPage() {
               <button
                 type='button'
                 onClick={addToCart}
+                disabled={form.productId && getProductStock(form.productId) <= 0}
                 className={
                   `px-6 py-2 rounded-lg font-medium transition-all shadow-md ${
-                    editingCartIndex !== null
+                    form.productId && getProductStock(form.productId) <= 0
+                      ? 'bg-gray-300 cursor-not-allowed text-gray-500'
+                      : editingCartIndex !== null
                       ? 'bg-blue-600 hover:bg-blue-700 text-white'
                       : 'bg-teal-600 hover:bg-teal-700 text-white'
                   }`

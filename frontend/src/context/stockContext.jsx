@@ -355,21 +355,8 @@ const StockProviderCore = ({ children }) => {
 
   const getProductStock = (productId) => {
     if (!productId) return 0;
-
-    const purchased = (purchaseContext.purchases || [])
-      .filter((p) => p.productId === productId)
-      .reduce((sum, p) => sum + (Number(p.quantity) || 0), 0);
-
-    const sold = (salesContext.sales || [])
-      .filter((s) => s.productId === productId)
-      .reduce((sum, s) => sum + (Number(s.quantity) || 0), 0);
-
-    const dispensed = (dispenses || [])
-      .filter((d) => d.productId === productId)
-      .reduce((sum, d) => sum + (Number(d.quantity) || 0), 0);
-
-    const stock = purchased - sold - dispensed;
-    return stock > 0 ? stock : 0;
+    const product = productSettings.find(p => p.id === productId);
+    return Number(product?.currentStock) || 0;
   };
 
   const getProductTotalPrice = (productId) => {

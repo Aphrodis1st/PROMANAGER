@@ -1,12 +1,13 @@
 import { SalesModel } from "../../models/stock/sales.model.js";
 import { ProductModel } from "../../models/stock/product.model.js";
 import { ProductSettingModel } from "../../models/stock/productSetting.model.js";
+import { InventoryValuationService } from "../../services/inventoryValuation.service.js";
 
 export const SalesController = {
-  // CREATE SALE
+  // CREATE SALE (Reduces Inventory - IAS 2 Compliant)
   async create(req, res) {
     try {
-      console.log('📥 Creating sale with data:', JSON.stringify(req.body, null, 2));
+      console.log('📥 [SALES] Creating sale with data:', JSON.stringify(req.body, null, 2));
       
       const saleData = {
         ...req.body,
@@ -14,38 +15,76 @@ export const SalesController = {
         updatedAt: new Date().toISOString(),
       };
 
-      console.log('💾 Sale data to save:', JSON.stringify(saleData, null, 2));
+      console.log('💾 [SALES] Sale data to save:', JSON.stringify(saleData, null, 2));
       
       const sale = await SalesModel.create(saleData);
       
-      console.log('✅ Sale created:', JSON.stringify(sale, null, 2));
+      console.log('✅ [SALES] Sale created:', JSON.stringify(sale, null, 2));
       
-      // Update product stock (reduce)
+      // ✅ REDUCE INVENTORY (IAS 2 - Inventory Recognition with FIFO/LIFO)
+      const valuationMethod = req.body.valuationMethod || 'FIFO';
+      const costDetails = [];
+      
       if (sale.items && Array.isArray(sale.items)) {
         for (const item of sale.items) {
           if (item.productId && item.quantity) {
-            console.log(`📉 Reducing stock for product ${item.productId} by ${item.quantity}`);
+            console.log(`📉 [INVENTORY] Reducing stock for product ${item.productId} by ${item.quantity} using ${valuationMethod}`);
             try {
+              const valuation = valuationMethod === 'LIFO' 
+                ? await InventoryValuationService.consumeStockLIFO(item.productId, Number(item.quantity))
+                : await InventoryValuationService.consumeStockFIFO(item.productId, Number(item.quantity));
+              
               await ProductSettingModel.updateStock(item.productId, -Number(item.quantity));
-              console.log(`✅ Stock updated for product ${item.productId}`);
+              
+              costDetails.push({
+                productId: item.productId,
+                productName: item.productName,
+                quantity: item.quantity,
+                costOfGoodsSold: valuation.totalCost,
+                averageCost: valuation.averageCost,
+              });
+              
+              console.log(`✅ [INVENTORY] Stock reduced for product ${item.productId}, COGS: ${valuation.totalCost}`);
             } catch (stockError) {
-              console.error(`❌ Error updating stock for product ${item.productId}:`, stockError);
+              console.error(`❌ [INVENTORY] Error reducing stock for product ${item.productId}:`, stockError);
+              await SalesModel.remove(sale.id);
+              return res.status(400).json({ error: `Insufficient stock for ${item.productName}: ${stockError.message}` });
             }
           }
         }
       } else if (sale.productId && sale.quantity) {
-        console.log(`📉 Reducing stock for product ${sale.productId} by ${sale.quantity}`);
+        console.log(`📉 [INVENTORY] Reducing stock for product ${sale.productId} by ${sale.quantity} using ${valuationMethod}`);
         try {
+          const valuation = valuationMethod === 'LIFO'
+            ? await InventoryValuationService.consumeStockLIFO(sale.productId, Number(sale.quantity))
+            : await InventoryValuationService.consumeStockFIFO(sale.productId, Number(sale.quantity));
+          
           await ProductSettingModel.updateStock(sale.productId, -Number(sale.quantity));
-          console.log(`✅ Stock updated for product ${sale.productId}`);
+          
+          costDetails.push({
+            productId: sale.productId,
+            quantity: sale.quantity,
+            costOfGoodsSold: valuation.totalCost,
+            averageCost: valuation.averageCost,
+          });
+          
+          console.log(`✅ [INVENTORY] Stock reduced for product ${sale.productId}, COGS: ${valuation.totalCost}`);
         } catch (stockError) {
-          console.error(`❌ Error updating stock for product ${sale.productId}:`, stockError);
+          console.error(`❌ [INVENTORY] Error reducing stock for product ${sale.productId}:`, stockError);
+          await SalesModel.remove(sale.id);
+          return res.status(400).json({ error: `Insufficient stock: ${stockError.message}` });
         }
       }
       
-      res.status(201).json({ message: "Sale created successfully", sale });
+      console.log('✅ [SALES] Sale completed successfully with inventory reduction');
+      res.status(201).json({ 
+        message: "Sale created successfully", 
+        sale,
+        costDetails,
+        valuationMethod 
+      });
     } catch (err) {
-      console.error("❌ Error creating sale:", err);
+      console.error("❌ [SALES] Error creating sale:", err);
       res.status(500).json({ error: err.message });
     }
   },

@@ -1,11 +1,15 @@
 import { PurchaseModel } from "../../models/stock/purchase.model.js";
 
 export const PurchaseController = {
+  // CREATE PURCHASE (Increases Inventory - IAS 2 Compliant)
   async create(req, res) {
     try {
+      console.log('📥 [PURCHASE] Creating purchase with data:', JSON.stringify(req.body, null, 2));
       const purchase = await PurchaseModel.create(req.body);
+      console.log('✅ [PURCHASE] Purchase created successfully with inventory increase');
       res.status(201).json(purchase);
     } catch (err) {
+      console.error('❌ [PURCHASE] Error creating purchase:', err);
       res.status(500).json({ error: err.message });
     }
   },

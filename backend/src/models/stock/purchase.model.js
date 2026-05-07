@@ -3,11 +3,13 @@ import { db } from '../../../utils/firebase.js';
 import admin from 'firebase-admin';
 import { ProductSettingModel } from './productSetting.model.js';
 import { TaxTransactionModel } from './taxTransaction.model.js';
+import { InventoryLedgerModel } from './inventoryLedger.model.js';
 
 // Lazy-loaded collection
 const getPurchaseCollection = () => db().collection('purchases');
 
 export const PurchaseModel = {
+  // CREATE PURCHASE (Increases Inventory - IAS 2 Compliant)
   async create(data) {
     const purchaseCollection = getPurchaseCollection();
     const newDoc = purchaseCollection.doc();
@@ -18,12 +20,25 @@ export const PurchaseModel = {
     };
     await newDoc.set(purchaseData);
     
-    // Update product stock
+    // ✅ INCREASE INVENTORY (IAS 2 - Inventory Recognition)
     if (data.productId && data.quantity) {
+      console.log(`📈 [INVENTORY] Increasing stock for product ${data.productId} by ${data.quantity}`);
       await ProductSettingModel.updateStock(data.productId, Number(data.quantity));
+      
+      // Record in inventory ledger for FIFO/LIFO
+      await InventoryLedgerModel.create({
+        productId: data.productId,
+        transactionType: 'PURCHASE',
+        transactionId: newDoc.id,
+        transactionDate: data.date || new Date().toISOString(),
+        quantity: Number(data.quantity),
+        unitCost: Number(data.unitPrice) || 0,
+      });
+      
+      console.log(`✅ [INVENTORY] Stock increased for product ${data.productId}`);
     }
     
-    // Record tax transactions
+    // Record tax transactions (IAS 12 - Income Taxes)
     if (data.taxes && Array.isArray(data.taxes)) {
       for (const tax of data.taxes) {
         await TaxTransactionModel.create({
@@ -70,15 +85,18 @@ export const PurchaseModel = {
     return { id, ...data };
   },
 
+  // DELETE PURCHASE (Reverses Inventory Increase - IAS 2 Compliant)
   async remove(id) {
     const purchaseCollection = getPurchaseCollection();
     const ref = purchaseCollection.doc(id);
     const doc = await ref.get();
     if (doc.exists) {
       const data = doc.data();
-      // Reverse stock update
+      // ✅ REVERSE INVENTORY INCREASE (IAS 2 - Inventory Reversal)
       if (data.productId && data.quantity) {
+        console.log(`📉 [INVENTORY] Reversing purchase - reducing stock for product ${data.productId} by ${data.quantity}`);
         await ProductSettingModel.updateStock(data.productId, -Number(data.quantity));
+        console.log(`✅ [INVENTORY] Stock reversed for product ${data.productId}`);
       }
     }
     await ref.delete();

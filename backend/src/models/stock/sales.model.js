@@ -6,7 +6,7 @@ import { TaxTransactionModel } from './taxTransaction.model.js';
 const getSalesCollection = () => db().collection("sales");
 
 export const SalesModel = {
-  // CREATE SALE
+  // CREATE SALE (Reduces Inventory - IAS 2 Compliant)
   async create(data) {
     const salesCollection = getSalesCollection();
     const newDoc = salesCollection.doc();
@@ -24,7 +24,7 @@ export const SalesModel = {
     
     await newDoc.set(payload);
     
-    // Record tax transactions
+    // Record tax transactions (IAS 12 - Income Taxes)
     if (data.taxes && Array.isArray(data.taxes)) {
       for (const tax of data.taxes) {
         await TaxTransactionModel.create({
@@ -88,7 +88,7 @@ export const SalesModel = {
     return updated;
   },
 
-  // DELETE SALE
+  // DELETE SALE (Reverses Inventory Reduction - IAS 2 Compliant)
   async remove(id) {
     const salesCollection = getSalesCollection();
     const ref = salesCollection.doc(id);
@@ -96,15 +96,19 @@ export const SalesModel = {
     if (!doc.exists) return false;
     
     const data = doc.data();
-    // Reverse stock update (add back)
+    // ✅ REVERSE INVENTORY REDUCTION (IAS 2 - Inventory Reversal)
     if (data.items && Array.isArray(data.items)) {
       for (const item of data.items) {
         if (item.productId && item.quantity) {
+          console.log(`📈 [INVENTORY] Reversing sale - adding back stock for product ${item.productId} by ${item.quantity}`);
           await ProductSettingModel.updateStock(item.productId, Number(item.quantity));
+          console.log(`✅ [INVENTORY] Stock reversed for product ${item.productId}`);
         }
       }
     } else if (data.productId && data.quantity) {
+      console.log(`📈 [INVENTORY] Reversing sale - adding back stock for product ${data.productId} by ${data.quantity}`);
       await ProductSettingModel.updateStock(data.productId, Number(data.quantity));
+      console.log(`✅ [INVENTORY] Stock reversed for product ${data.productId}`);
     }
     
     await ref.delete();

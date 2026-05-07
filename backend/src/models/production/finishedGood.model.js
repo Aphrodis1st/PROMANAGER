@@ -1,6 +1,7 @@
 // models/production/finishedGood.model.js
 import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
+import { InventoryLedgerModel } from "../stock/inventoryLedger.model.js";
 
 const getCollection = () => db().collection("finishedGoods");
 
@@ -39,6 +40,20 @@ export const FinishedGoodModel = {
 
   async update(id, data) {
     const collection = getCollection();
+    const existing = await this.findById(id);
+    
+    // If adding to inventory for the first time, record in ledger
+    if (data.addedToInventory && !existing.addedToInventory && existing.productId) {
+      await InventoryLedgerModel.create({
+        productId: existing.productId,
+        transactionType: 'PRODUCTION',
+        transactionId: id,
+        transactionDate: new Date().toISOString(),
+        quantity: Number(existing.quantityProduced),
+        unitCost: Number(existing.unitCost) || 0,
+      });
+    }
+    
     const upd = { ...data, updatedAt: admin.firestore.FieldValue.serverTimestamp() };
     await collection.doc(id).update(upd);
     return this.findById(id);

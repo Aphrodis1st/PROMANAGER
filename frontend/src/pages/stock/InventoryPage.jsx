@@ -3,6 +3,7 @@ import { useStock } from '../../context/stockContext';
 import { usePurchase } from '../../context/PurchaseContext';
 import { useSales } from '../../context/SalesContext';
 import { inventoryService } from '../../services/stock.service';
+import { useOrganizationCurrency } from '../../hooks/useCurrencyFormat';
 import { 
   Box, 
   Paper, 
@@ -30,41 +31,33 @@ export default function InventoryPage() {
   const { productSettings, loading } = useStock();
   const { purchases } = usePurchase();
   const { sales } = useSales();
+  const { formatAmount } = useOrganizationCurrency();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [inventoryData, setInventoryData] = useState([]);
   const [loadingReport, setLoadingReport] = useState(false);
   const [updatingStocks, setUpdatingStocks] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [activeTab, setActiveTab] = useState(0);
+  const [valuationMethod, setValuationMethod] = useState('FIFO');
 
   useEffect(() => {
     fetchInventoryReport();
-  }, [selectedDate]);
+  }, [selectedDate, valuationMethod]);
 
   const fetchInventoryReport = async () => {
     setLoadingReport(true);
     try {
-      const data = await inventoryService.getReport(selectedDate);
-      console.log('📊 Inventory report fetched:', data);
+      const data = await inventoryService.getReport(selectedDate, valuationMethod);
       
-      // Process the data to add categoryType
       const processedData = data.map(item => ({
         ...item,
         categoryType: getCategoryType(item.storeCategory),
         productionQty: item.productionQty || 0
       }));
       
-      console.log('📈 Processed inventory data:', {
-        total: processedData.length,
-        raw: processedData.filter(d => d.categoryType === 'raw').length,
-        finished: processedData.filter(d => d.categoryType === 'finished').length,
-        other: processedData.filter(d => d.categoryType === 'other').length
-      });
-      
       setInventoryData(processedData);
     } catch (error) {
       console.error('Error fetching inventory report:', error);
-      // Fallback to local calculation
       calculateInventoryLocally();
     } finally {
       setLoadingReport(false);
@@ -72,19 +65,14 @@ export default function InventoryPage() {
   };
 
   const calculateInventoryLocally = () => {
-    console.log('📊 Calculating inventory from productSettings:', productSettings.length);
-    console.log('📦 Sample productSettings data:', productSettings.slice(0, 2));
-    
     const data = productSettings.map(product => {
       const openingStock = Number(product.openingStock) || 0;
+      const currentStock = Number(product.currentStock) || 0;
       
       const purchasedQty = purchases
         .filter(p => p.productId === product.id && new Date(p.createdAt) <= new Date(selectedDate))
         .reduce((sum, p) => sum + (Number(p.quantity) || 0), 0);
       
-      // Calculate production quantity (for finished products)
-      // This would come from production cycles or finished goods records
-      // For now, we'll calculate it as: currentStock - openingStock - purchases + sales
       const soldQty = sales
         .filter(s => {
           if (s.items && Array.isArray(s.items)) {
@@ -100,24 +88,14 @@ export default function InventoryPage() {
           return sum + (Number(s.quantity) || 0);
         }, 0);
       
-      const currentStock = Number(product.currentStock) || 0;
-      const closingStock = openingStock + purchasedQty - soldQty;
+      const productionQty = Math.max(0, currentStock - openingStock - purchasedQty + soldQty);
       
-      // Calculate production: if closing stock doesn't match calculation, the difference is production
-      const calculatedStock = openingStock + purchasedQty - soldQty;
-      const productionQty = currentStock - calculatedStock;
+      const unitPrice = Number(product.defaultBuyingPrice) || 0;
+      const openingValue = openingStock * unitPrice;
+      const closingValue = currentStock * unitPrice;
       
-      // Use productCategory for display, storeCategory for type detection
       const displayCategory = getDisplayCategory(product);
       const categoryType = getCategoryType(product.storeCategory);
-      
-      console.log(`📝 Product: "${product.name}"`);  
-      console.log(`   - productCategory (display): "${product.productCategory}"`);  
-      console.log(`   - storeCategory (for filtering): "${product.storeCategory}"`);  
-      console.log(`   - Display as: "${displayCategory}"`);  
-      console.log(`   - Detected type: ${categoryType}`);
-      console.log(`   - Production: ${productionQty}`);
-      console.log(`   ---`);
       
       return {
         id: product.id,
@@ -128,42 +106,27 @@ export default function InventoryPage() {
         unit: product.unit,
         openingStock,
         purchasedQty,
-        productionQty: productionQty > 0 ? productionQty : 0,
+        productionQty,
         soldQty,
         closingStock: currentStock,
         reorderLevel: product.reorderLevel || 0,
+        unitPrice,
+        openingValue,
+        closingValue,
         status: currentStock <= (product.reorderLevel || 0) ? 'Low Stock' : 'In Stock'
       };
     });
     
-    const rawCount = data.filter(d => d.categoryType === 'raw').length;
-    const finishedCount = data.filter(d => d.categoryType === 'finished').length;
-    const otherCount = data.filter(d => d.categoryType === 'other').length;
-    
-    console.log('📈 Inventory data summary:', {
-      total: data.length,
-      raw: rawCount,
-      finished: finishedCount,
-      other: otherCount
-    });
-    
-    console.log('🔍 Raw materials:', data.filter(d => d.categoryType === 'raw').map(d => `${d.name} (store: ${d.storeCategory})`));
-    console.log('🔍 Finished products:', data.filter(d => d.categoryType === 'finished').map(d => `${d.name} (store: ${d.storeCategory})`));
-    console.log('🔍 Other items:', data.filter(d => d.categoryType === 'other').map(d => `${d.name} (store: ${d.storeCategory})`));
-    
     setInventoryData(data);
   };
 
-  // Helper function to determine category type based on STORE CATEGORY only
   const getCategoryType = (storeCategory) => {
     if (!storeCategory) return 'other';
     const cat = String(storeCategory).toLowerCase().trim();
     
-    // Check for exact matches first
     if (cat === 'raw materials' || cat === 'raw material') return 'raw';
     if (cat === 'finished products' || cat === 'finished product' || cat === 'finished goods') return 'finished';
     
-    // Check for partial matches
     if (cat.includes('raw') && cat.includes('material')) return 'raw';
     if (cat.includes('finished') && cat.includes('product')) return 'finished';
     if (cat.includes('finished') || cat.includes('final')) return 'finished';
@@ -172,7 +135,6 @@ export default function InventoryPage() {
     return 'other';
   };
 
-  // Get display category (productCategory for display, storeCategory for filtering)
   const getDisplayCategory = (product) => {
     return product.productCategory || product.storeCategory || 'Uncategorized';
   };
@@ -207,13 +169,14 @@ export default function InventoryPage() {
     const rawMaterials = inventoryData.filter(item => item.categoryType === 'raw');
     const finishedProducts = inventoryData.filter(item => item.categoryType === 'finished');
     const lowStock = inventoryData.filter(item => item.status === 'Low Stock');
+    const totalInventoryValue = inventoryData.reduce((sum, item) => sum + (item.closingValue || 0), 0);
 
     return {
       total: inventoryData.length,
       rawMaterials: rawMaterials.length,
       finishedProducts: finishedProducts.length,
       lowStock: lowStock.length,
-      totalValue: inventoryData.reduce((sum, item) => sum + (item.closingStock * (item.costPrice || 0)), 0)
+      totalValue: totalInventoryValue
     };
   }, [inventoryData]);
 
@@ -286,6 +249,10 @@ export default function InventoryPage() {
             <Typography variant="body2" color="text.secondary">Low Stock Items</Typography>
             <Typography variant="h4" sx={{ fontWeight: 600, color: '#dc2626' }}>{summaryStats.lowStock}</Typography>
           </Paper>
+          <Paper sx={{ p: 2, bgcolor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+            <Typography variant="body2" color="text.secondary">Total Inventory Value</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 600, color: '#16a34a' }}>{formatAmount(summaryStats.totalValue)}</Typography>
+          </Paper>
         </Box>
 
         {/* Tabs for category types */}
@@ -316,6 +283,17 @@ export default function InventoryPage() {
             InputLabelProps={{ shrink: true }}
             size="small"
           />
+          <FormControl size="small" sx={{ minWidth: 200 }}>
+            <InputLabel>Valuation Method</InputLabel>
+            <Select
+              value={valuationMethod}
+              onChange={(e) => setValuationMethod(e.target.value)}
+              label="Valuation Method"
+            >
+              <MenuItem value="FIFO">FIFO (First In First Out)</MenuItem>
+              <MenuItem value="LIFO">LIFO (Last In First Out)</MenuItem>
+            </Select>
+          </FormControl>
           <FormControl size="small" sx={{ minWidth: 200 }}>
             <InputLabel>Filter by Category</InputLabel>
             <Select
@@ -349,13 +327,15 @@ export default function InventoryPage() {
                   <TableCell sx={{ color: 'white', fontWeight: 600 }} align="right">Sales</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 600 }} align="right">Closing Stock</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 600 }} align="right">Reorder Level</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 600 }} align="right">Unit Price</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 600 }} align="right">Total Value</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 600 }}>Status</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {filteredData.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
+                    <TableCell colSpan={12} align="center" sx={{ py: 4 }}>
                       <Typography color="text.secondary">
                         No items found in this category
                       </Typography>
@@ -364,7 +344,7 @@ export default function InventoryPage() {
                 ) : (
                   filteredData.map((item) => (
                     <TableRow key={item.id} sx={{ '&:hover': { bgcolor: '#f5f5f5' } }}>
-                      <TableCell>{item.name}</TableCell>
+                      <TableCell sx={{ fontWeight: 500 }}>{item.name}</TableCell>
                       <TableCell>
                         <Chip 
                           label={item.category} 
@@ -374,12 +354,14 @@ export default function InventoryPage() {
                         />
                       </TableCell>
                       <TableCell>{item.unit}</TableCell>
-                      <TableCell align="right">{item.openingStock}</TableCell>
-                      <TableCell align="right" sx={{ color: 'green' }}>+{item.purchasedQty}</TableCell>
-                      <TableCell align="right" sx={{ color: '#0d9488', fontWeight: 600 }}>+{item.productionQty || 0}</TableCell>
-                      <TableCell align="right" sx={{ color: 'red' }}>-{item.soldQty}</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 600 }}>{item.closingStock}</TableCell>
-                      <TableCell align="right">{item.reorderLevel}</TableCell>
+                      <TableCell align="right">{item.openingStock.toLocaleString()}</TableCell>
+                      <TableCell align="right" sx={{ color: 'green', fontWeight: 500 }}>+{item.purchasedQty.toLocaleString()}</TableCell>
+                      <TableCell align="right" sx={{ color: '#0d9488', fontWeight: 600 }}>+{(item.productionQty || 0).toLocaleString()}</TableCell>
+                      <TableCell align="right" sx={{ color: 'red', fontWeight: 500 }}>-{item.soldQty.toLocaleString()}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 600, fontSize: '1rem' }}>{item.closingStock.toLocaleString()}</TableCell>
+                      <TableCell align="right">{item.reorderLevel.toLocaleString()}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 500 }}>{formatAmount(item.unitPrice)}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 600, color: '#16a34a' }}>{formatAmount(item.closingValue)}</TableCell>
                       <TableCell>
                         <Chip
                           label={item.status}
@@ -398,14 +380,16 @@ export default function InventoryPage() {
 
         <Box sx={{ mt: 3, p: 2, bgcolor: '#f0f9ff', borderRadius: 2 }}>
           <Typography variant="body2" sx={{ fontWeight: 600, color: '#0369a1', mb: 1 }}>
-            📌 Inventory Categories:
+            📌 Inventory Valuation: {valuationMethod}
           </Typography>
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
             <Chip label="Raw Materials" color="warning" size="small" icon={<CategoryIcon />} />
             <Chip label="Finished Products" color="success" size="small" icon={<CategoryIcon />} />
           </Box>
           <Typography variant="caption" sx={{ display: 'block', mt: 1, color: '#0369a1' }}>
-            Note: Today's closing stock becomes tomorrow's opening stock (Professional Accounting Standard)
+            {valuationMethod === 'FIFO' 
+              ? 'FIFO: Oldest inventory costs are used first (IAS 2 compliant)'
+              : 'LIFO: Newest inventory costs are used first (IAS 2 compliant)'}
           </Typography>
         </Box>
       </Paper>

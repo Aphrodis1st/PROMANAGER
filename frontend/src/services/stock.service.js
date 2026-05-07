@@ -318,10 +318,13 @@ export const reportsService = {
 // ✅ Inventory Service
 // ================================
 export const inventoryService = {
-  getReport: async (date) => {
+  getReport: async (date, valuationMethod = 'FIFO') => {
     console.log("📥 Fetching inventory report...");
-    const params = date ? `?date=${date}` : '';
-    const res = await axios.get(`${API_URL}/inventory/report${params}`, getAuthHeader());
+    const params = new URLSearchParams();
+    if (date) params.append('date', date);
+    if (valuationMethod) params.append('valuationMethod', valuationMethod);
+    const queryString = params.toString();
+    const res = await axios.get(`${API_URL}/inventory/report${queryString ? '?' + queryString : ''}`, getAuthHeader());
     console.log("✅ Inventory report fetched:", res.data);
     return res.data;
   },

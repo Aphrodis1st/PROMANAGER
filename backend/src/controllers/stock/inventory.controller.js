@@ -2,12 +2,13 @@ import { ProductSettingModel } from "../../models/stock/productSetting.model.js"
 import { PurchaseModel } from "../../models/stock/purchase.model.js";
 import { SalesModel } from "../../models/stock/sales.model.js";
 import { FinishedGoodModel } from "../../models/production/finishedGood.model.js";
+import { InventoryLedgerModel } from "../../models/stock/inventoryLedger.model.js";
+import { InventoryValuationService } from "../../services/inventoryValuation.service.js";
 
 export const InventoryController = {
-  // GET INVENTORY REPORT
   async getInventoryReport(req, res) {
     try {
-      const { date } = req.query;
+      const { date, valuationMethod = 'FIFO' } = req.query;
       const targetDate = date ? new Date(date) : new Date();
 
       const products = await ProductSettingModel.getAll();
@@ -15,10 +16,9 @@ export const InventoryController = {
       const sales = await SalesModel.findAll();
       const finishedGoods = await FinishedGoodModel.findAll();
 
-      const inventoryData = products.map(product => {
+      const inventoryData = await Promise.all(products.map(async product => {
         const openingStock = Number(product.openingStock) || 0;
         
-        // Calculate purchases up to target date
         const purchasedQty = purchases
           .filter(p => {
             const pDate = p.createdAt?.toDate ? p.createdAt.toDate() : new Date(p.createdAt);
@@ -26,7 +26,6 @@ export const InventoryController = {
           })
           .reduce((sum, p) => sum + (Number(p.quantity) || 0), 0);
         
-        // Calculate production quantity from finished goods
         const productionQty = finishedGoods
           .filter(fg => {
             const fgDate = fg.createdAt?.toDate ? fg.createdAt.toDate() : new Date(fg.createdAt);
@@ -36,7 +35,6 @@ export const InventoryController = {
           })
           .reduce((sum, fg) => sum + (Number(fg.quantityProduced) || 0), 0);
         
-        // Calculate sales up to target date
         const soldQty = sales
           .filter(s => {
             const sDate = s.createdAt?.toDate ? s.createdAt.toDate() : new Date(s.createdAt);
@@ -53,7 +51,22 @@ export const InventoryController = {
             return sum + (Number(s.quantity) || 0);
           }, 0);
         
-        const closingStock = openingStock + purchasedQty + productionQty - soldQty;
+        const currentStock = Number(product.currentStock) || 0;
+        
+        // Get inventory value using FIFO or LIFO
+        let stockValue = 0;
+        let averageCost = Number(product.defaultBuyingPrice) || 0;
+        
+        try {
+          const valuation = valuationMethod === 'LIFO'
+            ? await InventoryValuationService.getInventoryValueLIFO(product.id)
+            : await InventoryValuationService.getInventoryValueFIFO(product.id);
+          
+          stockValue = valuation.value;
+          averageCost = valuation.averageCost || averageCost;
+        } catch (error) {
+          stockValue = currentStock * averageCost;
+        }
         
         return {
           id: product.id,
@@ -66,12 +79,16 @@ export const InventoryController = {
           purchasedQty,
           productionQty,
           soldQty,
-          closingStock,
-          currentStock: product.currentStock || closingStock,
+          closingStock: currentStock,
+          currentStock,
           reorderLevel: product.reorderLevel || 0,
-          status: closingStock <= (product.reorderLevel || 0) ? 'Low Stock' : 'In Stock'
+          unitPrice: averageCost,
+          openingValue: openingStock * averageCost,
+          closingValue: stockValue,
+          valuationMethod,
+          status: currentStock <= (product.reorderLevel || 0) ? 'Low Stock' : 'In Stock'
         };
-      });
+      }));
 
       return res.status(200).json(inventoryData);
     } catch (err) {
@@ -80,7 +97,6 @@ export const InventoryController = {
     }
   },
 
-  // UPDATE OPENING STOCK FOR NEW DAY
   async updateOpeningStocks(req, res) {
     try {
       const products = await ProductSettingModel.getAll();

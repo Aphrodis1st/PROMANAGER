@@ -1,5 +1,6 @@
 import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
+import { InventoryLedgerModel } from './inventoryLedger.model.js';
 
 const getCollection = () => db().collection("productSettings");
 
@@ -47,6 +48,19 @@ export const ProductSettingModel = {
     };
 
     await newDoc.set(payload);
+    
+    // Record opening stock in inventory ledger
+    if (payload.openingStock > 0) {
+      await InventoryLedgerModel.create({
+        productId: newDoc.id,
+        transactionType: 'OPENING',
+        transactionId: newDoc.id,
+        transactionDate: new Date().toISOString(),
+        quantity: payload.openingStock,
+        unitCost: payload.defaultBuyingPrice,
+      });
+    }
+    
     return { id: newDoc.id, ...payload };
   },
 
