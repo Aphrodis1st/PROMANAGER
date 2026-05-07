@@ -4,8 +4,9 @@ import { QualityInspectionModel } from "../../models/production/qualityInspectio
 import { FinishedGoodModel } from "../../models/production/finishedGood.model.js";
 import { MaterialConsumptionModel } from "../../models/production/materialConsumption.model.js";
 import { ProductModel } from "../../models/stock/product.model.js";
+import { ProductSettingModel } from "../../models/stock/productSetting.model.js";
 import JournalModel from "../../models/stock/journal.model.js";
-import { PurchaseModel } from "../../models/stock/purchase.model.js"; // <-- fallback
+import { PurchaseModel } from "../../models/stock/purchase.model.js";
 import admin from "firebase-admin";
 
 export const ProductionController = {
@@ -128,41 +129,73 @@ export const ProductionController = {
         for (const item of consumedMaterials) {
           console.log("Processing raw material item:", item);
 
-          // --- Try fetching from products ---
-          let product = await ProductModel.findById(item.materialId || item.productId);
-          let source = "product";
+          // --- Try fetching from multiple sources ---
+          let product = null;
+          let source = null;
+
+          // 1. Try productSettings (inventory)
+          product = await ProductSettingModel.findById(item.materialId || item.productId);
+          if (product) {
+            source = "productSettings";
+            console.log(`✅ Found in productSettings: ${item.productName}`);
+          }
+
+          // 2. Try products
           if (!product) {
-            console.warn(`Product ${item.productName} not found in products. Checking purchases...`);
+            product = await ProductModel.findById(item.materialId || item.productId);
+            if (product) {
+              source = "product";
+              console.log(`✅ Found in products: ${item.productName}`);
+            }
+          }
+
+          // 3. Try purchases
+          if (!product) {
             product = await PurchaseModel.findById(item.materialId || item.productId);
-            source = "purchase";
+            if (product) {
+              source = "purchase";
+              console.log(`✅ Found in purchases: ${item.productName}`);
+            }
           }
 
           if (!product) {
-            console.error(`❌ Product not found in products or purchases: ${item.productName}`);
+            console.error(`❌ Product not found in any collection: ${item.productName}`);
             return res.status(400).json({
               success: false,
-              error: `Raw material ${item.productName} not found in products or purchases`,
+              error: `Raw material "${item.productName}" not found in inventory, products, or purchases`,
             });
           }
 
           const qtyUsed = item.quantity || item.qtyUsed || 0;
           console.log(`Quantity to use: ${qtyUsed}, Source: ${source}`);
 
-          // --- Adjust stock / purchase based on source ---
-          if (source === "product") {
-            console.log(`Adjusting stock in products for ${item.productName}`);
-            await ProductModel.adjustStock(product.id, -qtyUsed);
-          } else if (source === "purchase") {
-            console.log(`Adjusting stock in purchases for ${item.productName}`);
-            await PurchaseModel.adjustStock(product.id, -qtyUsed);
+          // --- Adjust stock based on source ---
+          try {
+            if (source === "productSettings") {
+              console.log(`Adjusting stock in productSettings for ${item.productName}`);
+              await ProductSettingModel.adjustStock(product.id, -qtyUsed);
+            } else if (source === "product") {
+              console.log(`Adjusting stock in products for ${item.productName}`);
+              await ProductModel.adjustStock(product.id, -qtyUsed);
+            } else if (source === "purchase") {
+              console.log(`Adjusting stock in purchases for ${item.productName}`);
+              await PurchaseModel.adjustStock(product.id, -qtyUsed);
+            }
+          } catch (stockError) {
+            console.error(`❌ Stock adjustment failed for ${item.productName}:`, stockError);
+            return res.status(400).json({
+              success: false,
+              error: `Insufficient stock for ${item.productName}. ${stockError.message}`,
+            });
           }
 
+          const unitCost = item.costPerUnit || product.costPrice || product.defaultBuyingPrice || 0;
           const entry = {
             materialId: product.id,
             materialName: item.materialName || item.productName,
             qtyUsed,
-            unitCost: item.costPerUnit || product.costPrice || 0,
-            totalCost: qtyUsed * (item.costPerUnit || product.costPrice || 0),
+            unitCost,
+            totalCost: qtyUsed * unitCost,
           };
           consumptionList.push(entry);
           await MaterialConsumptionModel.create({ cycleId: planId, ...entry });
@@ -243,19 +276,30 @@ async completeCycle(req, res) {
 
     // --- Fetch or create finished product ---
     console.log("Fetching finished product...");
-    let finishedProduct = await ProductModel.findById(plan.finishedProductId);
+    let finishedProduct = await ProductSettingModel.findById(plan.finishedProductId);
+    let productSource = "productSettings";
+
+    if (!finishedProduct) {
+      console.log("Not found in productSettings, checking products...");
+      finishedProduct = await ProductModel.findById(plan.finishedProductId);
+      productSource = "products";
+    }
 
     if (!finishedProduct) {
       console.log(
-        `Finished product not found (${plan.finishedProductId}), creating dynamically...`
+        `Finished product not found (${plan.finishedProductId}), creating in productSettings...`
       );
-      finishedProduct = await ProductModel.create({
-        id: plan.finishedProductId,
+      finishedProduct = await ProductSettingModel.create({
         name: plan.finishedProductName,
         currentStock: 0,
-        costPrice: 0,
+        openingStock: 0,
+        defaultBuyingPrice: 0,
+        defaultSellingPrice: 0,
+        type: "Product",
+        status: "Active",
       });
-      console.log("Finished product created:", finishedProduct);
+      productSource = "productSettings";
+      console.log("Finished product created in productSettings:", finishedProduct);
     }
 
     // --- Calculate total material cost from frontend-provided consumedMaterials ---
@@ -267,10 +311,17 @@ async completeCycle(req, res) {
     const costPerUnit = producedQty > 0 ? totalCost / producedQty : 0;
 
     // --- Adjust stock for finished product ---
-    await ProductModel.adjustStock(finishedProduct.id, producedQty);
-    console.log(
-      `Stock adjusted for finished product (${finishedProduct.name}): +${producedQty}`
-    );
+    if (productSource === "productSettings") {
+      await ProductSettingModel.adjustStock(finishedProduct.id, producedQty);
+      console.log(
+        `Stock adjusted in productSettings for finished product (${finishedProduct.name}): +${producedQty}`
+      );
+    } else {
+      await ProductModel.adjustStock(finishedProduct.id, producedQty);
+      console.log(
+        `Stock adjusted in products for finished product (${finishedProduct.name}): +${producedQty}`
+      );
+    }
 
     // --- Create Finished Goods record ---
     const fg = await FinishedGoodModel.create({

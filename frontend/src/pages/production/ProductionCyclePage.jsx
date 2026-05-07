@@ -153,7 +153,7 @@ export default function ProductionCyclePage() {
     const doc = new jsPDF();
     doc.text('Production Cycles Summary', 14, 10);
     const tableData = filteredCycles.map((c) => [
-      c.id,
+      c.batchNo || c.name || c.id,
       c.productName,
       c.quantityPlanned,
       c.quantityCompleted,
@@ -214,7 +214,7 @@ export default function ProductionCyclePage() {
           <div className='flex items-center gap-3'>
             <CSVLink
               data={filteredCycles.map((c) => ({
-                id: c.id,
+                cycleId: c.batchNo || c.name || c.id,
                 product: c.productName,
                 plannedQty: c.quantityPlanned,
                 completedQty: c.quantityCompleted,
@@ -576,7 +576,9 @@ export default function ProductionCyclePage() {
                             '&:hover': { bgcolor: '#e8f5e9' },
                           }}
                         >
-                          <TableCell sx={{ color: 'grey.800', py: 1.5 }}>{c.id}</TableCell>
+                          <TableCell sx={{ color: 'grey.800', py: 1.5 }}>
+                            {c.batchNo || c.name || c.id}
+                          </TableCell>
                           <TableCell sx={{ color: 'grey.800', py: 1.5 }}>
                             {c.productName}
                           </TableCell>

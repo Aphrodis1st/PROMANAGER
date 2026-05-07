@@ -84,4 +84,29 @@ export const PurchaseModel = {
     await ref.delete();
     return { id };
   },
+
+  async adjustStock(id, adjustment) {
+    const purchaseCollection = getPurchaseCollection();
+    const ref = purchaseCollection.doc(id);
+    const doc = await ref.get();
+    
+    if (!doc.exists) {
+      throw new Error(`Purchase with ID ${id} not found`);
+    }
+    
+    const currentData = doc.data();
+    const currentQty = Number(currentData.quantity || 0);
+    const newQty = currentQty + adjustment;
+    
+    if (newQty < 0) {
+      throw new Error(`Insufficient stock. Available: ${currentQty}, Requested: ${Math.abs(adjustment)}`);
+    }
+    
+    await ref.update({
+      quantity: newQty,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    
+    return { id, quantity: newQty };
+  },
 };

@@ -45,6 +45,7 @@ export const ProductionProvider = ({ children }) => {
           const cost = c.costSummary || {};
           return {
             id: c.id,
+            batchNo: c.batchNo || `BATCH-${c.id.slice(0, 6)}`,
             name: plan?.planName || `Cycle-${c.id}`,
             planId: c.planId,
             productId: c.productId,
@@ -148,18 +149,6 @@ export const ProductionProvider = ({ children }) => {
     if (!plan) throw new Error('Invalid plan ID');
 
     try {
-      for (let item of rawMaterials) {
-        const available = getProductStock(item.productId) || 0;
-        const needed = item.quantity || 0;
-        if (available <= 0) console.warn(`⚠️ No stock for ${item.productName}`);
-        const consumeQty = Math.min(available, needed);
-        await addItem('dispense', {
-          ...item,
-          quantity: consumeQty,
-          description: `Consumed in cycle for plan ${plan.planName}`,
-        });
-      }
-
       const cycleRes = await productionService.startCycle({
         planId,
         consumedMaterials: rawMaterials,
@@ -170,6 +159,7 @@ export const ProductionProvider = ({ children }) => {
         ...created,
         rawMaterials,
         id: created.id,
+        batchNo: created.batchNo || `BATCH-${created.id.slice(0, 6)}`,
         planId,
         productId: created.productId,
         name: plan.planName,
@@ -177,6 +167,12 @@ export const ProductionProvider = ({ children }) => {
         quantityPlanned: plan.quantity,
         quantityCompleted: 0,
         status: 'in_progress',
+        costSummary: created.costSummary || {
+          materialCost: rawMaterials.reduce((sum, m) => sum + (m.totalCost || 0), 0),
+          laborCost: 0,
+          overheadCost: 0,
+          totalCost: rawMaterials.reduce((sum, m) => sum + (m.totalCost || 0), 0),
+        },
         createdAt: new Date().toISOString(),
       };
 
@@ -218,6 +214,13 @@ export const ProductionProvider = ({ children }) => {
       const completedCycle = {
         ...existingCycle,
         ...updated,
+        costSummary: {
+          laborCost: Number(cost.laborCost ?? laborCost),
+          overheadCost: Number(cost.overheadCost ?? overheadCost),
+          materialCost: Number(cost.materialCost ?? 0),
+          totalCost: Number(cost.totalCost ?? 0),
+          costPerUnit: Number(cost.costPerUnit ?? 0),
+        },
         laborCost: Number(cost.laborCost ?? laborCost),
         overheadCost: Number(cost.overheadCost ?? overheadCost),
         materialCost: Number(cost.materialCost ?? 0),
@@ -231,28 +234,6 @@ export const ProductionProvider = ({ children }) => {
       setCycles((prev) =>
         prev.map((c) => (c.id === cycleId ? completedCycle : c))
       );
-
-      await addItem('receive', {
-        productId: completedCycle.productId,
-        productName: completedCycle.productName,
-        quantity: completedCycle.quantityCompleted,
-        description: `Finished goods from cycle ${cycleId}`,
-      });
-
-      await createJournalEntry({
-        description: `Production completion - ${completedCycle.productName}`,
-        debit: 'Finished Goods Inventory',
-        credit: 'Work In Progress',
-        amount: completedCycle.totalCost,
-        meta: {
-          cycleId,
-          producedQty: completedCycle.quantityCompleted,
-          laborCost: completedCycle.laborCost,
-          overheadCost: completedCycle.overheadCost,
-          materialCost: completedCycle.materialCost,
-          rawMaterials: completedCycle.rawMaterials,
-        },
-      });
 
       console.log('✅ Cycle completed successfully:', completedCycle);
       return completedCycle;

@@ -23,8 +23,8 @@ const ProductSettingForm = ({ initialData, onSave, onCancel, saving }) => {
     mainOrSub: "Main Store",
     storeLocation: "",
     locationGroup: "",
-    storeCategory: "Online",
-    productCategory: "Food",
+    storeCategory: "Warehouse",
+    productCategory: "Raw Materials",
     name: "",
     quality: "High",
     tax: 0,
@@ -54,11 +54,11 @@ const ProductSettingForm = ({ initialData, onSave, onCancel, saving }) => {
   const storeOptions = ["Main Store", "Sub Store", "Add New"];
   const locationGroups = ["Group A", "Group B", "Group C", "Add New"];
   const typeOptions = ["Product", "Service"];
-  const storeCategories = ["Online", "Raw Materials", "Finished Products", "Service", "Add New"];
-  const productCategories = ["Food", "Drink", "Equipment", "Electronics", "Service Categories", "Add New"];
+  const storeCategories = ["Online", "Warehouse", "Retail Store", "Add New"];
+  const productCategories = ["Raw Materials", "Finished Products", "Food", "Drink", "Equipment", "Electronics", "Service Categories", "Add New"];
   const qualityOptions = ["High", "Medium", "Low"];
   const statusOptions = ["Draft", "Active", "Inactive"];
-  const unitOptions = ["Piece", "Kg", "Gram", "Liter", "Pack", "Box", "Meter", "Bottle", "Case", "Carton", "Dozen"];
+  const unitOptions = ["Piece", "Kg", "Gram", "Liter", "Meter", "Pack", "Box", "Bottle", "Case", "Carton", "Dozen"];
   const warrantyUnitOptions = ["Days", "Months", "Years"];
   const discountTypeOptions = ["Percentage", "Fixed"];
 
@@ -373,6 +373,21 @@ const ProductSettingForm = ({ initialData, onSave, onCancel, saving }) => {
               </div>
             )}
 
+          </div>
+
+          {/* Category Guide */}
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+            <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Category Selection Guide
+            </h4>
+            <div className="text-sm text-blue-800 space-y-1">
+              <p><strong>Raw Materials:</strong> Items used in production (e.g., Steel, Cotton, Flour)</p>
+              <p><strong>Finished Products:</strong> Items produced from raw materials (e.g., Juice, Furniture, Clothing)</p>
+              <p><strong>Other Categories:</strong> For retail or service items</p>
+            </div>
           </div>
         </div>
 

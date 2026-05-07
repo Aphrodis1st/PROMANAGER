@@ -118,4 +118,35 @@ export const ProductSettingModel = {
     await ref.delete();
     return true;
   },
+
+  // ADJUST STOCK (for production consumption)
+  async adjustStock(id, adjustment) {
+    const collection = getCollection();
+    const ref = collection.doc(id);
+    const doc = await ref.get();
+    
+    if (!doc.exists) {
+      throw new Error(`Product setting with ID ${id} not found`);
+    }
+    
+    const currentData = doc.data();
+    const currentQty = Number(currentData.currentStock || 0);
+    const newQty = currentQty + adjustment;
+    
+    if (newQty < 0) {
+      throw new Error(`Insufficient stock. Available: ${currentQty}, Requested: ${Math.abs(adjustment)}`);
+    }
+    
+    await ref.update({
+      currentStock: newQty,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    
+    return { id, currentStock: newQty };
+  },
+
+  // FIND BY ID (alias for getById for consistency)
+  async findById(id) {
+    return this.getById(id);
+  },
 };

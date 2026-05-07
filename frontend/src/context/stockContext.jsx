@@ -404,6 +404,7 @@ const StockProviderCore = ({ children }) => {
         assets,
         productSettings,
         accountSettings,
+        purchases: purchaseContext.purchases,
         loading,
         addProduct,
         updateProduct,

@@ -59,6 +59,7 @@ export const ProductionCycleModel = {
   },
 
   async update(id, data) {
+    const collection = getCollection();
     const upd = {
       ...data,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),

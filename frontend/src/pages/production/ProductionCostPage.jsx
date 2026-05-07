@@ -264,7 +264,7 @@ export default function ProductionCostPage() {
                     </MenuItem>
                     {completedCycles.map((c) => (
                       <MenuItem key={c.id} value={c.id}>
-                        {c.productName} (Cycle {c.id})
+                        {c.productName} ({c.batchNo || c.name || c.id})
                       </MenuItem>
                     ))}
                   </Select>
@@ -336,19 +336,22 @@ export default function ProductionCostPage() {
                     Raw Materials Used:
                   </Typography>
                   <div className='grid grid-cols-2 gap-2'>
-                    {formData.rawMaterials.map((rm, i) => (
-                      <div
-                        key={i}
-                        className='p-2 border rounded bg-gray-50 flex justify-between items-center'
-                      >
-                        <Typography variant='body2'>
-                          {products.find((p) => p.id === rm.productId)?.name || '-'}
-                        </Typography>
-                        <Typography variant='body2' sx={{ fontWeight: 600 }}>
-                          Qty: {rm.quantity}
-                        </Typography>
-                      </div>
-                    ))}
+                    {formData.rawMaterials.map((rm, i) => {
+                      const productName = rm.productName || rm.materialName || products.find((p) => p.id === rm.productId)?.name || 'Unknown Material';
+                      return (
+                        <div
+                          key={i}
+                          className='p-2 border rounded bg-gray-50 flex justify-between items-center'
+                        >
+                          <Typography variant='body2'>
+                            {productName}
+                          </Typography>
+                          <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                            Qty: {rm.quantity || rm.qtyUsed || 0}
+                          </Typography>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -495,7 +498,9 @@ export default function ProductionCostPage() {
                                 '&:hover': { bgcolor: '#e8f5e9' },
                               }}
                             >
-                              <TableCell sx={{ color: 'grey.800', py: 1.5 }}>{row.id}</TableCell>
+                              <TableCell sx={{ color: 'grey.800', py: 1.5 }}>
+                                {row.batchNo || row.name || row.id}
+                              </TableCell>
                               <TableCell sx={{ color: 'grey.800', py: 1.5 }}>
                                 {row.productName}
                               </TableCell>

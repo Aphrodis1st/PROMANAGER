@@ -47,6 +47,8 @@ export const InventoryController = {
           id: product.id,
           name: product.name,
           category: product.productCategory || product.storeCategory,
+          productCategory: product.productCategory,
+          storeCategory: product.storeCategory,
           unit: product.unit,
           openingStock,
           purchasedQty,
