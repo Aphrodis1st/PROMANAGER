@@ -8,8 +8,10 @@ import { PurchaseProvider, usePurchase } from "./PurchaseContext";
 import { SalesProvider, useSales } from "./SalesContext";
 import { ReportProvider } from "./ReportContext";
 import { PaymentProvider, usePayment } from "./PaymentContext";
+import axios from 'axios';
 
 const StockContext = createContext();
+const StockCurrencyContext = createContext();
 
 const StockProviderCore = ({ children }) => {
   const [products, setProducts] = useState([]);
@@ -18,15 +20,44 @@ const StockProviderCore = ({ children }) => {
   const [productSettings, setProductSettings] = useState([]);
   const [accountSettings, setAccountSettings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currencySettings, setCurrencySettings] = useState({
+    code: 'USD',
+    symbol: '$',
+    name: 'US Dollar',
+    decimalPlaces: 2
+  });
+
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
 
   const purchaseContext = usePurchase();
   const salesContext = useSales();
   const paymentContext = usePayment();
 
+  // Fetch currency settings
+  const fetchCurrencySettings = async (stockId) => {
+    try {
+      const response = await axios.get(`${API_URL}/currency/settings/${stockId}/stock`);
+      setCurrencySettings({
+        code: response.data.currencyCode || 'USD',
+        symbol: response.data.currencySymbol || '$',
+        name: response.data.currencyName || 'US Dollar',
+        decimalPlaces: response.data.decimalPlaces || 2
+      });
+    } catch (error) {
+      console.error('Error fetching currency settings:', error);
+    }
+  };
+
   useEffect(() => {
     const loadAllData = async () => {
       setLoading(true);
       try {
+        // Get stockId from localStorage
+        const stockId = localStorage.getItem('stockId') || 'default';
+        
+        // Fetch currency settings first
+        await fetchCurrencySettings(stockId);
+
         const [
           stockResRaw,
           productSettingsResRaw,
@@ -408,9 +439,22 @@ const StockProviderCore = ({ children }) => {
         getProductTotalPrice,
         getTotalClosingStockValue,
         getById,
+        currencySettings,
+        fetchCurrencySettings,
       }}
     >
-      {children}
+      <StockCurrencyContext.Provider value={{
+        currency: currencySettings,
+        formatAmount: (amount, showSymbol = true) => {
+          if (amount === null || amount === undefined) return '-';
+          const num = Number(amount);
+          if (isNaN(num)) return '-';
+          const formatted = num.toFixed(currencySettings.decimalPlaces);
+          return showSymbol ? `${currencySettings.symbol}${formatted}` : formatted;
+        }
+      }}>
+        {children}
+      </StockCurrencyContext.Provider>
     </StockContext.Provider>
   );
 };
@@ -447,3 +491,4 @@ export const StockProvider = ({ children }) => {
 };
 
 export const useStock = () => useContext(StockContext);
+export const useStockCurrency = () => useContext(StockCurrencyContext);

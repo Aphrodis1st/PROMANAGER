@@ -20,9 +20,14 @@ import {
   IconButton,
   Tooltip,
   TablePagination,
+  Card,
+  CardContent,
+  Box,
+  Divider,
 } from "@mui/material";
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon } from "@mui/icons-material";
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, AttachMoney as CurrencyIcon } from "@mui/icons-material";
 import { useStockAuth } from "../../context/StockAuthContext.jsx";
+import { useCurrency } from "../../context/CurrencyContext.jsx";
 
 const ALL_ROLES = [
   "ADMIN",
@@ -49,6 +54,7 @@ const ALL_DEPARTMENTS = [
 
 export default function UserSettingsPage() {
   const { logout } = useStockAuth();
+  const { currencies, defaultCurrency, fetchDefaultCurrency, setOrganizationCurrency, loading: currencyLoading } = useCurrency();
   const [users, setUsers] = useState([]);
   const [form, setForm] = useState({
     name: "",
@@ -63,11 +69,69 @@ export default function UserSettingsPage() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [search, setSearch] = useState("");
+  const [selectedCurrency, setSelectedCurrency] = useState("");
+  const [currencyMessage, setCurrencyMessage] = useState("");
+  const [savingCurrency, setSavingCurrency] = useState(false);
+  const [initializingCurrencies, setInitializingCurrencies] = useState(false);
 
   useEffect(() => {
     const savedUsers = JSON.parse(localStorage.getItem("registeredStockUsers")) || [];
     setUsers(savedUsers);
-  }, []);
+    
+    // Load currency settings
+    const orgId = localStorage.getItem("stockOrganizationId") || "stock-org-1";
+    fetchDefaultCurrency(orgId, "stock").then(currency => {
+      if (currency) {
+        setSelectedCurrency(currency.id);
+      }
+    });
+  }, [currencies]);
+
+  const handleInitializeCurrencies = async () => {
+    try {
+      setInitializingCurrencies(true);
+      setCurrencyMessage("");
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${API_URL}/currency/initialize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!response.ok) throw new Error('Failed to initialize currencies');
+      
+      const data = await response.json();
+      setCurrencyMessage(`Successfully initialized ${data.currencies.length} currencies!`);
+      
+      // Refresh currencies list
+      window.location.reload();
+    } catch (error) {
+      setCurrencyMessage(`Error: ${error.message}`);
+    } finally {
+      setInitializingCurrencies(false);
+      setTimeout(() => setCurrencyMessage(""), 5000);
+    }
+  };
+
+  const handleCurrencySave = async () => {
+    if (!selectedCurrency) {
+      setCurrencyMessage("Please select a currency");
+      setTimeout(() => setCurrencyMessage(""), 3000);
+      return;
+    }
+
+    try {
+      setSavingCurrency(true);
+      const orgId = localStorage.getItem("stockOrganizationId") || "stock-org-1";
+      await setOrganizationCurrency(orgId, "stock", selectedCurrency);
+      setCurrencyMessage("Currency updated successfully!");
+      setTimeout(() => setCurrencyMessage(""), 3000);
+    } catch (error) {
+      setCurrencyMessage("Failed to update currency");
+      setTimeout(() => setCurrencyMessage(""), 3000);
+    } finally {
+      setSavingCurrency(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -136,7 +200,7 @@ export default function UserSettingsPage() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <Typography variant="h5" sx={{ fontWeight: 600, color: 'grey.800' }}>
-          User Settings
+          System Settings
         </Typography>
         <div className="flex items-center gap-4">
           <TextField
@@ -169,6 +233,108 @@ export default function UserSettingsPage() {
         </div>
       </div>
 
+      {/* Currency Settings Card */}
+      <Card sx={{ mb: 4, border: '1px solid #e2e8f0', borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <CurrencyIcon sx={{ color: '#0d9488', fontSize: 28, mr: 1.5 }} />
+            <Typography variant="h6" sx={{ fontWeight: 600, color: 'grey.800' }}>
+              Currency Configuration
+            </Typography>
+          </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Select the currency to be used for all stock transactions, purchases, sales, expenses, and financial reports. This currency will be applied across the entire stock management system.
+          </Typography>
+          <Divider sx={{ mb: 3 }} />
+          
+          {currencyMessage && (
+            <Alert 
+              severity={currencyMessage.includes("success") ? "success" : "error"} 
+              sx={{ mb: 3 }}
+            >
+              {currencyMessage}
+            </Alert>
+          )}
+
+          {currencies.length === 0 ? (
+            <Box sx={{ textAlign: 'center', py: 3 }}>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                No currencies available. Initialize the currency system to get started.
+              </Typography>
+              <Button
+                variant="contained"
+                onClick={handleInitializeCurrencies}
+                disabled={initializingCurrencies}
+                sx={{
+                  bgcolor: '#0d9488',
+                  '&:hover': {
+                    bgcolor: '#14b8a6',
+                  },
+                }}
+              >
+                {initializingCurrencies ? 'Initializing...' : 'Initialize Currencies'}
+              </Button>
+            </Box>
+          ) : (
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+              <FormControl sx={{ flex: 1, maxWidth: 400 }} size="small">
+                <InputLabel>Default Currency</InputLabel>
+                <Select
+                  value={selectedCurrency}
+                  onChange={(e) => setSelectedCurrency(e.target.value)}
+                  label="Default Currency"
+                  disabled={currencyLoading || savingCurrency}
+                  sx={{
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#0d9488",
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#0d9488",
+                    },
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>-- Select Currency --</em>
+                  </MenuItem>
+                  {currencies.map((currency) => (
+                    <MenuItem key={currency.id} value={currency.id}>
+                      {currency.code} - {currency.name} ({currency.symbol})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Button
+                variant="contained"
+                onClick={handleCurrencySave}
+                disabled={savingCurrency || !selectedCurrency}
+                sx={{
+                  bgcolor: '#0d9488',
+                  '&:hover': {
+                    bgcolor: '#14b8a6',
+                  },
+                  minWidth: 120,
+                  height: 40,
+                }}
+              >
+                {savingCurrency ? 'Saving...' : 'Save'}
+              </Button>
+            </Box>
+          )}
+
+          {defaultCurrency && (
+            <Box sx={{ mt: 3, p: 2, bgcolor: '#f0fdfa', borderRadius: 1, border: '1px solid #99f6e4' }}>
+              <Typography variant="body2" sx={{ color: 'grey.700' }}>
+                <strong>Current Currency:</strong> {defaultCurrency.code} - {defaultCurrency.name} ({defaultCurrency.symbol})
+              </Typography>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* User Management Section */}
+      <Typography variant="h6" sx={{ fontWeight: 600, color: 'grey.800', mb: 2 }}>
+        User Management
+      </Typography>
       <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded">
         <div className="rounded-xl overflow-hidden shadow-md">
           <TableContainer>

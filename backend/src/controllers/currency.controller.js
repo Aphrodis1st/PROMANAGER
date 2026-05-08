@@ -20,7 +20,8 @@ export const getAllCurrencies = async (req, res) => {
     const currencies = await Currency.getAll();
     res.json(currencies);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Get all currencies error:', error);
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 };
 
@@ -29,7 +30,8 @@ export const getActiveCurrencies = async (req, res) => {
     const currencies = await Currency.getActive();
     res.json(currencies);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Get active currencies error:', error);
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 };
 
@@ -93,8 +95,37 @@ export const getDefaultCurrency = async (req, res) => {
   }
 };
 
+export const getOrganizationCurrencySettings = async (req, res) => {
+  try {
+    const { organizationId, moduleType } = req.params;
+    const settings = await Currency.getOrganizationCurrencySettings(organizationId, moduleType);
+    
+    if (!settings) {
+      // Return default USD settings
+      return res.json({
+        organizationId,
+        moduleType,
+        currencyCode: 'USD',
+        currencySymbol: '$',
+        currencyName: 'US Dollar',
+        decimalPlaces: 2
+      });
+    }
+    
+    res.json(settings);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const initializeDefaultCurrencies = async (req, res) => {
   try {
+    // Check if currencies already exist
+    const existing = await Currency.getAll();
+    if (existing.length > 0) {
+      return res.json({ message: 'Currencies already initialized', currencies: existing });
+    }
+
     const defaultCurrencies = [
       { code: 'USD', name: 'US Dollar', symbol: '$', decimalPlaces: 2 },
       { code: 'EUR', name: 'Euro', symbol: '€', decimalPlaces: 2 },
@@ -116,6 +147,7 @@ export const initializeDefaultCurrencies = async (req, res) => {
 
     res.json({ message: 'Default currencies initialized', currencies: created });
   } catch (error) {
+    console.error('Initialize currencies error:', error);
     res.status(500).json({ error: error.message });
   }
 };

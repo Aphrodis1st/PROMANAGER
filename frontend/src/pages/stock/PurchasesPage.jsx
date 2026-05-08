@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useStock } from '../../context/stockContext';
+import { useStock, useStockCurrency } from '../../context/stockContext';
 import { usePurchase } from '../../context/PurchaseContext';
 import { usePayment } from '../../context/PaymentContext';
 import StockTable from '../../components/stock/StockTable';
@@ -7,6 +7,7 @@ import AddPurchaseModal from '../../components/modals/AddPurchaseModal';
 import SinglePurchaseHistory from '../../components/modals/SinglePurchaseHistory';
 import { Button } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
+import CurrencyDisplay from '../../components/stock/CurrencyDisplay';
 
 function AddSupplierForm({ onAdd }) {
   const [supplierForm, setSupplierForm] = useState({
@@ -101,6 +102,8 @@ export default function PurchasesPage() {
     accountSettings,
     loading,
   } = useStock();
+
+  const { formatAmount } = useStockCurrency();
 
   const {
     purchases,
@@ -553,7 +556,7 @@ export default function PurchasesPage() {
                         <tr key={inv.id} className='border-t'>
                           <td className='border px-2 py-1'>{inv.id}</td>
                           <td className='border px-2 py-1'>
-                            ${total.toFixed(2)}
+                            <CurrencyDisplay amount={total} />
                           </td>
                           <td className='border px-2 py-1'>
                             {inv.paymentType}
@@ -783,7 +786,7 @@ export default function PurchasesPage() {
               </div>
 
               <div className='col-span-3 text-right font-semibold mt-2'>
-                Total: ${form.totalPrice || '0.00'}
+                Total: <CurrencyDisplay amount={form.totalPrice || 0} />
               </div>
 
               <div className='col-span-3 flex justify-end gap-3 mt-2'>
@@ -850,10 +853,7 @@ export default function PurchasesPage() {
                   </tbody>
                 </table>
                 <div className='text-right font-semibold mt-2'>
-                  Total: $
-                  {invoiceItems
-                    .reduce((sum, i) => sum + Number(i.totalPrice || 0), 0)
-                    .toFixed(2)}
+                  Total: <CurrencyDisplay amount={invoiceItems.reduce((sum, i) => sum + Number(i.totalPrice || 0), 0)} />
                 </div>
               </div>
             )}

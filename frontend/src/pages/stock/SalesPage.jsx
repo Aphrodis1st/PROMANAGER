@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useStock } from '../../context/stockContext';
+import { useStock, useStockCurrency } from '../../context/stockContext';
 import { useSales } from '../../context/SalesContext';
 import { usePurchase } from '../../context/PurchaseContext';
 import { inventoryService } from '../../services/stock.service';
 import StockTable from '../../components/stock/StockTable';
+import CurrencyDisplay from '../../components/stock/CurrencyDisplay';
 
 export default function SalesPage() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export default function SalesPage() {
     dispenses,
   } = useStock();
 
+  const { formatAmount, currency } = useStockCurrency();
   const { sales, addSale } = useSales();
   const { purchases } = usePurchase();
   const [inventoryData, setInventoryData] = useState([]);
@@ -585,7 +587,7 @@ export default function SalesPage() {
                             </svg>
                             <div>
                               <p className='text-xs text-gray-600'>Unit Price</p>
-                              <p className='text-sm font-bold text-teal-700'>RWF {Number(selectedProduct.defaultSellingPrice).toLocaleString()}</p>
+                              <p className='text-sm font-bold text-teal-700'><CurrencyDisplay amount={selectedProduct.defaultSellingPrice} /></p>
                             </div>
                           </div>
                         </div>
@@ -598,7 +600,7 @@ export default function SalesPage() {
                           </svg>
                           <div>
                             <p className='text-xs text-gray-600'>Stock Value</p>
-                            <p className='text-sm font-bold text-purple-700'>RWF {stockValue.toLocaleString()}</p>
+                            <p className='text-sm font-bold text-purple-700'><CurrencyDisplay amount={stockValue} /></p>
                           </div>
                         </div>
                       </div>
@@ -846,7 +848,7 @@ export default function SalesPage() {
             </div>
 
             <div className='col-span-3 text-right font-semibold text-gray-800'>
-              Total: ${form.totalPrice || '0.00'}
+              Total: <CurrencyDisplay amount={form.totalPrice || 0} />
             </div>
 
             <div className='col-span-3 flex justify-between gap-3 mt-2'>
@@ -978,7 +980,7 @@ export default function SalesPage() {
                           <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                             <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
                           </svg>
-                          @ RWF {Number(item.unitPrice).toLocaleString()}
+                          @ <CurrencyDisplay amount={item.unitPrice} showSymbol={false} />
                         </span>
                         {item.discount > 0 && (
                           <span className='text-orange-600 flex items-center gap-1'>
@@ -994,7 +996,7 @@ export default function SalesPage() {
                     <div className='flex items-center gap-3'>
                       <div className='text-right'>
                         <div className='text-lg font-bold text-teal-700'>
-                          RWF {Number(item.totalPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          <CurrencyDisplay amount={item.totalPrice} />
                         </div>
                       </div>
                       
@@ -1037,9 +1039,7 @@ export default function SalesPage() {
                 <div className='flex justify-between items-center'>
                   <span className='text-gray-600 font-medium'>Cart Total:</span>
                   <span className='text-2xl font-bold text-teal-700'>
-                    RWF {cartItems
-                      .reduce((sum, i) => sum + Number(i.totalPrice || 0), 0)
-                      .toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <CurrencyDisplay amount={cartItems.reduce((sum, i) => sum + Number(i.totalPrice || 0), 0)} />
                   </span>
                 </div>
               </div>

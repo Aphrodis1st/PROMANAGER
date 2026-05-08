@@ -1,9 +1,9 @@
 // src/services/authService.js
 import axios from "axios";
-import { API_BASE_URL } from '../constants/api';
 
-// Change this to match your backend URL
-const API_URL = `${API_BASE_URL}/api/v1/stock/auth`;
+// Use environment variable or fallback to localhost
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+const API_URL = `${API_BASE_URL}/stock/auth`;
 
 const getAuthHeader = () => ({
     headers: {

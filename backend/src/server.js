@@ -5,8 +5,10 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { initFirebase } from '../utils/firebase.js';
 
-// Load environment variables
-const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development';
+// Load environment variables based on NODE_ENV (set before importing)
+const NODE_ENV_RAW = process.env.NODE_ENV || 'development';
+const envFile = NODE_ENV_RAW === 'production' ? '.env.production' : '.env.development';
+console.log(`📄 Loading environment from: ${envFile}`);
 dotenv.config({ path: envFile });
 
 // Clean environment variables (remove quotes if present)
@@ -15,15 +17,17 @@ const cleanEnvVar = (value) => {
   return value.replace(/^["']|["']$/g, '');
 };
 
-// Environment configuration
+// Environment configuration - NOW read from loaded .env file
 const NODE_ENV = cleanEnvVar(process.env.NODE_ENV) || 'development';
-const PORT = parseInt(cleanEnvVar(process.env.PORT)) || (NODE_ENV === 'production' ? 8080 : 3001);
-const CORS_ORIGIN = cleanEnvVar(process.env.CORS_ORIGIN) || (NODE_ENV === 'production' ? false : 'http://localhost:5173');
+const PORT = parseInt(cleanEnvVar(process.env.PORT)) || 3001; // Default to 3001
+const CORS_ORIGIN = cleanEnvVar(process.env.CORS_ORIGIN) || 'http://localhost:5173';
 const allowed = CORS_ORIGIN ? CORS_ORIGIN.split(',') : false;
 
 console.log(`🚀 Starting server in ${NODE_ENV} mode`);
 console.log(`📡 CORS Origin: ${CORS_ORIGIN}`);
 console.log(`🔌 Port will be: ${PORT}`);
+console.log(`🔌 PORT from env: ${process.env.PORT}`);
+console.log(`🔌 NODE_ENV from env: ${process.env.NODE_ENV}`);
 
 const app = express();
 

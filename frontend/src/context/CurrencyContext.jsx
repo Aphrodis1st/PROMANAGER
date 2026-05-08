@@ -22,9 +22,12 @@ export const CurrencyProvider = ({ children }) => {
     try {
       setLoading(true);
       const response = await axios.get(`${API_URL}/currency/active`);
-      setCurrencies(response.data);
+      setCurrencies(response.data || []);
+      return response.data || [];
     } catch (error) {
       console.error('Error fetching currencies:', error);
+      setCurrencies([]);
+      return [];
     } finally {
       setLoading(false);
     }
@@ -65,10 +68,12 @@ export const CurrencyProvider = ({ children }) => {
 
   const initializeDefaultCurrencies = async () => {
     try {
-      await axios.post(`${API_URL}/currency/initialize`);
+      const response = await axios.post(`${API_URL}/currency/initialize`);
       await fetchCurrencies();
+      return response.data;
     } catch (error) {
       console.error('Error initializing currencies:', error);
+      throw error;
     }
   };
 

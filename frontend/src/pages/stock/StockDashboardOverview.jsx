@@ -14,6 +14,7 @@ import {
   Refresh as RefreshIcon,
   TrendingDown,
   Notifications as NotificationsIcon,
+  Settings as SettingsIcon,
 } from "@mui/icons-material";
 import axios from "axios";
 
@@ -99,6 +100,9 @@ const StockDashboardOverview = () => {
     if (hasRole(["ADMIN", "MANAGER", "ACCOUNTANT"])) {
       actions.push({ label: "View Reports", path: "/stock/reports-dashboard", icon: <ReportsIcon />, color: "#9c27b0" });
     }
+    if (hasRole(["ADMIN", "MANAGER"])) {
+      actions.push({ label: "Settings & Currency", path: "/stock/user-settings", icon: <SettingsIcon />, color: "#607d8b" });
+    }
     return actions;
   };
 
@@ -133,6 +137,13 @@ const StockDashboardOverview = () => {
               <RefreshIcon />
             </IconButton>
           </Tooltip>
+          {hasRole(["ADMIN", "MANAGER"]) && (
+            <Tooltip title="Settings">
+              <IconButton onClick={() => navigate("/stock/user-settings")} sx={{ color: "white", bgcolor: "rgba(255,255,255,0.2)", "&:hover": { bgcolor: "rgba(255,255,255,0.3)" } }}>
+                <SettingsIcon />
+              </IconButton>
+            </Tooltip>
+          )}
           {hasRole(["ADMIN", "MANAGER", "ACCOUNTANT"]) && (
             <Button variant="contained" sx={{ bgcolor: "rgba(255,255,255,0.2)", "&:hover": { bgcolor: "rgba(255,255,255,0.3)" } }} onClick={() => navigate("/stock/reports-dashboard")}>📊 View Reports</Button>
           )}

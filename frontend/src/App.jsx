@@ -29,6 +29,7 @@ import MaterialConsumptionPage from './pages/production/MaterialConsumptionPage.
 import ProductionCyclePage from './pages/production/ProductionCyclePage.jsx';
 import InvoicePage from './pages/stock/InvoicePage.jsx';
 import UserSettingsPage from './pages/stock/UserSettingsPage.jsx';
+import StockSettingsPage from './pages/stock/StockSettingsPage.jsx';
 
 import { AuthProvider } from './context/AuthContext.jsx';
 import { AppProvider } from './context/AppStateContext.jsx';
@@ -229,7 +230,7 @@ function AppContent() {
         <Route path='tax-settings' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance"]}><TaxSettingsPage /></StockProtectedRoute>} />
         <Route path='tax-reports' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance"]}><TaxReportsPage /></StockProtectedRoute>} />
         <Route path='charts-of-accounts' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance"]}><ChartOfAccountsPage /></StockProtectedRoute>} />
-        <Route path='user-settings' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","FINANCE_MANAGER","SALE_MANAGER","MARKETTING_MANAGER","ACCOUNTANT","STOCK_KEEPER","PROCUREMENT","SALES"]}><UserSettingsPage /></StockProtectedRoute>} />
+        <Route path='user-settings' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","FINANCE_MANAGER","SALE_MANAGER","MARKETTING_MANAGER","ACCOUNTANT","STOCK_KEEPER","PROCUREMENT","SALES"]}><StockSettingsPage /></StockProtectedRoute>} />
         <Route path='expenses' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance"]}><ExpensesPage /></StockProtectedRoute>} />
         <Route path='reports-dashboard' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]}><ReportsDashboard /></StockProtectedRoute>} />
         <Route path='fixed-assets' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance"]}><FixedAssetsPage /></StockProtectedRoute>} />

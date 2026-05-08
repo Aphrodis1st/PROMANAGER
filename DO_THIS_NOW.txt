@@ -1,0 +1,114 @@
+╔══════════════════════════════════════════════════════════════╗
+║                  CURRENCY FIX - DO THIS NOW                  ║
+╚══════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────┐
+│ STEP 1: RESTART FRONTEND                                     │
+└──────────────────────────────────────────────────────────────┘
+
+   1. Go to your frontend terminal
+   2. Press Ctrl+C to stop it
+   3. Run: npm run dev
+   4. Wait for it to start
+
+   OR
+
+   Double-click: restart-frontend.bat
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ STEP 2: OPEN USER SETTINGS                                   │
+└──────────────────────────────────────────────────────────────┘
+
+   Open in browser:
+   → http://localhost:5173/stock/user-settings
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ STEP 3: INITIALIZE CURRENCIES                                │
+└──────────────────────────────────────────────────────────────┘
+
+   You'll see:
+   
+   ┌────────────────────────────────────────┐
+   │ 💰 Currency Configuration              │
+   ├────────────────────────────────────────┤
+   │ No currencies available.               │
+   │ Initialize the currency system to      │
+   │ get started.                           │
+   │                                        │
+   │     [Initialize Currencies]            │ ← CLICK THIS
+   └────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ STEP 4: SELECT YOUR CURRENCY                                 │
+└──────────────────────────────────────────────────────────────┘
+
+   After initialization, you'll see:
+   
+   ┌────────────────────────────────────────┐
+   │ Default Currency                       │
+   │ ┌────────────────────────────────────┐ │
+   │ │ USD - US Dollar ($)            ▼  │ │ ← CLICK HERE
+   │ └────────────────────────────────────┘ │
+   │                                        │
+   │ [Save]                                 │ ← THEN CLICK SAVE
+   └────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ STEP 5: DONE! ✅                                             │
+└──────────────────────────────────────────────────────────────┘
+
+   You'll see:
+   
+   ┌────────────────────────────────────────┐
+   │ ✅ Currency updated successfully!      │
+   ├────────────────────────────────────────┤
+   │ Current Currency:                      │
+   │ USD - US Dollar ($)                    │
+   └────────────────────────────────────────┘
+
+
+╔══════════════════════════════════════════════════════════════╗
+║                    THAT'S IT! YOU'RE DONE!                   ║
+╚══════════════════════════════════════════════════════════════╝
+
+
+TROUBLESHOOTING:
+───────────────
+
+❌ Problem: Dropdown still empty after restart
+✅ Solution: Hard refresh browser (Ctrl+Shift+R)
+
+❌ Problem: Backend not responding
+✅ Solution: Check backend is running on port 3001
+            Run: cd backend && npm run dev
+
+❌ Problem: Can't click Initialize button
+✅ Solution: Check browser console (F12) for errors
+            Make sure backend is running
+
+
+QUICK TEST:
+──────────
+
+Run this to test if backend is working:
+→ Double-click: test-currency-api.bat
+
+You should see JSON data with currencies.
+
+
+NEED HELP?
+─────────
+
+Read these files:
+→ CURRENCY_QUICK_FIX.md      (Quick fix guide)
+→ CURRENCY_SETUP_GUIDE.md    (Complete guide)
+→ CURRENCY_FIX_SUMMARY.md    (What was fixed)
+
+
+═══════════════════════════════════════════════════════════════
+                    CURRENCY SYSTEM v1.0
+═══════════════════════════════════════════════════════════════

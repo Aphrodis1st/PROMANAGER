@@ -1,0 +1,138 @@
+╔══════════════════════════════════════════════════════════════╗
+║              NETWORK ERROR FIX - DO THIS NOW!                ║
+╚══════════════════════════════════════════════════════════════╝
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ OPTION 1: AUTOMATIC FIX (EASIEST)                            │
+└──────────────────────────────────────────────────────────────┘
+
+   Double-click this file:
+   → fix-network-error.bat
+
+   It will:
+   ✅ Stop all servers
+   ✅ Restart backend on port 3001
+   ✅ Restart frontend on port 5173
+   ✅ Test the connection
+   ✅ Ready to use!
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ OPTION 2: MANUAL FIX                                         │
+└──────────────────────────────────────────────────────────────┘
+
+   Step 1: Stop Frontend
+   ─────────────────────
+   Go to frontend terminal and press: Ctrl+C
+
+   Step 2: Restart Frontend
+   ────────────────────────
+   cd frontend
+   npm run dev
+
+   Step 3: Test Login
+   ──────────────────
+   Open: http://localhost:5173/stock/login
+   Login with your credentials
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ WHAT WAS FIXED?                                              │
+└──────────────────────────────────────────────────────────────┘
+
+   ✅ frontend/.env
+      Changed: Port 5000 → 3001
+
+   ✅ frontend/src/constants/api.js
+      Changed: Port 5000 → 3001
+
+   ✅ frontend/src/config/environment.js
+      Changed: Port 5000 → 3001
+
+   ✅ frontend/src/services/authService.js
+      Fixed: Removed double /api/v1 path
+
+   ✅ frontend/src/services/stock.service.js
+      Fixed: Removed double /api/v1 path
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ VERIFY IT'S WORKING                                          │
+└──────────────────────────────────────────────────────────────┘
+
+   1. Open browser console (F12)
+   2. Go to Network tab
+   3. Try to login
+   4. You should see:
+      ✅ POST http://localhost:3001/api/v1/stock/auth/login
+      ✅ Status: 200 OK (or 401 if wrong password)
+      ❌ NO "Network Error"
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ STILL NOT WORKING?                                           │
+└──────────────────────────────────────────────────────────────┘
+
+   Check 1: Is backend running?
+   ───────────────────────────
+   Open: http://localhost:3001/api/v1/health
+   Should see: {"ok":true,"firebase":"ready"}
+
+   Check 2: Hard refresh browser
+   ─────────────────────────────
+   Press: Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac)
+
+   Check 3: Clear browser cache
+   ────────────────────────────
+   F12 → Right-click refresh → Empty Cache and Hard Reload
+
+   Check 4: Check firewall
+   ──────────────────────
+   Make sure ports 3001 and 5173 are not blocked
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ TEST CREDENTIALS                                             │
+└──────────────────────────────────────────────────────────────┘
+
+   Email: ngiriyezadavidmanager@gmail.com
+   Password: (your password)
+
+   Or create a new user at:
+   http://localhost:5173/stock/register
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ AFTER SUCCESSFUL LOGIN                                       │
+└──────────────────────────────────────────────────────────────┘
+
+   You'll be redirected to:
+   → http://localhost:5173/stock/inventory
+
+   Then you can:
+   1. Go to User Settings
+   2. Initialize currencies
+   3. Select default currency
+   4. Start managing stock!
+
+
+╔══════════════════════════════════════════════════════════════╗
+║                    QUICK REFERENCE                           ║
+╚══════════════════════════════════════════════════════════════╝
+
+   Backend URL:  http://localhost:3001/api/v1
+   Frontend URL: http://localhost:5173
+   Login Page:   http://localhost:5173/stock/login
+   Settings:     http://localhost:5173/stock/user-settings
+
+
+═══════════════════════════════════════════════════════════════
+
+   📖 For detailed info, read:
+      → NETWORK_ERROR_FIXED.md
+
+   🚀 To start everything:
+      → fix-network-error.bat
+
+═══════════════════════════════════════════════════════════════

@@ -1,8 +1,9 @@
 import axios from "axios";
-import { API_BASE_URL } from '../constants/api';
 
-const API_URL = `${API_BASE_URL}/api/v1/stock`;
-const PRODUCTION_API_URL = `${API_BASE_URL}/api/v1/production`;
+// Use environment variable or fallback to localhost
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+const API_URL = `${API_BASE_URL}/stock`;
+const PRODUCTION_API_URL = `${API_BASE_URL}/production`;
 
 const getAuthHeader = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
