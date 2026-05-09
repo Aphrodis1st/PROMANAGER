@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useProduction } from '../../context/ProductionContext';
-import { useStock } from '../../context/stockContext';
+import { useStock, useStockCurrency } from '../../context/stockContext';
+import CurrencyDisplay from '../../components/stock/CurrencyDisplay';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { CSVLink } from 'react-csv';
@@ -42,6 +43,7 @@ import {
 export default function ProductionCyclePage() {
   const { plans, cycles, startCycle, completeCycle, loading } = useProduction();
   const { products } = useStock();
+  const { formatAmount } = useStockCurrency();
 
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [selectedCycle, setSelectedCycle] = useState(null);
@@ -182,13 +184,7 @@ export default function ProductionCyclePage() {
     doc.save('ProductionCyclesReport.pdf');
   };
 
-  const formatCurrency = (amount) => {
-    if (amount === undefined || amount === null) return '$0.00';
-    return `$${Number(amount).toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
-  };
+
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -589,19 +585,19 @@ export default function ProductionCyclePage() {
                             {c.quantityCompleted || 0}
                           </TableCell>
                           <TableCell align='right' sx={{ color: 'grey.800', py: 1.5 }}>
-                            {formatCurrency(c.costSummary?.laborCost)}
+                            <CurrencyDisplay amount={c.costSummary?.laborCost} />
                           </TableCell>
                           <TableCell align='right' sx={{ color: 'grey.800', py: 1.5 }}>
-                            {formatCurrency(c.costSummary?.overheadCost)}
+                            <CurrencyDisplay amount={c.costSummary?.overheadCost} />
                           </TableCell>
                           <TableCell align='right' sx={{ color: 'grey.800', py: 1.5 }}>
-                            {formatCurrency(c.costSummary?.materialCost)}
+                            <CurrencyDisplay amount={c.costSummary?.materialCost} />
                           </TableCell>
                           <TableCell
                             align='right'
                             sx={{ color: 'grey.800', py: 1.5, fontWeight: 600 }}
                           >
-                            {formatCurrency(c.costSummary?.totalCost)}
+                            <CurrencyDisplay amount={c.costSummary?.totalCost} />
                           </TableCell>
                           <TableCell align='center' sx={{ py: 1.5 }}>
                             <Chip

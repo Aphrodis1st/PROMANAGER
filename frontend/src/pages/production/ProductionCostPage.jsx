@@ -4,7 +4,8 @@
 // ========================================
 import React, { useState, useEffect, useMemo } from 'react';
 import { useProduction } from '../../context/ProductionContext';
-import { useStock } from '../../context/stockContext';
+import { useStock, useStockCurrency } from '../../context/stockContext';
+import CurrencyDisplay from '../../components/stock/CurrencyDisplay';
 import {
   Table,
   TableBody,
@@ -36,6 +37,7 @@ import {
 export default function ProductionCostPage() {
   const { cycles } = useProduction();
   const { products, getProductStock, productSettings } = useStock();
+  const { formatAmount } = useStockCurrency();
 
   // ✅ Only show completed cycles dynamically
   const [completedCycles, setCompletedCycles] = useState(
@@ -192,13 +194,7 @@ export default function ProductionCostPage() {
     setPage(0);
   };
 
-  const formatCurrency = (amount) => {
-    if (amount === undefined || amount === null) return '$0.00';
-    return `$${Number(amount).toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
-  };
+
 
   return (
     <div className='p-6 flex flex-col gap-6'>
@@ -327,12 +323,12 @@ export default function ProductionCostPage() {
                               {productName}
                             </Typography>
                             <Typography variant='body2' sx={{ fontWeight: 700, color: '#0d9488' }}>
-                              {formatCurrency(totalCost)}
+                              <CurrencyDisplay amount={totalCost} />
                             </Typography>
                           </div>
                           <div className='flex justify-between items-center text-sm text-gray-600'>
                             <span>Qty: {quantity}</span>
-                            <span>Unit Cost: {formatCurrency(unitCost)}</span>
+                            <span>Unit Cost: <CurrencyDisplay amount={unitCost} /></span>
                           </div>
                         </div>
                       );
@@ -496,16 +492,16 @@ export default function ProductionCostPage() {
                                 {row.quantityCompleted}
                               </TableCell>
                               <TableCell align='right' sx={{ color: 'grey.800', py: 1.5 }}>
-                                {formatCurrency(row.laborCost)}
+                                <CurrencyDisplay amount={row.laborCost} />
                               </TableCell>
                               <TableCell align='right' sx={{ color: 'grey.800', py: 1.5 }}>
-                                {formatCurrency(row.overheadCost)}
+                                <CurrencyDisplay amount={row.overheadCost} />
                               </TableCell>
                               <TableCell
                                 align='right'
                                 sx={{ color: 'grey.800', py: 1.5, fontWeight: 600 }}
                               >
-                                {formatCurrency(row.totalCost)}
+                                <CurrencyDisplay amount={row.totalCost} />
                               </TableCell>
                               <TableCell align='center' sx={{ py: 1.5 }}>
                                 <Chip label='Completed' size='small' color='success' />

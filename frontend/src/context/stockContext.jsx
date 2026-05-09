@@ -8,6 +8,7 @@ import { PurchaseProvider, usePurchase } from "./PurchaseContext";
 import { SalesProvider, useSales } from "./SalesContext";
 import { ReportProvider } from "./ReportContext";
 import { PaymentProvider, usePayment } from "./PaymentContext";
+import { useCurrency } from "./CurrencyContext";
 import axios from 'axios';
 
 const StockContext = createContext();
@@ -20,6 +21,13 @@ const StockProviderCore = ({ children }) => {
   const [productSettings, setProductSettings] = useState([]);
   const [accountSettings, setAccountSettings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+
+  const purchaseContext = usePurchase();
+  const salesContext = useSales();
+  const paymentContext = usePayment();
+  const { defaultCurrency, fetchDefaultCurrency } = useCurrency();
+
   const [currencySettings, setCurrencySettings] = useState({
     code: 'USD',
     symbol: '$',
@@ -27,36 +35,22 @@ const StockProviderCore = ({ children }) => {
     decimalPlaces: 2
   });
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
-
-  const purchaseContext = usePurchase();
-  const salesContext = useSales();
-  const paymentContext = usePayment();
-
-  // Fetch currency settings
-  const fetchCurrencySettings = async (stockId) => {
-    try {
-      const response = await axios.get(`${API_URL}/currency/settings/${stockId}/stock`);
-      setCurrencySettings({
-        code: response.data.currencyCode || 'USD',
-        symbol: response.data.currencySymbol || '$',
-        name: response.data.currencyName || 'US Dollar',
-        decimalPlaces: response.data.decimalPlaces || 2
-      });
-    } catch (error) {
-      console.error('Error fetching currency settings:', error);
-    }
-  };
-
   useEffect(() => {
     const loadAllData = async () => {
       setLoading(true);
       try {
-        // Get stockId from localStorage
-        const stockId = localStorage.getItem('stockId') || 'default';
+        // Get organization ID and fetch currency settings
+        const orgId = localStorage.getItem('stockOrganizationId') || 'stock-org-1';
+        const currency = await fetchDefaultCurrency(orgId, 'stock');
         
-        // Fetch currency settings first
-        await fetchCurrencySettings(stockId);
+        if (currency) {
+          setCurrencySettings({
+            code: currency.code,
+            symbol: currency.symbol,
+            name: currency.name,
+            decimalPlaces: currency.decimalPlaces || 2
+          });
+        }
 
         const [
           stockResRaw,
@@ -440,7 +434,6 @@ const StockProviderCore = ({ children }) => {
         getTotalClosingStockValue,
         getById,
         currencySettings,
-        fetchCurrencySettings,
       }}
     >
       <StockCurrencyContext.Provider value={{

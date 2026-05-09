@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useProduction } from '../../context/ProductionContext';
+import { useStockCurrency } from '../../context/stockContext';
+import CurrencyDisplay from '../../components/stock/CurrencyDisplay';
 import {
   Box,
   Typography,
@@ -28,6 +30,7 @@ import {
 
 export default function MaterialConsumptionPage() {
   const { cycles, loading } = useProduction();
+  const { formatAmount } = useStockCurrency();
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   const allCycles = cycles || [];
@@ -50,13 +53,7 @@ export default function MaterialConsumptionPage() {
     }
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-RW', {
-      style: 'currency',
-      currency: 'RWF',
-      minimumFractionDigits: 0,
-    }).format(amount || 0);
-  };
+
 
   const formatDate = (date) => {
     if (!date) return '-';
@@ -114,7 +111,7 @@ export default function MaterialConsumptionPage() {
                     </Typography>
                   </Box>
                   <Typography variant='h5' sx={{ fontWeight: 700, color: '#1e293b' }}>
-                    {formatCurrency(totalMaterialCost)}
+                    <CurrencyDisplay amount={totalMaterialCost} />
                   </Typography>
                 </CardContent>
               </Card>
@@ -130,7 +127,7 @@ export default function MaterialConsumptionPage() {
                     </Typography>
                   </Box>
                   <Typography variant='h5' sx={{ fontWeight: 700, color: '#1e293b' }}>
-                    {formatCurrency(totalLaborCost)}
+                    <CurrencyDisplay amount={totalLaborCost} />
                   </Typography>
                 </CardContent>
               </Card>
@@ -146,7 +143,7 @@ export default function MaterialConsumptionPage() {
                     </Typography>
                   </Box>
                   <Typography variant='h5' sx={{ fontWeight: 700, color: '#1e293b' }}>
-                    {formatCurrency(totalOverheadCost)}
+                    <CurrencyDisplay amount={totalOverheadCost} />
                   </Typography>
                 </CardContent>
               </Card>
@@ -162,7 +159,7 @@ export default function MaterialConsumptionPage() {
                     </Typography>
                   </Box>
                   <Typography variant='h5' sx={{ fontWeight: 700, color: '#1e293b' }}>
-                    {formatCurrency(totalCost)}
+                    <CurrencyDisplay amount={totalCost} />
                   </Typography>
                 </CardContent>
               </Card>
@@ -198,7 +195,7 @@ export default function MaterialConsumptionPage() {
                           <TableCell sx={{ fontWeight: 500 }}>{cycle.batchNo || cycle.name}</TableCell>
                           <TableCell>{cycle.productName}</TableCell>
                           <TableCell>{cycle.quantityPlanned}</TableCell>
-                          <TableCell>{formatCurrency(cycle.materialCost)}</TableCell>
+                          <TableCell><CurrencyDisplay amount={cycle.materialCost} /></TableCell>
                           <TableCell>
                             <Chip
                               label='In Progress'
@@ -251,11 +248,11 @@ export default function MaterialConsumptionPage() {
                           <TableCell sx={{ fontWeight: 500 }}>{cycle.batchNo || cycle.name}</TableCell>
                           <TableCell>{cycle.productName}</TableCell>
                           <TableCell>{cycle.quantityCompleted || 0}</TableCell>
-                          <TableCell>{formatCurrency(cycle.materialCost)}</TableCell>
-                          <TableCell>{formatCurrency(cycle.laborCost)}</TableCell>
-                          <TableCell>{formatCurrency(cycle.overheadCost)}</TableCell>
+                          <TableCell><CurrencyDisplay amount={cycle.materialCost} /></TableCell>
+                          <TableCell><CurrencyDisplay amount={cycle.laborCost} /></TableCell>
+                          <TableCell><CurrencyDisplay amount={cycle.overheadCost} /></TableCell>
                           <TableCell sx={{ fontWeight: 600 }}>
-                            {formatCurrency(cycle.totalCost)}
+                            <CurrencyDisplay amount={cycle.totalCost} />
                           </TableCell>
                           <TableCell>
                             <Chip
@@ -305,9 +302,9 @@ export default function MaterialConsumptionPage() {
                               <TableRow key={idx}>
                                 <TableCell>{material.materialName || material.productName}</TableCell>
                                 <TableCell>{material.qtyUsed || material.quantity}</TableCell>
-                                <TableCell>{formatCurrency(material.unitCost || material.costPerUnit)}</TableCell>
+                                <TableCell><CurrencyDisplay amount={material.unitCost || material.costPerUnit} /></TableCell>
                                 <TableCell sx={{ fontWeight: 600 }}>
-                                  {formatCurrency(material.totalCost)}
+                                  <CurrencyDisplay amount={material.totalCost} />
                                 </TableCell>
                               </TableRow>
                             ))}

@@ -1,13 +1,15 @@
 // ========================================
 // ✅ FinishedGoodsPage.jsx (Enhanced)
 // ========================================
-import React, { useMemo, useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useProduction } from "../../context/ProductionContext";
+import { useStockCurrency } from "../../context/stockContext";
 import { productionService } from "../../services/productionService";
 import { saveAs } from "file-saver";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import SellingPriceDialog from "../../components/SellingPriceDialog";
+import CurrencyDisplay from "../../components/stock/CurrencyDisplay";
 import {
   Table,
   TableBody,
@@ -34,6 +36,7 @@ import {
 
 export default function FinishedGoodsPage() {
   const { cycles, loading } = useProduction();
+  const { formatAmount } = useStockCurrency();
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -244,13 +247,7 @@ export default function FinishedGoodsPage() {
     );
   }
 
-  const formatCurrency = (amount) => {
-    if (amount === undefined || amount === null) return "$0.00";
-    return `$${Number(amount).toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
-  };
+
 
   return (
     <div className="p-6 flex flex-col h-full">
@@ -476,22 +473,22 @@ export default function FinishedGoodsPage() {
                         {qty.toLocaleString()}
                       </TableCell>
                       <TableCell align="right" sx={{ color: "grey.800", py: 1.5 }}>
-                        {formatCurrency(cycle.materialCost)}
+                        <CurrencyDisplay amount={cycle.materialCost} />
                       </TableCell>
                       <TableCell align="right" sx={{ color: "grey.800", py: 1.5 }}>
-                        {formatCurrency(cycle.laborCost)}
+                        <CurrencyDisplay amount={cycle.laborCost} />
                       </TableCell>
                       <TableCell align="right" sx={{ color: "grey.800", py: 1.5 }}>
-                        {formatCurrency(cycle.overheadCost)}
+                        <CurrencyDisplay amount={cycle.overheadCost} />
                       </TableCell>
                       <TableCell
                         align="right"
                         sx={{ color: "grey.800", py: 1.5, fontWeight: 600 }}
                       >
-                        {formatCurrency(total)}
+                        <CurrencyDisplay amount={total} />
                       </TableCell>
                       <TableCell align="right" sx={{ color: "grey.800", py: 1.5 }}>
-                        {formatCurrency(unit)}
+                        <CurrencyDisplay amount={unit} />
                       </TableCell>
                       <TableCell sx={{ color: "grey.800", py: 1.5 }}>
                         {(() => {

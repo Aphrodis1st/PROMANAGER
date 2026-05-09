@@ -24,8 +24,9 @@ import {
   CardContent,
   Box,
   Divider,
+  Collapse,
 } from "@mui/material";
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, AttachMoney as CurrencyIcon } from "@mui/icons-material";
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, AttachMoney as CurrencyIcon, AddCircle as AddCurrencyIcon, ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
 import { useStockAuth } from "../../context/StockAuthContext.jsx";
 import { useCurrency } from "../../context/CurrencyContext.jsx";
 
@@ -73,6 +74,10 @@ export default function UserSettingsPage() {
   const [currencyMessage, setCurrencyMessage] = useState("");
   const [savingCurrency, setSavingCurrency] = useState(false);
   const [initializingCurrencies, setInitializingCurrencies] = useState(false);
+  const [currencyFormOpen, setCurrencyFormOpen] = useState(false);
+  const [currencyForm, setCurrencyForm] = useState({ code: "", name: "", symbol: "", decimalPlaces: 2 });
+  const [allCurrencies, setAllCurrencies] = useState([]);
+  const [manageCurrenciesOpen, setManageCurrenciesOpen] = useState(false);
 
   useEffect(() => {
     const savedUsers = JSON.parse(localStorage.getItem("registeredStockUsers")) || [];
@@ -85,7 +90,23 @@ export default function UserSettingsPage() {
         setSelectedCurrency(currency.id);
       }
     });
+    
+    // Load all currencies
+    fetchAllCurrencies();
   }, [currencies]);
+
+  const fetchAllCurrencies = async () => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${API_URL}/currency`);
+      if (response.ok) {
+        const data = await response.json();
+        setAllCurrencies(data);
+      }
+    } catch (error) {
+      console.error('Error fetching currencies:', error);
+    }
+  };
 
   const handleInitializeCurrencies = async () => {
     try {
@@ -131,6 +152,49 @@ export default function UserSettingsPage() {
     } finally {
       setSavingCurrency(false);
     }
+  };
+
+  const handleAddCurrency = async (e) => {
+    e.preventDefault();
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${API_URL}/currency`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(currencyForm)
+      });
+      
+      if (!response.ok) throw new Error('Failed to add currency');
+      
+      setCurrencyMessage('Currency added successfully!');
+      setCurrencyFormOpen(false);
+      setCurrencyForm({ code: "", name: "", symbol: "", decimalPlaces: 2 });
+      fetchAllCurrencies();
+      window.location.reload();
+    } catch (error) {
+      setCurrencyMessage(`Error: ${error.message}`);
+    }
+    setTimeout(() => setCurrencyMessage(""), 3000);
+  };
+
+  const handleDeleteCurrency = async (id) => {
+    if (!confirm('Are you sure you want to delete this currency?')) return;
+    
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${API_URL}/currency/${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) throw new Error('Failed to delete currency');
+      
+      setCurrencyMessage('Currency deleted successfully!');
+      fetchAllCurrencies();
+      window.location.reload();
+    } catch (error) {
+      setCurrencyMessage(`Error: ${error.message}`);
+    }
+    setTimeout(() => setCurrencyMessage(""), 3000);
   };
 
   const handleChange = (e) => {
@@ -328,8 +392,172 @@ export default function UserSettingsPage() {
               </Typography>
             </Box>
           )}
+
+          {/* Currency Management */}
+          {allCurrencies.length > 0 && (
+            <Box sx={{ mt: 4 }}>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  p: 2, 
+                  bgcolor: '#f8fafc',
+                  borderRadius: 1,
+                  cursor: 'pointer',
+                  '&:hover': { bgcolor: '#f1f5f9' },
+                  border: '1px solid #e2e8f0'
+                }}
+                onClick={() => setManageCurrenciesOpen(!manageCurrenciesOpen)}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'grey.800' }}>
+                    Manage Currencies
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'grey.600' }}>({allCurrencies.length} currencies)</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<AddCurrencyIcon />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrencyFormOpen(true);
+                    }}
+                    sx={{
+                      borderColor: '#0d9488',
+                      color: '#0d9488',
+                      '&:hover': {
+                        borderColor: '#14b8a6',
+                        bgcolor: '#f0fdfa',
+                      },
+                    }}
+                  >
+                    Add Currency
+                  </Button>
+                  <ExpandMoreIcon 
+                    sx={{ 
+                      transform: manageCurrenciesOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.3s',
+                      color: 'grey.600'
+                    }} 
+                  />
+                </Box>
+              </Box>
+              <Collapse in={manageCurrenciesOpen}>
+                <TableContainer sx={{ border: '1px solid #e2e8f0', borderTop: 'none', borderRadius: '0 0 4px 4px' }}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ bgcolor: '#f8fafc', fontWeight: 600 }}>Code</TableCell>
+                        <TableCell sx={{ bgcolor: '#f8fafc', fontWeight: 600 }}>Name</TableCell>
+                        <TableCell sx={{ bgcolor: '#f8fafc', fontWeight: 600 }}>Symbol</TableCell>
+                        <TableCell sx={{ bgcolor: '#f8fafc', fontWeight: 600 }}>Decimals</TableCell>
+                        <TableCell align="center" sx={{ bgcolor: '#f8fafc', fontWeight: 600 }}>Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {allCurrencies.map((curr) => (
+                        <TableRow key={curr.id} hover>
+                          <TableCell>{curr.code}</TableCell>
+                          <TableCell>{curr.name}</TableCell>
+                          <TableCell>{curr.symbol}</TableCell>
+                          <TableCell>{curr.decimalPlaces}</TableCell>
+                          <TableCell align="center">
+                            <Tooltip title="Delete">
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() => handleDeleteCurrency(curr.id)}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Collapse>
+            </Box>
+          )}
         </CardContent>
       </Card>
+
+      {/* Add Currency Dialog */}
+      <Dialog
+        open={currencyFormOpen}
+        onClose={() => {
+          setCurrencyFormOpen(false);
+          setCurrencyForm({ code: "", name: "", symbol: "", decimalPlaces: 2 });
+        }}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ bgcolor: '#0d9488', color: 'white', fontWeight: 600 }}>
+          Add New Currency
+        </DialogTitle>
+        <DialogContent sx={{ p: 3, mt: 2 }}>
+          <form onSubmit={handleAddCurrency}>
+            <div className="flex flex-col gap-4">
+              <TextField
+                fullWidth
+                label="Currency Code"
+                value={currencyForm.code}
+                onChange={(e) => setCurrencyForm({ ...currencyForm, code: e.target.value.toUpperCase() })}
+                required
+                placeholder="e.g., USD"
+                inputProps={{ maxLength: 3 }}
+              />
+              <TextField
+                fullWidth
+                label="Currency Name"
+                value={currencyForm.name}
+                onChange={(e) => setCurrencyForm({ ...currencyForm, name: e.target.value })}
+                required
+                placeholder="e.g., US Dollar"
+              />
+              <TextField
+                fullWidth
+                label="Symbol"
+                value={currencyForm.symbol}
+                onChange={(e) => setCurrencyForm({ ...currencyForm, symbol: e.target.value })}
+                required
+                placeholder="e.g., $"
+              />
+              <TextField
+                fullWidth
+                label="Decimal Places"
+                type="number"
+                value={currencyForm.decimalPlaces}
+                onChange={(e) => setCurrencyForm({ ...currencyForm, decimalPlaces: parseInt(e.target.value) })}
+                required
+                inputProps={{ min: 0, max: 4 }}
+              />
+              <div className="flex justify-end gap-2 mt-2">
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    setCurrencyFormOpen(false);
+                    setCurrencyForm({ code: "", name: "", symbol: "", decimalPlaces: 2 });
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  sx={{ bgcolor: '#0d9488', '&:hover': { bgcolor: '#14b8a6' } }}
+                >
+                  Add Currency
+                </Button>
+              </div>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* User Management Section */}
       <Typography variant="h6" sx={{ fontWeight: 600, color: 'grey.800', mb: 2 }}>
