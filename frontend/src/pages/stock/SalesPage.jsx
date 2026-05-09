@@ -128,6 +128,20 @@ export default function SalesPage() {
           calculatedWarranty = `${selected.defaultWarrantyPeriod} ${selected.defaultWarrantyUnit}`;
         }
         
+        // Get selling price from inventory data (includes finished goods prices) or fallback to product settings
+        const inventoryItem = inventoryData.find(i => i.id === value);
+        const isFinishedGood = inventoryItem?.isFinishedGood || selected.isFinishedGood || false;
+        const sellingPrice = inventoryItem?.sellingPrice || selected.defaultSellingPrice || 0;
+        
+        console.log('🔍 Product selection:', {
+          productId: value,
+          productName: selected.name,
+          isFinishedGood,
+          inventorySellingPrice: inventoryItem?.sellingPrice,
+          settingsSellingPrice: selected.defaultSellingPrice,
+          finalSellingPrice: sellingPrice
+        });
+        
         updatedForm = {
           ...updatedForm,
           productName: selected.name,
@@ -137,10 +151,11 @@ export default function SalesPage() {
           qualityGrade: selected.quality,
           tax: selected.tax || 0,
           unit: selected.unit || 'Kg',
-          unitPrice: selected.defaultSellingPrice || 0,
+          unitPrice: sellingPrice,
           discount: selected.defaultDiscount || 0,
           expirationDate: calculatedExpiryDate,
           warranty: calculatedWarranty,
+          isFinishedGood: isFinishedGood,
         };
       }
     }
@@ -579,19 +594,33 @@ export default function SalesPage() {
                     
                     {/* Additional Info */}
                     <div className='grid grid-cols-3 gap-3 mb-3'>
-                      {selectedProduct?.defaultSellingPrice > 0 && (
-                        <div className='bg-white p-2 rounded-lg border border-gray-200 shadow-sm'>
-                          <div className='flex items-center gap-2'>
-                            <svg className='w-4 h-4 text-teal-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
-                            </svg>
-                            <div>
-                              <p className='text-xs text-gray-600'>Unit Price</p>
-                              <p className='text-sm font-bold text-teal-700'><CurrencyDisplay amount={selectedProduct.defaultSellingPrice} /></p>
+                      {(() => {
+                        const invItem = inventoryData.find(i => i.id === form.productId);
+                        const displayPrice = invItem?.sellingPrice || selectedProduct?.defaultSellingPrice || 0;
+                        const isFinishedGood = invItem?.isFinishedGood || selectedProduct?.isFinishedGood || false;
+                        const priceSource = isFinishedGood ? '🏭 Finished Good' : (invItem?.sellingPrice ? 'From Inventory' : 'From Settings');
+                        
+                        return displayPrice > 0 && (
+                          <div className={`bg-white p-2 rounded-lg border-2 shadow-sm ${
+                            isFinishedGood ? 'border-purple-300 bg-purple-50' : 'border-gray-200'
+                          }`}>
+                            <div className='flex items-center gap-2'>
+                              <svg className='w-4 h-4 text-teal-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
+                              </svg>
+                              <div>
+                                <p className='text-xs text-gray-600'>Selling Price</p>
+                                <p className={`text-sm font-bold ${
+                                  isFinishedGood ? 'text-purple-700' : 'text-teal-700'
+                                }`}><CurrencyDisplay amount={displayPrice} /></p>
+                                <p className={`text-xs italic font-medium ${
+                                  isFinishedGood ? 'text-purple-600' : 'text-gray-500'
+                                }`}>{priceSource}</p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
+                        );
+                      })()}
                       
                       <div className='bg-white p-2 rounded-lg border border-gray-200 shadow-sm'>
                         <div className='flex items-center gap-2'>
@@ -676,12 +705,35 @@ export default function SalesPage() {
 
             <div className='col-span-1'>
               <label className='block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2'>
-                Unit Price
-                {form.productId && productSettings.find(p => p.id === form.productId)?.defaultSellingPrice > 0 && (
-                  <span className='text-xs text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full'>
-                    Default
-                  </span>
-                )}
+                Unit Price (Selling)
+                {form.productId && (() => {
+                  const invItem = inventoryData.find(i => i.id === form.productId);
+                  const selectedProd = productSettings.find(p => p.id === form.productId);
+                  const isFinishedGood = invItem?.isFinishedGood || selectedProd?.isFinishedGood || false;
+                  const hasInventoryPrice = invItem?.sellingPrice > 0;
+                  const hasSettingsPrice = selectedProd?.defaultSellingPrice > 0;
+                  
+                  if (isFinishedGood && hasInventoryPrice) {
+                    return (
+                      <span className='text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full font-semibold'>
+                        🏭 Finished Good
+                      </span>
+                    );
+                  } else if (hasInventoryPrice) {
+                    return (
+                      <span className='text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full'>
+                        From Inventory
+                      </span>
+                    );
+                  } else if (hasSettingsPrice) {
+                    return (
+                      <span className='text-xs text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full'>
+                        From Settings
+                      </span>
+                    );
+                  }
+                  return null;
+                })()}
               </label>
               <input
                 name='unitPrice'

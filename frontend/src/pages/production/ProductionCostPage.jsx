@@ -35,7 +35,7 @@ import {
 
 export default function ProductionCostPage() {
   const { cycles } = useProduction();
-  const { products, getProductStock, createJournalEntry, addItem } = useStock();
+  const { products, getProductStock, productSettings } = useStock();
 
   // ✅ Only show completed cycles dynamically
   const [completedCycles, setCompletedCycles] = useState(
@@ -70,30 +70,23 @@ export default function ProductionCostPage() {
       (c) => c.id === formData.cycleId
     );
     if (selectedCycle) {
-      const totalMaterialCost = (selectedCycle.rawMaterials || []).reduce(
-        (sum, rm) => {
-          const product = products.find((p) => p.id === rm.productId);
-          return sum + (product?.costPrice || 0) * (rm.quantity || 0);
-        },
-        0
-      );
-
-      const totalCost =
-        totalMaterialCost +
-        Number(selectedCycle.laborCost || 0) +
-        Number(selectedCycle.overheadCost || 0);
+      // Use costSummary from cycle
+      const materialCost = selectedCycle.costSummary?.materialCost || selectedCycle.materialCost || 0;
+      const laborCost = selectedCycle.costSummary?.laborCost || selectedCycle.laborCost || 0;
+      const overheadCost = selectedCycle.costSummary?.overheadCost || selectedCycle.overheadCost || 0;
+      const totalCost = selectedCycle.costSummary?.totalCost || selectedCycle.totalCost || (materialCost + laborCost + overheadCost);
 
       setFormData({
         cycleId: selectedCycle.id,
         productId: selectedCycle.productId || selectedCycle.productName,
         quantity:
           selectedCycle.quantityCompleted || selectedCycle.quantityPlanned,
-        rawMaterials: selectedCycle.rawMaterials || [],
-        laborCost: selectedCycle.laborCost || 0,
-        overheadCost: selectedCycle.overheadCost || 0,
+        rawMaterials: selectedCycle.consumedMaterials || selectedCycle.rawMaterials || [],
+        laborCost,
+        overheadCost,
         totalCost,
         dateProduced:
-          selectedCycle.dateProduced || new Date().toISOString().slice(0, 10),
+          selectedCycle.dateProduced || selectedCycle.completedAt || new Date().toISOString().slice(0, 10),
       });
     }
   }, [formData.cycleId, completedCycles, products]);
@@ -127,40 +120,22 @@ export default function ProductionCostPage() {
     }
 
     try {
-      // 🔍 Verify materials (optional)
-      for (const rm of rawMaterials) {
-        const stockQty = getProductStock(rm.productId);
-        if (stockQty < rm.quantity) {
-          console.warn(`⚠️ Not enough stock for ${rm.productId}`);
-        }
-      }
-
-      // ✅ Add finished goods to inventory
-      await addItem('receive', {
-        productId,
-        quantity,
-        description: `Produced via Cycle ${cycleId}`,
-      });
-
-      // ✅ Create journal entry
-      await createJournalEntry({
-        type: 'production',
-        date: dateProduced,
-        description: `Cycle ${cycleId} — ${quantity} units completed`,
-        debitAccountId: 'FinishedGoodsInventory',
-        creditAccountId: 'WorkInProgress',
-        amount: totalCost,
-        details: {
-          laborCost,
-          overheadCost,
-          materialCost: totalCost - (Number(laborCost) + Number(overheadCost)),
-        },
-      });
-
+      // Show success message - costs are already recorded when cycle was completed
       setSnackbar({
         open: true,
-        message: 'Production cost recorded successfully!',
+        message: 'Production cost information displayed successfully!',
         severity: 'success',
+      });
+
+      console.log('📊 Production Cost Summary:', {
+        cycleId,
+        productId,
+        quantity,
+        laborCost,
+        overheadCost,
+        totalCost,
+        dateProduced,
+        rawMaterials,
       });
 
       // 🧹 Reset form
@@ -175,10 +150,10 @@ export default function ProductionCostPage() {
         dateProduced: '',
       });
     } catch (err) {
-      console.error('❌ Error saving production cost:', err);
+      console.error('❌ Error displaying production cost:', err);
       setSnackbar({
         open: true,
-        message: `Failed to record production cost: ${err.message}`,
+        message: `Failed to display production cost: ${err.message}`,
         severity: 'error',
       });
     }
@@ -187,22 +162,21 @@ export default function ProductionCostPage() {
   // Calculate table data with costs
   const tableData = useMemo(() => {
     return completedCycles.map((c) => {
-      const materialCost = (c.rawMaterials || []).reduce((sum, rm) => {
-        const p = products.find((pr) => pr.id === rm.productId);
-        return sum + (p?.costPrice || 0) * rm.quantity;
-      }, 0);
-      const totalCost =
-        Number(materialCost) +
-        Number(c.laborCost || 0) +
-        Number(c.overheadCost || 0);
+      // Use costSummary from cycle if available
+      const materialCost = c.costSummary?.materialCost || c.materialCost || 0;
+      const laborCost = c.costSummary?.laborCost || c.laborCost || 0;
+      const overheadCost = c.costSummary?.overheadCost || c.overheadCost || 0;
+      const totalCost = c.costSummary?.totalCost || c.totalCost || (materialCost + laborCost + overheadCost);
 
       return {
         ...c,
         materialCost,
+        laborCost,
+        overheadCost,
         totalCost,
       };
     });
-  }, [completedCycles, products]);
+  }, [completedCycles]);
 
   const paginatedData = tableData.slice(
     page * rowsPerPage,
@@ -335,20 +309,31 @@ export default function ProductionCostPage() {
                   <Typography variant='subtitle2' sx={{ mb: 2, fontWeight: 600 }}>
                     Raw Materials Used:
                   </Typography>
-                  <div className='grid grid-cols-2 gap-2'>
+                  <div className='grid grid-cols-1 gap-2'>
                     {formData.rawMaterials.map((rm, i) => {
-                      const productName = rm.productName || rm.materialName || products.find((p) => p.id === rm.productId)?.name || 'Unknown Material';
+                      const product = products.find((p) => p.id === rm.productId);
+                      const productName = rm.productName || rm.materialName || product?.name || 'Unknown Material';
+                      const quantity = rm.quantity || rm.qtyUsed || 0;
+                      const unitCost = rm.unitCost || product?.buyingPrice || 0;
+                      const totalCost = rm.totalCost || (quantity * unitCost);
+                      
                       return (
                         <div
                           key={i}
-                          className='p-2 border rounded bg-gray-50 flex justify-between items-center'
+                          className='p-3 border rounded bg-gray-50'
                         >
-                          <Typography variant='body2'>
-                            {productName}
-                          </Typography>
-                          <Typography variant='body2' sx={{ fontWeight: 600 }}>
-                            Qty: {rm.quantity || rm.qtyUsed || 0}
-                          </Typography>
+                          <div className='flex justify-between items-center mb-1'>
+                            <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                              {productName}
+                            </Typography>
+                            <Typography variant='body2' sx={{ fontWeight: 700, color: '#0d9488' }}>
+                              {formatCurrency(totalCost)}
+                            </Typography>
+                          </div>
+                          <div className='flex justify-between items-center text-sm text-gray-600'>
+                            <span>Qty: {quantity}</span>
+                            <span>Unit Cost: {formatCurrency(unitCost)}</span>
+                          </div>
                         </div>
                       );
                     })}
@@ -368,7 +353,7 @@ export default function ProductionCostPage() {
                   '&:disabled': { bgcolor: 'grey.300' },
                 }}
               >
-                Save Production Cost
+                View Cost Summary
               </Button>
             </CardContent>
           </Card>

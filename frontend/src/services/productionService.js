@@ -2,7 +2,7 @@
 import axios from "axios";
 import { API_BASE_URL } from '../constants/api';
 
-const PRODUCTION_API_URL = `${API_BASE_URL}/api/v1/production`;
+const PRODUCTION_API_URL = `${API_BASE_URL}/production`;
 
 const getAuthHeader = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -117,13 +117,24 @@ export const productionService = {
     }
   },
 
-  migrateToInventory: async (cycleId) => {
+  migrateToInventory: async (cycleId, sellingPrice) => {
     if (!cycleId) throw new Error("Cycle ID is required for migrateToInventory");
+    if (!sellingPrice || sellingPrice <= 0) throw new Error("Valid selling price is required for migrateToInventory");
     try {
-      const res = await axios.post(`${PRODUCTION_API_URL}/cycles/migrate-to-inventory`, { cycleId }, getAuthHeader());
+      const res = await axios.post(`${PRODUCTION_API_URL}/cycles/migrate-to-inventory`, { cycleId, sellingPrice }, getAuthHeader());
       return res.data;
     } catch (err) {
       handleAxiosError(err, "migrateToInventory");
+    }
+  },
+
+  recalculateCycleCosts: async (cycleId) => {
+    if (!cycleId) throw new Error("Cycle ID is required for recalculateCycleCosts");
+    try {
+      const res = await axios.post(`${PRODUCTION_API_URL}/cycles/${cycleId}/recalculate-costs`, {}, getAuthHeader());
+      return res.data;
+    } catch (err) {
+      handleAxiosError(err, "recalculateCycleCosts");
     }
   },
 

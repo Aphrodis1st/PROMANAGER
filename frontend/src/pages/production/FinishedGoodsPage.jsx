@@ -7,6 +7,7 @@ import { productionService } from "../../services/productionService";
 import { saveAs } from "file-saver";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
+import SellingPriceDialog from "../../components/SellingPriceDialog";
 import {
   Table,
   TableBody,
@@ -22,6 +23,7 @@ import {
   InputAdornment,
   IconButton,
   Tooltip,
+  Chip,
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -38,6 +40,8 @@ export default function FinishedGoodsPage() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [migrating, setMigrating] = useState({});
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedCycle, setSelectedCycle] = useState(null);
 
   // ✅ Filter only completed cycles
   const completedCycles = useMemo(() => {
@@ -89,21 +93,37 @@ export default function FinishedGoodsPage() {
   // ==========================================
   // 📦 MIGRATE TO INVENTORY
   // ==========================================
-  const handleMigrateToInventory = async (cycle) => {
-    if (!window.confirm(`Migrate "${cycle.productName}" (Batch ${cycle.batchNo}) to inventory?\n\nThis will mark it as available for sale.`)) {
-      return;
-    }
+  const handleOpenDialog = (cycle) => {
+    const total = Number(cycle.totalCost || 0);
+    const qty = Number(cycle.quantityCompleted || 0);
+    const unit = qty > 0 ? total / qty : 0;
+    
+    setSelectedCycle({
+      ...cycle,
+      unitCost: unit,
+      totalCost: total,
+      quantityCompleted: qty,
+      batchNo: cycle.batchNo?.replace(/[^0-9]/g, '') || cycle.name?.replace(/[^0-9]/g, '') || cycle.id.slice(-6),
+    });
+    setDialogOpen(true);
+  };
 
-    setMigrating(prev => ({ ...prev, [cycle.id]: true }));
+  const handleConfirmMigration = async (sellingPrice) => {
+    if (!selectedCycle) return;
+
+    setMigrating(prev => ({ ...prev, [selectedCycle.id]: true }));
+    setDialogOpen(false);
+    
     try {
-      await productionService.migrateToInventory(cycle.id);
-      alert(`✅ Successfully migrated ${cycle.productName} to inventory!`);
-      window.location.reload(); // Refresh to show updated status
+      await productionService.migrateToInventory(selectedCycle.id, sellingPrice);
+      alert(`✅ Successfully migrated ${selectedCycle.productName} to inventory with selling price $${sellingPrice.toFixed(2)}!`);
+      window.location.reload();
     } catch (error) {
       console.error('Error migrating to inventory:', error);
       alert(`❌ Failed to migrate: ${error.response?.data?.error || error.message}`);
     } finally {
-      setMigrating(prev => ({ ...prev, [cycle.id]: false }));
+      setMigrating(prev => ({ ...prev, [selectedCycle.id]: false }));
+      setSelectedCycle(null);
     }
   };
 
@@ -237,9 +257,14 @@ export default function FinishedGoodsPage() {
       <div className="rounded-xl overflow-hidden shadow-md flex-1 flex flex-col min-h-[600px]">
         {/* Header with Title and Search */}
         <div className="p-6 flex justify-between items-center border-b border-gray-200">
-          <Typography variant="h5" sx={{ fontWeight: 600, color: "grey.800" }}>
-            Finished Goods Summary
-          </Typography>
+          <div>
+            <Typography variant="h5" sx={{ fontWeight: 600, color: "grey.800" }}>
+              Finished Goods Summary
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              Migrate completed production to <Chip label="Finished Products" size="small" sx={{ bgcolor: '#d1fae5', color: '#059669', fontWeight: 600, ml: 0.5 }} /> inventory
+            </Typography>
+          </div>
           <div className="flex items-center gap-4">
             <TextField
               placeholder="Search product..."
@@ -489,7 +514,7 @@ export default function FinishedGoodsPage() {
                         ) : (
                           <Tooltip title="Migrate to inventory">
                             <IconButton
-                              onClick={() => handleMigrateToInventory(cycle)}
+                              onClick={() => handleOpenDialog(cycle)}
                               disabled={migrating[cycle.id]}
                               sx={{
                                 color: "#0d9488",
@@ -532,6 +557,19 @@ export default function FinishedGoodsPage() {
           />
         )}
       </div>
+
+      {/* Selling Price Dialog */}
+      {selectedCycle && (
+        <SellingPriceDialog
+          open={dialogOpen}
+          onClose={() => {
+            setDialogOpen(false);
+            setSelectedCycle(null);
+          }}
+          onConfirm={handleConfirmMigration}
+          finishedGood={selectedCycle}
+        />
+      )}
     </div>
   );
 }

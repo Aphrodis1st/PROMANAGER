@@ -58,14 +58,22 @@ export const ProductionProvider = ({ children }) => {
             name: c.batchNo?.replace('BATCH-', '').replace(/[^0-9]/g, '') || plan?.planName || `Cycle-${c.id}`,
             planId: c.planId,
             productId: c.productId,
-            productName: plan?.productName || c.productName || 'Unknown',
-            quantityPlanned: plan?.quantity || c.quantityPlanned || 0,
-            quantityCompleted: c.producedQty || 0,
+            productName: c.productName || plan?.productName || 'Unknown',
+            quantityPlanned: c.quantityPlanned || plan?.quantity || 0,
+            quantityCompleted: c.producedQty || c.quantityCompleted || 0,
             status: c.status || 'in_progress',
             laborCost: cost.laborCost || 0,
             overheadCost: cost.overheadCost || 0,
             materialCost: cost.materialCost || 0,
             totalCost: cost.totalCost || 0,
+            costSummary: {
+              laborCost: cost.laborCost || 0,
+              overheadCost: cost.overheadCost || 0,
+              materialCost: cost.materialCost || 0,
+              totalCost: cost.totalCost || 0,
+              costPerUnit: cost.costPerUnit || 0,
+            },
+            consumedMaterials: c.consumedMaterials || [],
             rawMaterials: c.consumedMaterials || [],
             createdAt: c.createdAt || new Date().toISOString(),
             completedAt: c.completedAt,
@@ -217,7 +225,7 @@ export const ProductionProvider = ({ children }) => {
         producedQty,
         laborCost,
         overheadCost,
-        consumedMaterials: existingCycle.rawMaterials || [],
+        consumedMaterials: existingCycle.consumedMaterials || existingCycle.rawMaterials || [],
       });
 
       const updated = res?.data?.cycle || res?.data || res || {};
@@ -239,7 +247,7 @@ export const ProductionProvider = ({ children }) => {
         totalCost: Number(cost.totalCost ?? 0),
         quantityCompleted: Number(updated.producedQty ?? producedQty),
         status: 'completed',
-        rawMaterials: existingCycle.rawMaterials,
+        consumedMaterials: updated.consumedMaterials || existingCycle.consumedMaterials || existingCycle.rawMaterials || [],
         completedAt: updated.completedAt || new Date().toISOString(),
         updatedAt: updated.updatedAt || new Date().toISOString(),
       };

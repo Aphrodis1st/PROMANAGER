@@ -12,10 +12,11 @@ router.put("/plans/:id", ProductionController.updatePlan);
 router.put("/plans/:id/approve", ProductionController.approvePlan);
 
 // --- ⚙️ CYCLES ---
-router.get("/cycles", ProductionController.listCycles);
 router.post("/cycles/start", ProductionController.startCycle);
 router.post("/cycles/complete", ProductionController.completeCycle);
 router.post("/cycles/migrate-to-inventory", ProductionController.migrateToInventory);
+router.post("/cycles/:id/recalculate-costs", ProductionController.recalculateCycleCosts);
+router.get("/cycles", ProductionController.listCycles);
 console.log("🔥 /cycles/complete route hit");
 
 // --- 📦 FINISHED GOODS ---

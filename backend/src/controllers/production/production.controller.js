@@ -106,7 +106,7 @@ export const ProductionController = {
   },
 
   async startCycle(req, res) {
-    console.log("🟢 startCycle called with body:", req.body);
+    console.log("🟢 startCycle called with body:", JSON.stringify(req.body, null, 2));
     try {
       const { planId, plannedQtyOverride, consumedMaterials } = req.body;
 
@@ -118,14 +118,20 @@ export const ProductionController = {
       const plan = await ProductionPlanModel.findById(planId);
       console.log("Fetched plan:", plan);
 
-      if (!plan)
+      if (!plan) {
+        console.error("❌ Plan not found:", planId);
         return res.status(404).json({ success: false, error: "Plan not found" });
+      }
 
-      if (plan.status !== "approved")
+      if (plan.status !== "approved") {
+        console.error("❌ Plan not approved. Current status:", plan.status);
         return res.status(400).json({ success: false, error: "Plan must be approved to start a cycle" });
+      }
 
-      if (!plan.finishedProductId)
+      if (!plan.finishedProductId) {
+        console.error("❌ Finished product not set for plan:", planId);
         return res.status(400).json({ success: false, error: "Finished product not set for this plan" });
+      }
 
       // Generate sequential cycle/batch number
       const batchNo = await ProductionCounterModel.getNextCycleNumber();
@@ -137,9 +143,9 @@ export const ProductionController = {
       const consumptionList = [];
 
       if (Array.isArray(consumedMaterials) && consumedMaterials.length > 0) {
-        console.log("Using frontend-provided raw materials:", consumedMaterials);
+        console.log("Using frontend-provided raw materials:", consumedMaterials.length, "items");
         for (const item of consumedMaterials) {
-          console.log("Processing raw material item:", item);
+          console.log("Processing raw material item:", JSON.stringify(item, null, 2));
 
           // --- Try fetching from multiple sources ---
           let product = null;
@@ -149,7 +155,7 @@ export const ProductionController = {
           product = await ProductSettingModel.findById(item.materialId || item.productId);
           if (product) {
             source = "productSettings";
-            console.log(`✅ Found in productSettings: ${item.productName}`);
+            console.log(`✅ Found in productSettings: ${item.productName || item.materialName}`);
           }
 
           // 2. Try products
@@ -157,7 +163,7 @@ export const ProductionController = {
             product = await ProductModel.findById(item.materialId || item.productId);
             if (product) {
               source = "product";
-              console.log(`✅ Found in products: ${item.productName}`);
+              console.log(`✅ Found in products: ${item.productName || item.materialName}`);
             }
           }
 
@@ -166,16 +172,28 @@ export const ProductionController = {
             product = await PurchaseModel.findById(item.materialId || item.productId);
             if (product) {
               source = "purchase";
-              console.log(`✅ Found in purchases: ${item.productName}`);
+              console.log(`✅ Found in purchases: ${item.productName || item.materialName}`);
             }
           }
 
           if (!product) {
-            console.error(`❌ Product not found in any collection: ${item.productName}`);
-            return res.status(400).json({
-              success: false,
-              error: `Raw material "${item.productName}" not found in inventory, products, or purchases`,
-            });
+            const errorMsg = `Raw material "${item.productName || item.materialName}" (ID: ${item.materialId || item.productId}) not found in any collection`;
+            console.error(`❌ ${errorMsg}`);
+            console.log('💡 Using material data from frontend without stock adjustment...');
+            
+            // Add to consumption list using frontend data, but don't adjust stock
+            const qtyUsed = item.quantity || item.qtyUsed || 0;
+            const unitCost = item.costPerUnit || 0;
+            const entry = {
+              materialId: item.materialId || item.productId,
+              materialName: item.materialName || item.productName,
+              qtyUsed,
+              unitCost,
+              totalCost: qtyUsed * unitCost,
+            };
+            consumptionList.push(entry);
+            await MaterialConsumptionModel.create({ cycleId: planId, ...entry });
+            continue;
           }
 
           const qtyUsed = item.quantity || item.qtyUsed || 0;
@@ -237,12 +255,22 @@ export const ProductionController = {
 
       const totalMaterialCost = consumptionList.reduce((sum, c) => sum + c.totalCost, 0);
       console.log("Total material cost:", totalMaterialCost);
+      console.log("Consumption list:", JSON.stringify(consumptionList, null, 2));
 
       const cycle = await ProductionCycleModel.create({
         planId,
         batchNo,
+        productId: plan.finishedProductId,
+        productName: plan.finishedProductName,
+        quantityPlanned: produceQty,
         consumedMaterials: consumptionList,
-        costSummary: { materialCost: totalMaterialCost },
+        costSummary: { 
+          materialCost: totalMaterialCost,
+          laborCost: 0,
+          overheadCost: 0,
+          totalCost: totalMaterialCost,
+          costPerUnit: produceQty > 0 ? totalMaterialCost / produceQty : 0
+        },
       });
 
       await ProductionPlanModel.update(planId, { status: "in_progress" });
@@ -309,28 +337,46 @@ async completeCycle(req, res) {
         defaultSellingPrice: 0,
         type: "Product",
         status: "Active",
-        storeCategory: "Finished Products",
-        productCategory: "Finished Products",
+        storeCategory: "Finished",
+        productCategory: "Finished Product",
       });
       productSource = "productSettings";
-      console.log("Finished product created in productSettings:", finishedProduct);
-    } else if (productSource === "productSettings" && !finishedProduct.storeCategory) {
-      // Update existing product to set storeCategory if missing
+      console.log("✅ Finished product created in productSettings with storeCategory: Finished", finishedProduct);
+    } else if (productSource === "productSettings" && (!finishedProduct.storeCategory || finishedProduct.storeCategory !== "Finished")) {
+      // Update existing product to set storeCategory to Finished
       await ProductSettingModel.update(finishedProduct.id, {
-        storeCategory: "Finished Products",
-        productCategory: finishedProduct.productCategory || "Finished Products",
+        storeCategory: "Finished",
+        productCategory: "Finished Product",
       });
-      finishedProduct.storeCategory = "Finished Products";
-      console.log("Updated product with storeCategory: Finished Products");
+      finishedProduct.storeCategory = "Finished";
+      finishedProduct.productCategory = "Finished Product";
+      console.log("✅ Updated product with storeCategory and productCategory: Finished");
     }
 
-    // --- Calculate total material cost from frontend-provided consumedMaterials ---
-    const materialCost = consumedMaterials.reduce(
-      (sum, c) => sum + (c.totalCost || 0),
+    // --- Calculate costs: Use material cost from cycle's consumedMaterials ---
+    const cycleConsumedMaterials = cycle.consumedMaterials || [];
+    let materialCost = cycleConsumedMaterials.reduce(
+      (sum, material) => sum + (material.totalCost || (material.qtyUsed * material.unitCost) || 0),
       0
     );
-    const totalCost = materialCost + laborCost + overheadCost;
+    
+    // If no consumed materials in cycle, try to get from costSummary
+    if (materialCost === 0 && cycle.costSummary?.materialCost) {
+      materialCost = cycle.costSummary.materialCost;
+      console.log("Using material cost from existing costSummary:", materialCost);
+    }
+    
+    const totalCost = materialCost + Number(laborCost) + Number(overheadCost);
     const costPerUnit = producedQty > 0 ? totalCost / producedQty : 0;
+
+    console.log("💰 Cost Calculation:", {
+      cycleConsumedMaterials: cycleConsumedMaterials.length,
+      materialCost,
+      laborCost: Number(laborCost),
+      overheadCost: Number(overheadCost),
+      totalCost,
+      costPerUnit,
+    });
 
     // --- Adjust stock for finished product ---
     if (productSource === "productSettings") {
@@ -355,12 +401,15 @@ async completeCycle(req, res) {
       unitCost: costPerUnit,
       totalCost,
       materialCost,
-      laborCost,
-      overheadCost,
+      laborCost: Number(laborCost),
+      overheadCost: Number(overheadCost),
     });
     console.log("Finished Good created:", fg);
 
     // --- Update Production Cycle with full cost info ---
+    // Always use the consumedMaterials from when the cycle was started
+    const finalConsumedMaterials = cycleConsumedMaterials;
+
     const updatedCycle = await ProductionCycleModel.update(cycleId, {
       producedQty,
       quantityCompleted: producedQty,
@@ -368,12 +417,12 @@ async completeCycle(req, res) {
       completedAt: admin.firestore.FieldValue.serverTimestamp(),
       costSummary: {
         materialCost,
-        laborCost,
-        overheadCost,
+        laborCost: Number(laborCost),
+        overheadCost: Number(overheadCost),
         totalCost,
         costPerUnit,
       },
-      consumedMaterials, // persist frontend-sent rawMaterials
+      consumedMaterials: finalConsumedMaterials,
     });
     console.log("Cycle updated to completed with cost details:", updatedCycle);
 
@@ -395,7 +444,7 @@ async completeCycle(req, res) {
       ],
       source: { type: "production", id: cycleId },
       reference: plan.planCode,
-      meta: { rawMaterials: consumedMaterials }, // include frontend-provided raw materials
+      meta: { rawMaterials: finalConsumedMaterials },
     });
     console.log("Journal entry created");
 
@@ -408,8 +457,8 @@ async completeCycle(req, res) {
         totalCost,
         costPerUnit,
         materialCost,
-        laborCost,
-        overheadCost,
+        laborCost: Number(laborCost),
+        overheadCost: Number(overheadCost),
       },
     });
   } catch (err) {
@@ -417,6 +466,79 @@ async completeCycle(req, res) {
     res.status(500).json({ success: false, error: err.message });
   }
 },
+
+  // --- 📊 RECALCULATE CYCLE COSTS ---
+  async recalculateCycleCosts(req, res) {
+    console.log("🟢 recalculateCycleCosts called for cycle:", req.params.id);
+    try {
+      const { id } = req.params;
+
+      if (!id) {
+        return res.status(400).json({ success: false, error: "Cycle ID is required" });
+      }
+
+      // Fetch the cycle
+      const cycle = await ProductionCycleModel.findById(id);
+      if (!cycle) {
+        return res.status(404).json({ success: false, error: "Cycle not found" });
+      }
+
+      console.log("Cycle found:", cycle);
+
+      // Calculate material cost from consumedMaterials
+      const consumedMaterials = cycle.consumedMaterials || [];
+      
+      if (consumedMaterials.length === 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "No consumed materials found for this cycle" 
+        });
+      }
+
+      const materialCost = consumedMaterials.reduce((sum, material) => {
+        const cost = material.totalCost || (material.qtyUsed * material.unitCost) || 0;
+        return sum + cost;
+      }, 0);
+
+      console.log("💰 Calculated material cost:", materialCost);
+      console.log("📋 Materials used:", consumedMaterials.length);
+
+      // Get existing costs
+      const laborCost = cycle.costSummary?.laborCost || 0;
+      const overheadCost = cycle.costSummary?.overheadCost || 0;
+      const totalCost = materialCost + laborCost + overheadCost;
+      const producedQty = cycle.producedQty || cycle.quantityCompleted || 0;
+      const costPerUnit = producedQty > 0 ? totalCost / producedQty : 0;
+
+      const updatedCostSummary = {
+        materialCost,
+        laborCost,
+        overheadCost,
+        totalCost,
+        costPerUnit
+      };
+
+      // Update the cycle
+      const updatedCycle = await ProductionCycleModel.update(id, {
+        costSummary: updatedCostSummary,
+        materialCost, // Also store at root level
+      });
+
+      console.log("✅ Updated cost summary:", updatedCostSummary);
+
+      res.json({
+        success: true,
+        message: "Cycle costs recalculated successfully",
+        data: {
+          cycle: updatedCycle,
+          costSummary: updatedCostSummary,
+        },
+      });
+    } catch (err) {
+      console.error("❌ Error recalculating cycle costs:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  },
 
   // --- 🔍 QUALITY INSPECTION ---
   async createInspection(req, res) {
@@ -471,10 +593,14 @@ async completeCycle(req, res) {
   async migrateToInventory(req, res) {
     console.log("🟢 migrateToInventory called with:", req.body);
     try {
-      const { cycleId } = req.body;
+      const { cycleId, sellingPrice } = req.body;
 
       if (!cycleId) {
         return res.status(400).json({ success: false, error: "cycleId is required" });
+      }
+
+      if (!sellingPrice || sellingPrice <= 0) {
+        return res.status(400).json({ success: false, error: "Valid selling price is required" });
       }
 
       // Find the cycle
@@ -487,6 +613,11 @@ async completeCycle(req, res) {
         return res.status(400).json({ success: false, error: "Only completed cycles can be migrated to inventory" });
       }
 
+      // Check if already migrated
+      if (cycle.addedToInventory) {
+        return res.status(400).json({ success: false, error: "This cycle has already been migrated to inventory" });
+      }
+
       // Find the finished good record
       const finishedGoods = await FinishedGoodModel.findByCycle(cycleId);
       if (!finishedGoods || finishedGoods.length === 0) {
@@ -494,11 +625,6 @@ async completeCycle(req, res) {
       }
 
       const finishedGood = finishedGoods[0];
-
-      // Check if already migrated
-      if (finishedGood.addedToInventory) {
-        return res.status(400).json({ success: false, error: "This finished good has already been migrated to inventory" });
-      }
 
       // Find the product in productSettings
       let product = await ProductSettingModel.findById(finishedGood.productId);
@@ -510,23 +636,57 @@ async completeCycle(req, res) {
         productSource = "products";
         
         if (!product) {
-          return res.status(404).json({ success: false, error: "Product not found in inventory" });
+          // Product doesn't exist, create it in productSettings
+          console.log(`Product not found, creating in productSettings: ${finishedGood.productName}`);
+          product = await ProductSettingModel.create({
+            name: finishedGood.productName,
+            currentStock: finishedGood.quantityProduced || 0,
+            openingStock: 0,
+            defaultBuyingPrice: finishedGood.unitCost || 0,
+            defaultSellingPrice: sellingPrice,
+            type: "Product",
+            status: "Active",
+            storeCategory: "Finished",
+            productCategory: "Finished Product",
+            isFinishedGood: true,
+          });
+          productSource = "productSettings";
+          console.log(`✅ Created product in productSettings: ${product.name}`);
+          
+          // Update the finishedGood record with the new product ID
+          await FinishedGoodModel.update(finishedGood.id, {
+            productId: product.id,
+          });
+          finishedGood.productId = product.id;
         }
       }
 
-      // Ensure the product has the correct storeCategory
+      // Update the product with selling price and ensure correct category
+      const updateData = {
+        defaultSellingPrice: sellingPrice,
+        storeCategory: "Finished",
+        productCategory: "Finished Product",
+        isFinishedGood: true, // Flag to identify finished goods
+        finishedGoodMigratedAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
       if (productSource === "productSettings") {
-        if (!product.storeCategory || product.storeCategory !== "Finished Products") {
-          await ProductSettingModel.update(product.id, {
-            storeCategory: "Finished Products",
-            productCategory: product.productCategory || "Finished Products",
-          });
-          console.log(`Updated product ${product.name} with storeCategory: Finished Products`);
-        }
+        await ProductSettingModel.update(product.id, updateData);
+        console.log(`✅ Updated product ${product.name} with selling price: $${sellingPrice} and storeCategory: Finished`);
+      } else {
+        await ProductModel.update(product.id, updateData);
+        console.log(`✅ Updated product ${product.name} in products collection with selling price: $${sellingPrice} and storeCategory: Finished`);
       }
 
       // Update the finished good record
       await FinishedGoodModel.update(finishedGood.id, {
+        addedToInventory: true,
+        migratedAt: admin.firestore.FieldValue.serverTimestamp(),
+        sellingPrice,
+      });
+
+      // Update the cycle to mark as migrated
+      await ProductionCycleModel.update(cycleId, {
         addedToInventory: true,
         migratedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
@@ -534,7 +694,7 @@ async completeCycle(req, res) {
       // Create journal entry for the migration
       await JournalModel.create({
         date: admin.firestore.Timestamp.now(),
-        description: `Finished goods migrated to inventory: ${finishedGood.productName}`,
+        description: `Finished goods migrated to inventory: ${finishedGood.productName} (Selling Price: $${sellingPrice})`,
         lines: [
           {
             accountName: "Finished Goods Inventory",
@@ -554,20 +714,26 @@ async completeCycle(req, res) {
           productName: finishedGood.productName,
           quantity: finishedGood.quantityProduced,
           unitCost: finishedGood.unitCost,
+          sellingPrice,
+          profitMargin: ((sellingPrice - finishedGood.unitCost) / sellingPrice * 100).toFixed(2),
         },
       });
 
-      console.log("✅ Finished good migrated to inventory successfully");
+      console.log("✅ Finished good migrated to inventory successfully with selling price");
 
       res.json({
         success: true,
-        message: "Finished good migrated to inventory successfully",
+        message: `Finished good migrated to inventory successfully with selling price $${sellingPrice}`,
         data: {
           finishedGood: {
             ...finishedGood,
             addedToInventory: true,
+            sellingPrice,
           },
-          product,
+          product: {
+            ...product,
+            defaultSellingPrice: sellingPrice,
+          },
         },
       });
     } catch (err) {

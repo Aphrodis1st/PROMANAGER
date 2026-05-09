@@ -191,6 +191,7 @@ export default function AttachRawMaterials({ plan, onClose }) {
       await startCycle({
         planId: plan.id,
         rawMaterials: materialsUsed,
+        consumedMaterials: materialsUsed,
       });
 
       alert('✅ Raw materials attached and cycle started!');

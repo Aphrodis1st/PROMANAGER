@@ -91,6 +91,7 @@ export default function InventoryPage() {
       const productionQty = Math.max(0, currentStock - openingStock - purchasedQty + soldQty);
       
       const unitPrice = Number(product.defaultBuyingPrice) || 0;
+      const sellingPrice = Number(product.defaultSellingPrice) || unitPrice;
       const openingValue = openingStock * unitPrice;
       const closingValue = currentStock * unitPrice;
       
@@ -111,6 +112,7 @@ export default function InventoryPage() {
         closingStock: currentStock,
         reorderLevel: product.reorderLevel || 0,
         unitPrice,
+        sellingPrice,
         openingValue,
         closingValue,
         status: currentStock <= (product.reorderLevel || 0) ? 'Low Stock' : 'In Stock'
@@ -124,12 +126,13 @@ export default function InventoryPage() {
     if (!storeCategory) return 'other';
     const cat = String(storeCategory).toLowerCase().trim();
     
+    // Exact matches first
     if (cat === 'raw materials' || cat === 'raw material') return 'raw';
-    if (cat === 'finished products' || cat === 'finished product' || cat === 'finished goods') return 'finished';
+    if (cat === 'finished' || cat === 'finished products' || cat === 'finished product' || cat === 'finished goods') return 'finished';
     
+    // Partial matches
     if (cat.includes('raw') && cat.includes('material')) return 'raw';
-    if (cat.includes('finished') && cat.includes('product')) return 'finished';
-    if (cat.includes('finished') || cat.includes('final')) return 'finished';
+    if (cat.includes('finished')) return 'finished';
     if (cat.includes('raw') || cat.includes('material')) return 'raw';
     
     return 'other';
@@ -327,7 +330,8 @@ export default function InventoryPage() {
                   <TableCell sx={{ color: 'white', fontWeight: 600 }} align="right">Sales</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 600 }} align="right">Closing Stock</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 600 }} align="right">Reorder Level</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 600 }} align="right">Unit Price</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 600 }} align="right">Unit Cost</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 600 }} align="right">Selling Price</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 600 }} align="right">Total Value</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 600 }}>Status</TableCell>
                 </TableRow>
@@ -335,7 +339,7 @@ export default function InventoryPage() {
               <TableBody>
                 {filteredData.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={12} align="center" sx={{ py: 4 }}>
+                    <TableCell colSpan={13} align="center" sx={{ py: 4 }}>
                       <Typography color="text.secondary">
                         No items found in this category
                       </Typography>
@@ -361,6 +365,7 @@ export default function InventoryPage() {
                       <TableCell align="right" sx={{ fontWeight: 600, fontSize: '1rem' }}>{item.closingStock.toLocaleString()}</TableCell>
                       <TableCell align="right">{item.reorderLevel.toLocaleString()}</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 500 }}>{formatAmount(item.unitPrice)}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 600, color: '#059669', bgcolor: '#f0fdf4' }}>{formatAmount(item.sellingPrice || item.unitPrice)}</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 600, color: '#16a34a' }}>{formatAmount(item.closingValue)}</TableCell>
                       <TableCell>
                         <Chip
@@ -382,7 +387,7 @@ export default function InventoryPage() {
           <Typography variant="body2" sx={{ fontWeight: 600, color: '#0369a1', mb: 1 }}>
             📌 Inventory Valuation: {valuationMethod}
           </Typography>
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 1 }}>
             <Chip label="Raw Materials" color="warning" size="small" icon={<CategoryIcon />} />
             <Chip label="Finished Products" color="success" size="small" icon={<CategoryIcon />} />
           </Box>
@@ -390,6 +395,12 @@ export default function InventoryPage() {
             {valuationMethod === 'FIFO' 
               ? 'FIFO: Oldest inventory costs are used first (IAS 2 compliant)'
               : 'LIFO: Newest inventory costs are used first (IAS 2 compliant)'}
+          </Typography>
+          <Typography variant="caption" sx={{ display: 'block', mt: 1, color: '#059669', fontWeight: 500 }}>
+            💡 Unit Cost = Average cost from purchases/production | Selling Price = From Product Settings
+          </Typography>
+          <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: '#059669', fontWeight: 500 }}>
+            ✅ Finished Products are migrated from Production → Finished Goods with selling prices
           </Typography>
         </Box>
       </Paper>

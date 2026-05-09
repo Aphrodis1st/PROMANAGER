@@ -53,7 +53,7 @@ export const InventoryController = {
         
         const currentStock = Number(product.currentStock) || 0;
         
-        // Get inventory value using FIFO or LIFO
+        // Get inventory value using FIFO or LIFO (for cost)
         let stockValue = 0;
         let averageCost = Number(product.defaultBuyingPrice) || 0;
         
@@ -62,11 +62,20 @@ export const InventoryController = {
             ? await InventoryValuationService.getInventoryValueLIFO(product.id)
             : await InventoryValuationService.getInventoryValueFIFO(product.id);
           
-          stockValue = valuation.value;
-          averageCost = valuation.averageCost || averageCost;
+          // Use ledger value if available, otherwise fall back to default price
+          if (valuation.value > 0 || valuation.quantity > 0) {
+            stockValue = valuation.value;
+            averageCost = valuation.averageCost || averageCost;
+          } else {
+            // Fallback to default buying price if ledger is empty
+            stockValue = currentStock * averageCost;
+          }
         } catch (error) {
           stockValue = currentStock * averageCost;
         }
+        
+        // Use selling price from product settings for display
+        const sellingPrice = Number(product.defaultSellingPrice) || averageCost;
         
         return {
           id: product.id,
@@ -83,6 +92,8 @@ export const InventoryController = {
           currentStock,
           reorderLevel: product.reorderLevel || 0,
           unitPrice: averageCost,
+          sellingPrice: sellingPrice,
+          isFinishedGood: product.isFinishedGood || false,
           openingValue: openingStock * averageCost,
           closingValue: stockValue,
           valuationMethod,
