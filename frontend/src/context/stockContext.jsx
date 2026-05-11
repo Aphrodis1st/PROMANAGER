@@ -6,6 +6,7 @@ import {
 } from "../services/stock.service";
 import { PurchaseProvider, usePurchase } from "./PurchaseContext";
 import { SalesProvider, useSales } from "./SalesContext";
+import { CustomerProvider } from "./CustomerContext";
 import { ReportProvider } from "./ReportContext";
 import { PaymentProvider, usePayment } from "./PaymentContext";
 import { useCurrency } from "./CurrencyContext";
@@ -471,13 +472,15 @@ export const StockProvider = ({ children }) => {
   return (
     <PurchaseProvider accountSettings={accountSettings}>
       <SalesProvider>
-        <PaymentProvider accountSettings={accountSettings} updateInvoice={null}>
-          <StockProviderCore>
-            <ReportProvider products={[]} purchases={[]} sales={[]} invoices={[]}>
-              {children}
-            </ReportProvider>
-          </StockProviderCore>
-        </PaymentProvider>
+        <CustomerProvider>
+          <PaymentProvider accountSettings={accountSettings} updateInvoice={null}>
+            <StockProviderCore>
+              <ReportProvider products={[]} purchases={[]} sales={[]} invoices={[]}>
+                {children}
+              </ReportProvider>
+            </StockProviderCore>
+          </PaymentProvider>
+        </CustomerProvider>
       </SalesProvider>
     </PurchaseProvider>
   );

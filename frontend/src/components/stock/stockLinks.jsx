@@ -25,6 +25,7 @@ const iconMap = {
   Inventory: InventoryIcon,
   Purchases: ShoppingCartIcon,
   "Customer/Sales": SalesIcon,
+  Customers: SalesIcon,
   Dispense: DispenseIcon,
   Journals: JournalIcon,
   Expenses: ExpenseIcon,
@@ -38,6 +39,7 @@ export default function StockLinks({ theme, themeColors }) {
   const stockLinks = [
     { to: "/stock/inventory", label: "Inventory", roles: ["ADMIN", "MANAGER", "STOREKEEPER", "ACCOUNTANT"], icon: "Inventory" },
     { to: "/stock/purchases", label: "Purchases", roles: ["ADMIN", "PURCHASER", "MANAGER", "ACCOUNTANT"], icon: "Purchases" },
+    { to: "/stock/customers", label: "Customers", roles: ["ADMIN", "SALES", "MANAGER", "ACCOUNTANT"], icon: "Customers" },
     { to: "/stock/sales", label: "Customer/Sales", roles: ["ADMIN", "SALES", "MANAGER", "ACCOUNTANT"], icon: "Customer/Sales" },
     { to: "/stock/dispense", label: "Dispense", roles: ["ADMIN", "STOREKEEPER", "MANAGER"], icon: "Dispense" },
     { to: "/stock/general-journal", label: "Journals", roles: ["ADMIN", "ACCOUNTANT", "MANAGER"], icon: "Journals" },

@@ -1,6 +1,6 @@
 // ========================================
-// ✅ ProductionCostPage.jsx (Final Version)
-// Auto-updates when cycles change
+// ✅ ProductionCostPage.jsx (Professional Dashboard)
+// Modern production cost management dashboard
 // ========================================
 import React, { useState, useEffect, useMemo } from 'react';
 import { useProduction } from '../../context/ProductionContext';
@@ -28,10 +28,23 @@ import {
   Snackbar,
   Alert,
   Grid,
+  Box,
+  Paper,
+  Divider,
+  LinearProgress,
+  Avatar,
 } from '@mui/material';
 import {
   Save as SaveIcon,
   Assignment as AssignmentIcon,
+  TrendingUp as TrendingUpIcon,
+  Assessment as AssessmentIcon,
+  Factory as FactoryIcon,
+  MonetizationOn as MoneyIcon,
+  Timeline as TimelineIcon,
+  PieChart as PieChartIcon,
+  BarChart as BarChartIcon,
+  Analytics as AnalyticsIcon,
 } from '@mui/icons-material';
 
 export default function ProductionCostPage() {
@@ -58,11 +71,40 @@ export default function ProductionCostPage() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [selectedMetric, setSelectedMetric] = useState('overview');
 
   // 🔁 Auto-refresh completed cycles when `cycles` from context update
   useEffect(() => {
     setCompletedCycles(cycles.filter((c) => c.status === 'completed'));
   }, [cycles]);
+
+  // Calculate dashboard metrics
+  const dashboardMetrics = useMemo(() => {
+    const totalCycles = completedCycles.length;
+    const totalProduction = completedCycles.reduce((sum, c) => sum + (c.quantityCompleted || c.quantityPlanned || 0), 0);
+    const totalCost = completedCycles.reduce((sum, c) => {
+      const cost = c.costSummary?.totalCost || c.totalCost || 0;
+      return sum + cost;
+    }, 0);
+    const avgCostPerUnit = totalProduction > 0 ? totalCost / totalProduction : 0;
+    
+    const materialCosts = completedCycles.reduce((sum, c) => sum + (c.costSummary?.materialCost || c.materialCost || 0), 0);
+    const laborCosts = completedCycles.reduce((sum, c) => sum + (c.costSummary?.laborCost || c.laborCost || 0), 0);
+    const overheadCosts = completedCycles.reduce((sum, c) => sum + (c.costSummary?.overheadCost || c.overheadCost || 0), 0);
+    
+    return {
+      totalCycles,
+      totalProduction,
+      totalCost,
+      avgCostPerUnit,
+      materialCosts,
+      laborCosts,
+      overheadCosts,
+      materialPercentage: totalCost > 0 ? (materialCosts / totalCost) * 100 : 0,
+      laborPercentage: totalCost > 0 ? (laborCosts / totalCost) * 100 : 0,
+      overheadPercentage: totalCost > 0 ? (overheadCosts / totalCost) * 100 : 0,
+    };
+  }, [completedCycles]);
 
   // 🔁 Auto-fill form when cycleId changes
   useEffect(() => {
@@ -197,30 +239,267 @@ export default function ProductionCostPage() {
 
 
   return (
-    <div className='p-6 flex flex-col gap-6'>
-      {/* Header */}
-      <div className='rounded-xl overflow-hidden shadow-md'>
-        <div className='p-6 border-b border-gray-200'>
-          <Typography variant='h5' sx={{ fontWeight: 600, color: 'grey.800' }}>
-            Production Cost Allocation
-          </Typography>
-          <Typography variant='body2' sx={{ color: 'text.secondary', mt: 1 }}>
-            Allocate production costs for completed cycles and add finished goods to inventory
-          </Typography>
-        </div>
+    <Box sx={{ p: 3, bgcolor: '#f8fafc', minHeight: '100vh' }}>
+      {/* Professional Header */}
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          p: 4, 
+          mb: 3, 
+          background: 'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)',
+          color: 'white',
+          borderRadius: 3
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
+              <FactoryIcon sx={{ fontSize: 32 }} />
+            </Avatar>
+            <Box>
+              <Typography variant='h4' sx={{ fontWeight: 700, mb: 1 }}>
+                Production Cost Dashboard
+              </Typography>
+              <Typography variant='body1' sx={{ opacity: 0.9 }}>
+                Monitor and analyze production costs across all manufacturing cycles
+              </Typography>
+            </Box>
+          </Box>
+          <Box sx={{ textAlign: 'right' }}>
+            <Typography variant='h6' sx={{ opacity: 0.8 }}>
+              Total Cycles
+            </Typography>
+            <Typography variant='h3' sx={{ fontWeight: 700 }}>
+              {dashboardMetrics.totalCycles}
+            </Typography>
+          </Box>
+        </Box>
+      </Paper>
+
+      {/* Key Metrics Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card elevation={2} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Avatar sx={{ bgcolor: '#e3f2fd', color: '#1976d2' }}>
+                  <TrendingUpIcon />
+                </Avatar>
+                <Typography variant='h4' sx={{ fontWeight: 700, color: '#1976d2' }}>
+                  {dashboardMetrics.totalProduction.toLocaleString()}
+                </Typography>
+              </Box>
+              <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 600 }}>
+                Total Units Produced
+              </Typography>
+              <LinearProgress 
+                variant='determinate' 
+                value={85} 
+                sx={{ mt: 1, height: 6, borderRadius: 3, bgcolor: '#e3f2fd' }}
+              />
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card elevation={2} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Avatar sx={{ bgcolor: '#f3e5f5', color: '#7b1fa2' }}>
+                  <MoneyIcon />
+                </Avatar>
+                <Typography variant='h5' sx={{ fontWeight: 700, color: '#7b1fa2' }}>
+                  <CurrencyDisplay amount={dashboardMetrics.totalCost} />
+                </Typography>
+              </Box>
+              <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 600 }}>
+                Total Production Cost
+              </Typography>
+              <LinearProgress 
+                variant='determinate' 
+                value={72} 
+                sx={{ mt: 1, height: 6, borderRadius: 3, bgcolor: '#f3e5f5' }}
+              />
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card elevation={2} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Avatar sx={{ bgcolor: '#e8f5e9', color: '#388e3c' }}>
+                  <AssessmentIcon />
+                </Avatar>
+                <Typography variant='h5' sx={{ fontWeight: 700, color: '#388e3c' }}>
+                  <CurrencyDisplay amount={dashboardMetrics.avgCostPerUnit} />
+                </Typography>
+              </Box>
+              <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 600 }}>
+                Average Cost Per Unit
+              </Typography>
+              <LinearProgress 
+                variant='determinate' 
+                value={65} 
+                sx={{ mt: 1, height: 6, borderRadius: 3, bgcolor: '#e8f5e9' }}
+              />
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card elevation={2} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Avatar sx={{ bgcolor: '#fff3e0', color: '#f57c00' }}>
+                  <AnalyticsIcon />
+                </Avatar>
+                <Typography variant='h6' sx={{ fontWeight: 700, color: '#f57c00' }}>
+                  {dashboardMetrics.materialPercentage.toFixed(1)}%
+                </Typography>
+              </Box>
+              <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 600 }}>
+                Material Cost Ratio
+              </Typography>
+              <LinearProgress 
+                variant='determinate' 
+                value={dashboardMetrics.materialPercentage} 
+                sx={{ mt: 1, height: 6, borderRadius: 3, bgcolor: '#fff3e0' }}
+              />
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Cost Breakdown Chart */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} md={8}>
+          <Card elevation={2} sx={{ borderRadius: 3, height: '100%' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                <PieChartIcon sx={{ color: '#0d9488', fontSize: 28 }} />
+                <Typography variant='h6' sx={{ fontWeight: 600 }}>
+                  Cost Breakdown Analysis
+                </Typography>
+              </Box>
+              
+              <Grid container spacing={2}>
+                <Grid item xs={4}>
+                  <Box sx={{ textAlign: 'center', p: 2, bgcolor: '#f0fdfa', borderRadius: 2 }}>
+                    <Typography variant='h4' sx={{ fontWeight: 700, color: '#0d9488', mb: 1 }}>
+                      {dashboardMetrics.materialPercentage.toFixed(0)}%
+                    </Typography>
+                    <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 600 }}>
+                      Material Costs
+                    </Typography>
+                    <Typography variant='caption' sx={{ color: '#0d9488', fontWeight: 600 }}>
+                      <CurrencyDisplay amount={dashboardMetrics.materialCosts} />
+                    </Typography>
+                  </Box>
+                </Grid>
+                
+                <Grid item xs={4}>
+                  <Box sx={{ textAlign: 'center', p: 2, bgcolor: '#fef7ff', borderRadius: 2 }}>
+                    <Typography variant='h4' sx={{ fontWeight: 700, color: '#7b1fa2', mb: 1 }}>
+                      {dashboardMetrics.laborPercentage.toFixed(0)}%
+                    </Typography>
+                    <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 600 }}>
+                      Labor Costs
+                    </Typography>
+                    <Typography variant='caption' sx={{ color: '#7b1fa2', fontWeight: 600 }}>
+                      <CurrencyDisplay amount={dashboardMetrics.laborCosts} />
+                    </Typography>
+                  </Box>
+                </Grid>
+                
+                <Grid item xs={4}>
+                  <Box sx={{ textAlign: 'center', p: 2, bgcolor: '#fff8e1', borderRadius: 2 }}>
+                    <Typography variant='h4' sx={{ fontWeight: 700, color: '#f57c00', mb: 1 }}>
+                      {dashboardMetrics.overheadPercentage.toFixed(0)}%
+                    </Typography>
+                    <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 600 }}>
+                      Overhead Costs
+                    </Typography>
+                    <Typography variant='caption' sx={{ color: '#f57c00', fontWeight: 600 }}>
+                      <CurrencyDisplay amount={dashboardMetrics.overheadCosts} />
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+        
+        <Grid item xs={12} md={4}>
+          <Card elevation={2} sx={{ borderRadius: 3, height: '100%' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                <TimelineIcon sx={{ color: '#1976d2', fontSize: 28 }} />
+                <Typography variant='h6' sx={{ fontWeight: 600 }}>
+                  Quick Actions
+                </Typography>
+              </Box>
+              
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Button 
+                  variant='contained' 
+                  fullWidth 
+                  sx={{ 
+                    bgcolor: '#0d9488', 
+                    '&:hover': { bgcolor: '#14b8a6' },
+                    borderRadius: 2,
+                    py: 1.5
+                  }}
+                  startIcon={<AssignmentIcon />}
+                >
+                  New Cost Analysis
+                </Button>
+                
+                <Button 
+                  variant='outlined' 
+                  fullWidth 
+                  sx={{ 
+                    borderColor: '#0d9488', 
+                    color: '#0d9488',
+                    '&:hover': { borderColor: '#14b8a6', bgcolor: '#f0fdfa' },
+                    borderRadius: 2,
+                    py: 1.5
+                  }}
+                  startIcon={<BarChartIcon />}
+                >
+                  Export Report
+                </Button>
+                
+                <Divider sx={{ my: 1 }} />
+                
+                <Box sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: 2 }}>
+                  <Typography variant='body2' color='text.secondary' sx={{ mb: 1, fontWeight: 600 }}>
+                    Recent Activity
+                  </Typography>
+                  <Typography variant='caption' color='text.secondary'>
+                    Last cost analysis: {completedCycles.length > 0 ? 'Today' : 'No data'}
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
         {/* Production Cost Form */}
-        <div className='p-6'>
-          <Card variant='outlined' sx={{ mb: 4 }}>
-            <CardContent sx={{ p: 3 }}>
-              <div className='flex items-center gap-3 mb-4'>
-                <AssignmentIcon sx={{ fontSize: 32, color: '#0d9488' }} />
-                <Typography variant='h6' sx={{ fontWeight: 600 }}>
-                  Cost Allocation Form
-                </Typography>
-              </div>
+        <Card elevation={2} sx={{ borderRadius: 3, mb: 4 }}>
+          <CardContent sx={{ p: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
+              <Avatar sx={{ bgcolor: '#e8f5e9', color: '#0d9488' }}>
+                <AssignmentIcon />
+              </Avatar>
+              <Typography variant='h5' sx={{ fontWeight: 600 }}>
+                Cost Allocation Form
+              </Typography>
+            </Box>
 
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={4}>
                 <FormControl fullWidth>
                   <InputLabel>Select Completed Cycle</InputLabel>
                   <Select
@@ -239,7 +518,9 @@ export default function ProductionCostPage() {
                     ))}
                   </Select>
                 </FormControl>
+              </Grid>
 
+              <Grid item xs={12} md={4}>
                 <TextField
                   label='Product'
                   value={
@@ -250,7 +531,9 @@ export default function ProductionCostPage() {
                   disabled
                   fullWidth
                 />
+              </Grid>
 
+              <Grid item xs={12} md={4}>
                 <TextField
                   label='Quantity Produced'
                   type='number'
@@ -258,7 +541,9 @@ export default function ProductionCostPage() {
                   disabled
                   fullWidth
                 />
+              </Grid>
 
+              <Grid item xs={12} md={3}>
                 <TextField
                   label='Labor Cost'
                   type='number'
@@ -266,7 +551,9 @@ export default function ProductionCostPage() {
                   disabled
                   fullWidth
                 />
+              </Grid>
 
+              <Grid item xs={12} md={3}>
                 <TextField
                   label='Overhead Cost'
                   type='number'
@@ -274,7 +561,9 @@ export default function ProductionCostPage() {
                   disabled
                   fullWidth
                 />
+              </Grid>
 
+              <Grid item xs={12} md={3}>
                 <TextField
                   label='Total Cost'
                   type='number'
@@ -284,10 +573,13 @@ export default function ProductionCostPage() {
                   sx={{
                     '& .MuiInputBase-input': {
                       fontWeight: 600,
+                      color: '#0d9488'
                     },
                   }}
                 />
+              </Grid>
 
+              <Grid item xs={12} md={3}>
                 <TextField
                   label='Date Produced'
                   type='date'
@@ -297,171 +589,140 @@ export default function ProductionCostPage() {
                   InputLabelProps={{ shrink: true }}
                   fullWidth
                 />
-              </div>
+              </Grid>
+            </Grid>
 
-              {/* Raw Materials */}
-              {formData.rawMaterials && formData.rawMaterials.length > 0 && (
-                <div className='mt-4'>
-                  <Typography variant='subtitle2' sx={{ mb: 2, fontWeight: 600 }}>
-                    Raw Materials Used:
-                  </Typography>
-                  <div className='grid grid-cols-1 gap-2'>
-                    {formData.rawMaterials.map((rm, i) => {
-                      const product = products.find((p) => p.id === rm.productId);
-                      const productName = rm.productName || rm.materialName || product?.name || 'Unknown Material';
-                      const quantity = rm.quantity || rm.qtyUsed || 0;
-                      const unitCost = rm.unitCost || product?.buyingPrice || 0;
-                      const totalCost = rm.totalCost || (quantity * unitCost);
-                      
-                      return (
-                        <div
-                          key={i}
-                          className='p-3 border rounded bg-gray-50'
-                        >
-                          <div className='flex justify-between items-center mb-1'>
-                            <Typography variant='body2' sx={{ fontWeight: 600 }}>
+            {/* Raw Materials */}
+            {formData.rawMaterials && formData.rawMaterials.length > 0 && (
+              <Box sx={{ mt: 4 }}>
+                <Typography variant='h6' sx={{ mb: 3, fontWeight: 600, color: '#0d9488' }}>
+                  Raw Materials Breakdown
+                </Typography>
+                <Grid container spacing={2}>
+                  {formData.rawMaterials.map((rm, i) => {
+                    const product = products.find((p) => p.id === rm.productId);
+                    const productName = rm.productName || rm.materialName || product?.name || 'Unknown Material';
+                    const quantity = rm.quantity || rm.qtyUsed || 0;
+                    const unitCost = rm.unitCost || product?.buyingPrice || 0;
+                    const totalCost = rm.totalCost || (quantity * unitCost);
+                    
+                    return (
+                      <Grid item xs={12} sm={6} md={4} key={i}>
+                        <Paper elevation={1} sx={{ p: 3, borderRadius: 2, bgcolor: '#f8fafc' }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                            <Typography variant='subtitle1' sx={{ fontWeight: 600, color: '#374151' }}>
                               {productName}
                             </Typography>
-                            <Typography variant='body2' sx={{ fontWeight: 700, color: '#0d9488' }}>
+                            <Typography variant='h6' sx={{ fontWeight: 700, color: '#0d9488' }}>
                               <CurrencyDisplay amount={totalCost} />
                             </Typography>
-                          </div>
-                          <div className='flex justify-between items-center text-sm text-gray-600'>
-                            <span>Qty: {quantity}</span>
-                            <span>Unit Cost: <CurrencyDisplay amount={unitCost} /></span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography variant='body2' color='text.secondary'>
+                              Qty: {quantity}
+                            </Typography>
+                            <Typography variant='body2' color='text.secondary'>
+                              Unit: <CurrencyDisplay amount={unitCost} />
+                            </Typography>
+                          </Box>
+                        </Paper>
+                      </Grid>
+                    );
+                  })}
+                </Grid>
+              </Box>
+            )}
 
+            <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
               <Button
                 variant='contained'
                 startIcon={<SaveIcon />}
                 onClick={handleSubmit}
                 disabled={!formData.cycleId}
                 sx={{
-                  mt: 3,
                   bgcolor: '#0d9488',
                   '&:hover': { bgcolor: '#14b8a6' },
                   '&:disabled': { bgcolor: 'grey.300' },
+                  borderRadius: 2,
+                  px: 4,
+                  py: 1.5
                 }}
               >
                 View Cost Summary
               </Button>
-            </CardContent>
-          </Card>
+              
+              <Button
+                variant='outlined'
+                sx={{
+                  borderColor: '#0d9488',
+                  color: '#0d9488',
+                  '&:hover': { borderColor: '#14b8a6', bgcolor: '#f0fdfa' },
+                  borderRadius: 2,
+                  px: 4,
+                  py: 1.5
+                }}
+              >
+                Reset Form
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
 
           {/* Completed Cycles Table */}
-          <div>
-            <Typography variant='h6' sx={{ fontWeight: 600, color: 'grey.800', mb: 3 }}>
-              Completed Production Cycles
-            </Typography>
-            {completedCycles.length === 0 ? (
-              <Typography color='text.secondary' sx={{ textAlign: 'center', py: 4 }}>
-                No completed cycles yet
-              </Typography>
-            ) : (
-              <>
-                <div className='rounded-xl overflow-hidden shadow-md flex-1 flex flex-col min-h-[400px]'>
-                  <TableContainer sx={{ flex: 1, overflow: 'auto', minHeight: '400px' }}>
-                    <Table size='medium' stickyHeader>
+          <Card elevation={2} sx={{ borderRadius: 3 }}>
+            <CardContent sx={{ p: 0 }}>
+              <Box sx={{ p: 3, borderBottom: '1px solid #e5e7eb' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: '#e3f2fd', color: '#1976d2' }}>
+                    <BarChartIcon />
+                  </Avatar>
+                  <Typography variant='h5' sx={{ fontWeight: 600 }}>
+                    Production Cycles Overview
+                  </Typography>
+                </Box>
+              </Box>
+              
+              {completedCycles.length === 0 ? (
+                <Box sx={{ p: 6, textAlign: 'center' }}>
+                  <FactoryIcon sx={{ fontSize: 64, color: '#9ca3af', mb: 2 }} />
+                  <Typography variant='h6' color='text.secondary' sx={{ mb: 1 }}>
+                    No Completed Cycles
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    Complete some production cycles to see cost analysis here
+                  </Typography>
+                </Box>
+              ) : (
+                <>
+                  <TableContainer sx={{ maxHeight: 600 }}>
+                    <Table stickyHeader>
                       <TableHead>
                         <TableRow>
-                          <TableCell
-                            sx={{
-                              bgcolor: '#0d9488',
-                              color: 'white',
-                              fontWeight: 600,
-                              fontSize: '0.95rem',
-                              py: 1.5,
-                            }}
-                          >
+                          <TableCell sx={{ bgcolor: '#0d9488', color: 'white', fontWeight: 600, py: 2 }}>
                             Cycle ID
                           </TableCell>
-                          <TableCell
-                            sx={{
-                              bgcolor: '#0d9488',
-                              color: 'white',
-                              fontWeight: 600,
-                              fontSize: '0.95rem',
-                              py: 1.5,
-                            }}
-                          >
+                          <TableCell sx={{ bgcolor: '#0d9488', color: 'white', fontWeight: 600, py: 2 }}>
                             Product
                           </TableCell>
-                          <TableCell
-                            align='right'
-                            sx={{
-                              bgcolor: '#0d9488',
-                              color: 'white',
-                              fontWeight: 600,
-                              fontSize: '0.95rem',
-                              py: 1.5,
-                            }}
-                          >
+                          <TableCell align='right' sx={{ bgcolor: '#0d9488', color: 'white', fontWeight: 600, py: 2 }}>
                             Planned Qty
                           </TableCell>
-                          <TableCell
-                            align='right'
-                            sx={{
-                              bgcolor: '#0d9488',
-                              color: 'white',
-                              fontWeight: 600,
-                              fontSize: '0.95rem',
-                              py: 1.5,
-                            }}
-                          >
+                          <TableCell align='right' sx={{ bgcolor: '#0d9488', color: 'white', fontWeight: 600, py: 2 }}>
                             Completed Qty
                           </TableCell>
-                          <TableCell
-                            align='right'
-                            sx={{
-                              bgcolor: '#0d9488',
-                              color: 'white',
-                              fontWeight: 600,
-                              fontSize: '0.95rem',
-                              py: 1.5,
-                            }}
-                          >
+                          <TableCell align='right' sx={{ bgcolor: '#0d9488', color: 'white', fontWeight: 600, py: 2 }}>
+                            Material Cost
+                          </TableCell>
+                          <TableCell align='right' sx={{ bgcolor: '#0d9488', color: 'white', fontWeight: 600, py: 2 }}>
                             Labor Cost
                           </TableCell>
-                          <TableCell
-                            align='right'
-                            sx={{
-                              bgcolor: '#0d9488',
-                              color: 'white',
-                              fontWeight: 600,
-                              fontSize: '0.95rem',
-                              py: 1.5,
-                            }}
-                          >
+                          <TableCell align='right' sx={{ bgcolor: '#0d9488', color: 'white', fontWeight: 600, py: 2 }}>
                             Overhead Cost
                           </TableCell>
-                          <TableCell
-                            align='right'
-                            sx={{
-                              bgcolor: '#0d9488',
-                              color: 'white',
-                              fontWeight: 600,
-                              fontSize: '0.95rem',
-                              py: 1.5,
-                            }}
-                          >
+                          <TableCell align='right' sx={{ bgcolor: '#0d9488', color: 'white', fontWeight: 600, py: 2 }}>
                             Total Cost
                           </TableCell>
-                          <TableCell
-                            align='center'
-                            sx={{
-                              bgcolor: '#0d9488',
-                              color: 'white',
-                              fontWeight: 600,
-                              fontSize: '0.95rem',
-                              py: 1.5,
-                            }}
-                          >
+                          <TableCell align='center' sx={{ bgcolor: '#0d9488', color: 'white', fontWeight: 600, py: 2 }}>
                             Status
                           </TableCell>
                         </TableRow>
@@ -475,36 +736,55 @@ export default function ProductionCostPage() {
                               key={row.id}
                               hover
                               sx={{
-                                bgcolor: isEven ? '#fafafa' : '#f5f5f5',
-                                '&:hover': { bgcolor: '#e8f5e9' },
+                                bgcolor: isEven ? '#fafafa' : 'white',
+                                '&:hover': { bgcolor: '#f0fdfa' },
+                                cursor: 'pointer'
                               }}
                             >
-                              <TableCell sx={{ color: 'grey.800', py: 1.5 }}>
-                                {row.batchNo?.replace(/[^0-9]/g, '') || row.name?.replace(/[^0-9]/g, '') || row.id.slice(-6)}
+                              <TableCell sx={{ py: 2, fontWeight: 500 }}>
+                                <Chip 
+                                  label={row.batchNo?.replace(/[^0-9]/g, '') || row.name?.replace(/[^0-9]/g, '') || row.id.slice(-6)}
+                                  size='small'
+                                  sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', fontWeight: 600 }}
+                                />
                               </TableCell>
-                              <TableCell sx={{ color: 'grey.800', py: 1.5 }}>
+                              <TableCell sx={{ py: 2, fontWeight: 500 }}>
                                 {row.productName}
                               </TableCell>
-                              <TableCell align='right' sx={{ color: 'grey.800', py: 1.5 }}>
-                                {row.quantityPlanned}
+                              <TableCell align='right' sx={{ py: 2 }}>
+                                <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                                  {row.quantityPlanned?.toLocaleString()}
+                                </Typography>
                               </TableCell>
-                              <TableCell align='right' sx={{ color: 'grey.800', py: 1.5 }}>
-                                {row.quantityCompleted}
+                              <TableCell align='right' sx={{ py: 2 }}>
+                                <Typography variant='body2' sx={{ fontWeight: 600, color: '#0d9488' }}>
+                                  {row.quantityCompleted?.toLocaleString()}
+                                </Typography>
                               </TableCell>
-                              <TableCell align='right' sx={{ color: 'grey.800', py: 1.5 }}>
+                              <TableCell align='right' sx={{ py: 2 }}>
+                                <CurrencyDisplay amount={row.materialCost} />
+                              </TableCell>
+                              <TableCell align='right' sx={{ py: 2 }}>
                                 <CurrencyDisplay amount={row.laborCost} />
                               </TableCell>
-                              <TableCell align='right' sx={{ color: 'grey.800', py: 1.5 }}>
+                              <TableCell align='right' sx={{ py: 2 }}>
                                 <CurrencyDisplay amount={row.overheadCost} />
                               </TableCell>
-                              <TableCell
-                                align='right'
-                                sx={{ color: 'grey.800', py: 1.5, fontWeight: 600 }}
-                              >
-                                <CurrencyDisplay amount={row.totalCost} />
+                              <TableCell align='right' sx={{ py: 2 }}>
+                                <Typography variant='body2' sx={{ fontWeight: 700, color: '#0d9488' }}>
+                                  <CurrencyDisplay amount={row.totalCost} />
+                                </Typography>
                               </TableCell>
-                              <TableCell align='center' sx={{ py: 1.5 }}>
-                                <Chip label='Completed' size='small' color='success' />
+                              <TableCell align='center' sx={{ py: 2 }}>
+                                <Chip 
+                                  label='Completed' 
+                                  size='small' 
+                                  sx={{ 
+                                    bgcolor: '#dcfce7', 
+                                    color: '#166534',
+                                    fontWeight: 600
+                                  }} 
+                                />
                               </TableCell>
                             </TableRow>
                           );
@@ -521,17 +801,18 @@ export default function ProductionCostPage() {
                     onRowsPerPageChange={handleChangeRowsPerPage}
                     rowsPerPageOptions={[5, 10, 25, 50, 100]}
                     sx={{
-                      borderTop: '1px solid',
-                      borderColor: 'divider',
-                      '& .MuiTablePagination-toolbar': { bgcolor: 'grey.50' },
+                      borderTop: '1px solid #e5e7eb',
+                      bgcolor: '#f9fafb',
+                      '& .MuiTablePagination-toolbar': { 
+                        px: 3,
+                        py: 2
+                      }
                     }}
                   />
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
 
       {/* Snackbar */}
       <Snackbar
@@ -543,11 +824,15 @@ export default function ProductionCostPage() {
         <Alert
           onClose={() => setSnackbar({ ...snackbar, open: false })}
           severity={snackbar.severity}
-          sx={{ width: '100%' }}
+          sx={{ 
+            width: '100%',
+            borderRadius: 2,
+            boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+          }}
         >
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </div>
+    </Box>
   );
 }

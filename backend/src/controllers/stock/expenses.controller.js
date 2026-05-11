@@ -64,6 +64,7 @@ export const ExpenseController = {
         unit: unit || "pcs",
         unitPrice: unitPrice || 0,
         totalAmount: totalAmount || amount,
+        status: "pending", // Default status
       });
 
       // Create linked journal entry
@@ -87,6 +88,46 @@ export const ExpenseController = {
       const expenses = await ExpenseModel.findAll();
       res.json(expenses);
     } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  // Get expense by ID
+  async getById(req, res) {
+    try {
+      const { id } = req.params;
+      const expense = await ExpenseModel.findById(id);
+      
+      if (!expense) {
+        return res.status(404).json({ error: "Expense not found" });
+      }
+      
+      res.json(expense);
+    } catch (err) {
+      console.error("Get expense by ID error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  // Update expense
+  async update(req, res) {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      
+      console.log(`Updating expense ${id} with data:`, updateData);
+      
+      const updatedExpense = await ExpenseModel.update(id, updateData);
+      
+      res.json({ 
+        message: "Expense updated successfully", 
+        expense: updatedExpense 
+      });
+    } catch (err) {
+      console.error("Expense update error:", err);
+      if (err.message === 'Expense not found') {
+        return res.status(404).json({ error: err.message });
+      }
       res.status(500).json({ error: err.message });
     }
   },

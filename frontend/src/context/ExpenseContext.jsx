@@ -27,6 +27,7 @@ export const ExpenseProvider = ({ children }) => {
       exp.paymentAccount?.name ||
       exp.paymentAccount ||
       "-",
+    supplierId: exp.supplierId || "",
     supplierName: exp.supplierName || "-",
     supplierContact: exp.supplierContact || "-",
     supplierAddress: exp.supplierAddress || "-",
@@ -38,6 +39,7 @@ export const ExpenseProvider = ({ children }) => {
       0,
     currency: exp.currency || "RWF",
     date: exp.date || exp.expenseDate || "-",
+    status: exp.status || "pending", // ✅ Add status field
   });
 
   // ==========================
@@ -145,6 +147,34 @@ export const ExpenseProvider = ({ children }) => {
   };
 
   // ==========================
+  // 🔄 Update Expense (NEW)
+  // ==========================
+  const updateExpense = async (id, updateData) => {
+    try {
+      console.log("🔄 Updating expense:", id, updateData);
+      const updated = await expenseService.update(id, updateData);
+      console.log("✅ Expense updated successfully:", updated);
+      
+      // Update local state
+      setExpenses((prev) => 
+        prev.map(exp => 
+          exp.id === id 
+            ? { ...exp, ...updateData, ...updated }
+            : exp
+        )
+      );
+      
+      return updated;
+    } catch (err) {
+      console.error(
+        "❌ Error updating expense:",
+        err.response?.data || err.message
+      );
+      throw err;
+    }
+  };
+
+  // ==========================
   // 🗑 Remove Expense
   // ==========================
   const removeExpense = async (id) => {
@@ -186,8 +216,10 @@ export const ExpenseProvider = ({ children }) => {
         expenses,
         loading,
         addExpense,
+        updateExpense, // ✅ Add updateExpense to context
         removeExpense,
         refreshExpenses,
+        setExpenses, // ✅ Add setExpenses for local state updates
       }}
     >
       {children}

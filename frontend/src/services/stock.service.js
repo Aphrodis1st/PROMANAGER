@@ -225,10 +225,24 @@ export const expenseService = {
     return res.data;
   },
 
+  getById: async (id) => {
+    console.log(`📥 Fetching expense [${id}]`);
+    const res = await axios.get(`${API_URL}/expenses/${id}`, getAuthHeader());
+    console.log(`✅ Expense fetched [${id}]:`, res.data);
+    return res.data;
+  },
+
   create: async (data) => {
     console.log("📥 Creating expense:", data);
     const res = await axios.post(`${API_URL}/expenses`, data, getAuthHeader());
     console.log("✅ Expense created:", res.data);
+    return res.data;
+  },
+
+  update: async (id, data) => {
+    console.log(`📥 Updating expense [${id}]:`, data);
+    const res = await axios.put(`${API_URL}/expenses/${id}`, data, getAuthHeader());
+    console.log(`✅ Expense updated [${id}]:`, res.data);
     return res.data;
   },
 

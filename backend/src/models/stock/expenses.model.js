@@ -28,6 +28,27 @@ export const ExpenseModel = {
     return { id: doc.id, ...doc.data() };
   },
 
+  async update(id, data) {
+    const expensesCollection = getExpensesCollection();
+    const docRef = expensesCollection.doc(id);
+    
+    // Check if document exists
+    const doc = await docRef.get();
+    if (!doc.exists) {
+      throw new Error('Expense not found');
+    }
+    
+    // Update the document
+    await docRef.update({
+      ...data,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    
+    // Return updated document
+    const updatedDoc = await docRef.get();
+    return { id: updatedDoc.id, ...updatedDoc.data() };
+  },
+
   async remove(id) {
     const expensesCollection = getExpensesCollection();
     const result = await expensesCollection.doc(id).delete();

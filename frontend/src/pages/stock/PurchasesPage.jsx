@@ -5,8 +5,8 @@ import { usePayment } from '../../context/PaymentContext';
 import StockTable from '../../components/stock/StockTable';
 import AddPurchaseModal from '../../components/modals/AddPurchaseModal';
 import SinglePurchaseHistory from '../../components/modals/SinglePurchaseHistory';
-import { Button } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
+import { Button, Card, CardContent, Typography, Box, Grid, Paper, Chip, IconButton, Tooltip } from '@mui/material';
+import { Add as AddIcon, TrendingUp, ShoppingCart, Receipt, Payment, Visibility, CheckCircle, Cancel, MonetizationOn } from '@mui/icons-material';
 import CurrencyDisplay from '../../components/stock/CurrencyDisplay';
 
 function AddSupplierForm({ onAdd }) {
@@ -39,59 +39,76 @@ function AddSupplierForm({ onAdd }) {
   };
 
   return (
-    <form
-      className='grid grid-cols-1 gap-2 p-2 bg-white border rounded-lg'
-      onSubmit={handleSubmit}
-    >
-      <input
-        name='name'
-        value={supplierForm.name}
-        onChange={handleChange}
-        placeholder='Supplier Name'
-        className='border p-2 rounded-lg w-full'
-      />
-      <input
-        name='company'
-        value={supplierForm.company}
-        onChange={handleChange}
-        placeholder='Company Name'
-        className='border p-2 rounded-lg w-full'
-      />
-      <input
-        name='email'
-        value={supplierForm.email}
-        onChange={handleChange}
-        placeholder='Email'
-        className='border p-2 rounded-lg w-full'
-      />
-      <input
-        name='location'
-        value={supplierForm.location}
-        onChange={handleChange}
-        placeholder='Location'
-        className='border p-2 rounded-lg w-full'
-      />
-      <input
-        name='contact'
-        value={supplierForm.contact}
-        onChange={handleChange}
-        placeholder='+250 789999999'
-        className='border p-2 rounded-lg w-full'
-      />
-      <input
-        name='tin'
-        value={supplierForm.tin}
-        onChange={handleChange}
-        placeholder='TIN:999999999'
-        className='border p-2 rounded-lg w-full'
-      />
-      <button
-        type='submit'
-        className='bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg'
-      >
-        Add Supplier
-      </button>
-    </form>
+    <Paper elevation={2} sx={{ p: 3, mt: 2 }}>
+      <form onSubmit={handleSubmit}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <input
+              name='name'
+              value={supplierForm.name}
+              onChange={handleChange}
+              placeholder='Supplier Name'
+              className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all'
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <input
+              name='company'
+              value={supplierForm.company}
+              onChange={handleChange}
+              placeholder='Company Name'
+              className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all'
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <input
+              name='email'
+              value={supplierForm.email}
+              onChange={handleChange}
+              placeholder='Email'
+              className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all'
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <input
+              name='location'
+              value={supplierForm.location}
+              onChange={handleChange}
+              placeholder='Location'
+              className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all'
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <input
+              name='contact'
+              value={supplierForm.contact}
+              onChange={handleChange}
+              placeholder='+250 789999999'
+              className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all'
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <input
+              name='tin'
+              value={supplierForm.tin}
+              onChange={handleChange}
+              placeholder='TIN:999999999'
+              className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all'
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Button
+              type='submit'
+              variant='contained'
+              fullWidth
+              sx={{ py: 1.5, borderRadius: 2 }}
+            >
+              Add Supplier
+            </Button>
+          </Grid>
+        </Grid>
+      </form>
+    </Paper>
   );
 }
 
@@ -155,6 +172,12 @@ export default function PurchasesPage() {
   const [localInvoices, setLocalInvoices] = useState([]);
   const [showAddPurchaseModal, setShowAddPurchaseModal] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
+
+  // Calculate KPI metrics
+  const totalPurchases = purchases?.length || 0;
+  const totalPurchaseValue = purchases?.reduce((sum, p) => sum + (Number(p.totalPrice) || 0), 0) || 0;
+  const pendingInvoices = invoices?.filter(inv => inv.status === 'pending')?.length || 0;
+  const paidInvoices = invoices?.filter(inv => inv.status === 'paid')?.length || 0;
 
   const calculateTotalPrice = ({ quantity, unitPrice, discount, tax }) => {
     const q = Number(quantity) || 0;
@@ -473,406 +496,533 @@ export default function PurchasesPage() {
   const paymentTypes = ['accrual', 'cash', 'bank', 'check', 'credit'];
 
   return (
-    <div className='bg-gray-50 min-h-screen '>
-      <div className='flex gap-6'>
+    <Box sx={{ p: 3, bgcolor: '#f8fafc', minHeight: '100vh' }}>
+      {/* Professional Dashboard Header */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" sx={{ fontWeight: 600, color: '#1e293b', mb: 1 }}>
+          Purchase Management
+        </Typography>
+        <Typography variant="body1" sx={{ color: '#64748b' }}>
+          Manage purchases, suppliers, and invoices
+        </Typography>
+      </Box>
+
+      {/* KPI Dashboard Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                    {totalPurchases}
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    Total Purchases
+                  </Typography>
+                </Box>
+                <ShoppingCart sx={{ fontSize: 40, opacity: 0.8 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                    <CurrencyDisplay amount={totalPurchaseValue} />
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    Total Value
+                  </Typography>
+                </Box>
+                <MonetizationOn sx={{ fontSize: 40, opacity: 0.8 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                    {pendingInvoices}
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    Pending Invoices
+                  </Typography>
+                </Box>
+                <Receipt sx={{ fontSize: 40, opacity: 0.8 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', color: 'white' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                    {paidInvoices}
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    Paid Invoices
+                  </Typography>
+                </Box>
+                <Payment sx={{ fontSize: 40, opacity: 0.8 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={3}>
         {/* Left: Invoice Details & List */}
-        <div className='w-1/2 space-y-6 overflow-y-auto max-h-[80vh]'>
-          {selectedInvoice && (
-            <div className='bg-white shadow-lg border border-gray-200 p-6 rounded-xl overflow-x-auto'>
-              <div className='flex justify-between items-start mb-4'>
-                <div>
-                  <h2 className='text-lg font-semibold'>
-                    Invoice #{selectedInvoice.id}
-                  </h2>
-                  <div>
-                    <strong>Status:</strong> {selectedInvoice.status}
-                  </div>
-                  <div>
-                    <strong>Payment Type:</strong> {selectedInvoice.paymentType}
-                  </div>
-                </div>
-                <div className='text-right'>
-                  <h3 className='font-semibold'>Supplier</h3>
-                  <div>{selectedInvoice.supplier?.name || 'N/A'}</div>
-                  <div>{selectedInvoice.supplier?.company}</div>
-                  <div>{selectedInvoice.supplier?.contact}</div>
-                  <div>{selectedInvoice.supplier?.email}</div>
-                  <div>{selectedInvoice.supplier?.tin}</div>
-                  <div>{selectedInvoice.supplier?.location}</div>
-                </div>
-              </div>
-              <div className='overflow-x-auto'>
-                <table className='w-full text-sm border min-w-[1200px] table-auto'>
-                  <thead className='bg-gray-200 sticky top-0 z-10'>
-                    <tr>
-                      {fields.map((f) => (
-                        <th key={f.name} className='border px-2 py-1'>
-                          {f.label}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(selectedInvoice.items || []).map((item) => (
-                      <tr key={item.id} className='border-t'>
+        <Grid item xs={12} lg={formVisible ? 6 : 12}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {selectedInvoice && (
+              <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 3 }}>
+                  <Box>
+                    <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
+                      Invoice #{selectedInvoice.id}
+                    </Typography>
+                    <Chip 
+                      label={selectedInvoice.status} 
+                      color={selectedInvoice.status === 'paid' ? 'success' : selectedInvoice.status === 'approved' ? 'primary' : 'warning'}
+                      sx={{ mr: 1 }}
+                    />
+                    <Chip label={selectedInvoice.paymentType} variant="outlined" />
+                  </Box>
+                  <Box sx={{ textAlign: 'right' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>Supplier</Typography>
+                    <Typography variant="body2">{selectedInvoice.supplier?.name || 'N/A'}</Typography>
+                    <Typography variant="body2">{selectedInvoice.supplier?.company}</Typography>
+                    <Typography variant="body2">{selectedInvoice.supplier?.contact}</Typography>
+                    <Typography variant="body2">{selectedInvoice.supplier?.email}</Typography>
+                    <Typography variant="body2">{selectedInvoice.supplier?.tin}</Typography>
+                    <Typography variant="body2">{selectedInvoice.supplier?.location}</Typography>
+                  </Box>
+                </Box>
+                <Box sx={{ overflowX: 'auto' }}>
+                  <table className='w-full text-sm border min-w-[1200px] table-auto bg-white rounded-lg overflow-hidden'>
+                    <thead className='bg-gray-100'>
+                      <tr>
                         {fields.map((f) => (
-                          <td key={f.name} className='border px-2 py-1'>
-                            {item[f.name]}
-                          </td>
+                          <th key={f.name} className='border px-3 py-2 text-left font-semibold text-gray-700'>
+                            {f.label}
+                          </th>
                         ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className='text-right font-semibold mt-2'></div>
-            </div>
-          )}
-
-          {localInvoices.length > 0 && (
-            <div className='bg-white shadow-lg rounded-xl border border-gray-200 p-4 space-y-4'>
-              <h2 className='text-lg font-semibold mb-4'>Invoices</h2>
-              <div className='overflow-x-auto'>
-                <table className='w-full text-sm border min-w-[600px] table-auto'>
-                  <thead className='bg-gray-200 sticky top-0 z-10'>
-                    <tr>
-                      <th className='border px-2 py-1'>ID</th>
-                      <th className='border px-2 py-1'>Total</th>
-                      <th className='border px-2 py-1'>Payment Type</th>
-                      <th className='border px-2 py-1'>Status</th>
-                      <th className='border px-2 py-1'>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {localInvoices?.map((inv) => {
-                      const total =
-                        inv.total ??
-                        (inv.items?.reduce(
-                          (sum, i) => sum + Number(i.totalPrice || 0),
-                          0
-                        ) ||
-                          0);
-                      return (
-                        <tr key={inv.id} className='border-t'>
-                          <td className='border px-2 py-1'>{inv.id}</td>
-                          <td className='border px-2 py-1'>
-                            <CurrencyDisplay amount={total} />
-                          </td>
-                          <td className='border px-2 py-1'>
-                            {inv.paymentType}
-                          </td>
-                          <td className='border px-2 py-1'>{inv.status}</td>
-                          <td className='flex flex-wrap gap-2 items-center border px-2 py-1'>
-                            <button
-                              className='text-blue-600 underline'
-                              onClick={() => setSelectedInvoice(inv)}
-                            >
-                              View
-                            </button>
-                            {inv.status === 'pending' && (
-                              <>
-                                <button
-                                  className='text-green-600 underline'
-                                  onClick={() =>
-                                    handleInvoiceAction(inv.id, 'approved')
-                                  }
-                                >
-                                  Approve
-                                </button>
-                                <button
-                                  className='text-red-600 underline'
-                                  onClick={() =>
-                                    handleInvoiceAction(inv.id, 'rejected')
-                                  }
-                                >
-                                  Reject
-                                </button>
-                              </>
-                            )}
-                            {inv.status === 'approved' && (
-                              <button
-                                className='text-green-600 underline'
-                                onClick={() => {
-                                  setPayModalOpen(true);
-                                  setInvoiceToPay(inv);
-                                }}
-                              >
-                                Pay
-                              </button>
-                            )}
-                          </td>
+                    </thead>
+                    <tbody>
+                      {(selectedInvoice.items || []).map((item, idx) => (
+                        <tr key={item.id} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                          {fields.map((f) => (
+                            <td key={f.name} className='border px-3 py-2 text-gray-800'>
+                              {item[f.name]}
+                            </td>
+                          ))}
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-
-                {payModalOpen && invoiceToPay && (
-                  <div className='mt-6 border-t pt-4'>
-                    <h3 className='font-semibold mb-2'>
-                      Pay Invoice #{invoiceToPay.id}
-                    </h3>
-                    <label className='block mb-1 font-medium'>
-                      Select Payment Account
-                    </label>
-                    <select
-                      value={selectedPaymentAccount}
-                      onChange={(e) =>
-                        setSelectedPaymentAccount(e.target.value)
-                      }
-                      className='border w-full p-2 rounded-lg mb-3'
-                    >
-                      <option value=''>-- Select Account --</option>
-                      {accountSettings.map((acc) => (
-                        <option key={acc.id} value={acc.id}>
-                          {acc.name}
-                        </option>
                       ))}
-                    </select>
-                    <div className='flex justify-end gap-2'>
-                      <button
-                        className='bg-gray-300 hover:bg-gray-400 px-3 py-1 rounded-lg'
-                        onClick={() => {
-                          setPayModalOpen(false);
-                          setInvoiceToPay(null);
-                          setSelectedPaymentAccount('');
-                        }}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        className='bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg'
-                        onClick={confirmPayment}
-                      >
-                        Confirm Payment
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+                    </tbody>
+                  </table>
+                </Box>
+              </Paper>
+            )}
+
+            {localInvoices.length > 0 && (
+              <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
+                <Typography variant="h5" sx={{ fontWeight: 600, mb: 3 }}>Invoices</Typography>
+                <Box sx={{ overflowX: 'auto' }}>
+                  <table className='w-full text-sm border min-w-[600px] table-auto bg-white rounded-lg overflow-hidden'>
+                    <thead className='bg-gray-100'>
+                      <tr>
+                        <th className='border px-3 py-2 text-left font-semibold text-gray-700'>ID</th>
+                        <th className='border px-3 py-2 text-left font-semibold text-gray-700'>Total</th>
+                        <th className='border px-3 py-2 text-left font-semibold text-gray-700'>Payment Type</th>
+                        <th className='border px-3 py-2 text-left font-semibold text-gray-700'>Status</th>
+                        <th className='border px-3 py-2 text-left font-semibold text-gray-700'>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {localInvoices?.map((inv, idx) => {
+                        const total =
+                          inv.total ??
+                          (inv.items?.reduce(
+                            (sum, i) => sum + Number(i.totalPrice || 0),
+                            0
+                          ) ||
+                            0);
+                        return (
+                          <tr key={inv.id} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                            <td className='border px-3 py-2 text-gray-800 font-medium'>{inv.id}</td>
+                            <td className='border px-3 py-2 text-gray-800 font-semibold'>
+                              <CurrencyDisplay amount={total} />
+                            </td>
+                            <td className='border px-3 py-2'>
+                              <Chip label={inv.paymentType} size="small" variant="outlined" />
+                            </td>
+                            <td className='border px-3 py-2'>
+                              <Chip 
+                                label={inv.status} 
+                                size="small"
+                                color={inv.status === 'paid' ? 'success' : inv.status === 'approved' ? 'primary' : 'warning'}
+                              />
+                            </td>
+                            <td className='border px-3 py-2'>
+                              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                <Tooltip title="View Details">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => setSelectedInvoice(inv)}
+                                    sx={{ color: 'primary.main' }}
+                                  >
+                                    <Visibility fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                                {inv.status === 'pending' && (
+                                  <>
+                                    <Tooltip title="Approve">
+                                      <IconButton
+                                        size="small"
+                                        onClick={() => handleInvoiceAction(inv.id, 'approved')}
+                                        sx={{ color: 'success.main' }}
+                                      >
+                                        <CheckCircle fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Reject">
+                                      <IconButton
+                                        size="small"
+                                        onClick={() => handleInvoiceAction(inv.id, 'rejected')}
+                                        sx={{ color: 'error.main' }}
+                                      >
+                                        <Cancel fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </>
+                                )}
+                                {inv.status === 'approved' && (
+                                  <Tooltip title="Pay Invoice">
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => {
+                                        setPayModalOpen(true);
+                                        setInvoiceToPay(inv);
+                                      }}
+                                      sx={{ color: 'success.main' }}
+                                    >
+                                      <Payment fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                )}
+                              </Box>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+
+                  {payModalOpen && invoiceToPay && (
+                    <Paper elevation={2} sx={{ mt: 3, p: 3, bgcolor: '#f8fafc' }}>
+                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                        Pay Invoice #{invoiceToPay.id}
+                      </Typography>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                          Select Payment Account
+                        </Typography>
+                        <select
+                          value={selectedPaymentAccount}
+                          onChange={(e) => setSelectedPaymentAccount(e.target.value)}
+                          className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all'
+                        >
+                          <option value=''>-- Select Account --</option>
+                          {accountSettings.map((acc) => (
+                            <option key={acc.id} value={acc.id}>
+                              {acc.name}
+                            </option>
+                          ))}
+                        </select>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                        <Button
+                          variant="outlined"
+                          onClick={() => {
+                            setPayModalOpen(false);
+                            setInvoiceToPay(null);
+                            setSelectedPaymentAccount('');
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="contained"
+                          onClick={confirmPayment}
+                          sx={{ bgcolor: 'success.main', '&:hover': { bgcolor: 'success.dark' } }}
+                        >
+                          Confirm Payment
+                        </Button>
+                      </Box>
+                    </Paper>
+                  )}
+                </Box>
+              </Paper>
+            )}
+          </Box>
+        </Grid>
 
         {/* Right: Purchase Form */}
         {formVisible && (
-          <div
-            style={{ width: `${formWidth}%`, height: `${formHeight}vh` }}
-            className='bg-white shadow-2xl border border-gray-200 rounded-2xl p-6 transition-all duration-300 overflow-y-auto'
-          >
-            <h2 className='text-lg font-semibold mb-4'>
-              Add Purchase / Invoice
-            </h2>
+          <Grid item xs={12} lg={6}>
+            <Paper elevation={3} sx={{ p: 3, borderRadius: 2, maxHeight: '80vh', overflowY: 'auto' }}>
+              <Typography variant="h5" sx={{ fontWeight: 600, mb: 3 }}>
+                Add Purchase / Invoice
+              </Typography>
 
-            {/* Supplier selection & AddSupplierForm */}
-            <div className='mb-4 p-3 border rounded-lg bg-gray-50'>
-              <h3 className='font-semibold mb-2 flex justify-between items-center'>
-                Supplier
-                <button
-                  className='text-sm text-blue-600 underline'
-                  onClick={() => setAddSupplierOpen(!addSupplierOpen)}
-                >
-                  {addSupplierOpen ? 'Hide' : 'Add New'}
-                </button>
-              </h3>
-              <select
-                name='supplierId'
-                value={form.supplierId}
-                onChange={handleChange}
-                className='border w-full p-2 rounded-lg mb-2'
-              >
-                <option value=''>Select Supplier</option>
-                {suppliers.map((sup) => (
-                  <option key={sup.id} value={sup.id}>
-                    {sup.name}
-                  </option>
-                ))}
-              </select>
-              {addSupplierOpen && (
-                <AddSupplierForm
-                  onAdd={async (newSupplier) => {
-                    const added = await addSupplier(newSupplier);
-                    setForm({ ...form, supplierId: added.id });
-                    setAddSupplierOpen(false);
-                  }}
-                />
-              )}
-            </div>
-
-            {/* Purchase Form Fields */}
-            <form className='grid grid-cols-3 gap-3'>
-              {fields.map((field) => (
-                <div key={field.name}>
-                  <label className='block text-sm font-medium mb-1'>
-                    {field.label}
-                  </label>
-                  {field.name === 'productName' ? (
-                    <select
-                      name='productId'
-                      value={form.productId}
-                      onChange={handleChange}
-                      className='border w-full p-2 rounded-lg'
-                    >
-                      <option value=''>Select Product</option>
-                      {productSettings.map((ps) => (
-                        <option key={ps.id} value={ps.id}>
-                          {ps.name}
-                        </option>
-                      ))}
-                    </select>
-                  ) : field.name === 'storeCategory' ? (
-                    <select
-                      name='storeCategory'
-                      value={form.storeCategory}
-                      onChange={handleChange}
-                      className='border w-full p-2 rounded-lg'
-                    >
-                      {storeCategories.map((cat) => (
-                        <option key={cat}>{cat}</option>
-                      ))}
-                    </select>
-                  ) : field.name === 'inventoryAccountId' ? (
-                    <select
-                      name='inventoryAccountId'
-                      value={form.inventoryAccountId}
-                      onChange={handleChange}
-                      className='border w-full p-2 rounded-lg'
-                    >
-                      <option value=''>Select Inventory Account</option>
-                      {accountSettings.map((acc) => (
-                        <option key={acc.id} value={acc.id}>
-                          {acc.name}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      name={field.name}
-                      value={form[field.name]}
-                      onChange={handleChange}
-                      type={
-                        [
-                          'quantity',
-                          'unitPrice',
-                          'discount',
-                          'tax',
-                          'openingStock',
-                        ].includes(field.name)
-                          ? 'number'
-                          : 'text'
-                      }
-                      className='border w-full p-2 rounded-lg'
-                    />
-                  )}
-                </div>
-              ))}
-
-              <div className='col-span-1'>
-                <label className='block text-sm font-medium mb-1'>
-                  Payment Type
-                </label>
+              {/* Supplier selection & AddSupplierForm */}
+              <Paper elevation={1} sx={{ p: 2, mb: 3, bgcolor: '#f8fafc' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>Supplier</Typography>
+                  <Button
+                    size="small"
+                    onClick={() => setAddSupplierOpen(!addSupplierOpen)}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    {addSupplierOpen ? 'Hide' : 'Add New'}
+                  </Button>
+                </Box>
                 <select
-                  name='paymentType'
-                  value={form.paymentType}
+                  name='supplierId'
+                  value={form.supplierId}
                   onChange={handleChange}
-                  className='border w-full p-2 rounded-lg'
+                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all mb-2'
                 >
-                  {paymentTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
+                  <option value=''>Select Supplier</option>
+                  {suppliers.map((sup) => (
+                    <option key={sup.id} value={sup.id}>
+                      {sup.name}
                     </option>
                   ))}
                 </select>
-              </div>
+                {addSupplierOpen && (
+                  <AddSupplierForm
+                    onAdd={async (newSupplier) => {
+                      const added = await addSupplier(newSupplier);
+                      setForm({ ...form, supplierId: added.id });
+                      setAddSupplierOpen(false);
+                    }}
+                  />
+                )}
+              </Paper>
 
-              <div className='col-span-3 text-right font-semibold mt-2'>
-                Total: <CurrencyDisplay amount={form.totalPrice || 0} />
-              </div>
+              {/* Purchase Form Fields */}
+              <form>
+                <Grid container spacing={2}>
+                  {fields.map((field) => (
+                    <Grid item xs={12} sm={6} md={4} key={field.name}>
+                      <Typography variant="body2" sx={{ mb: 1, fontWeight: 500, color: '#374151' }}>
+                        {field.label}
+                      </Typography>
+                      {field.name === 'productName' ? (
+                        <select
+                          name='productId'
+                          value={form.productId}
+                          onChange={handleChange}
+                          className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all'
+                        >
+                          <option value=''>Select Product</option>
+                          {productSettings.map((ps) => (
+                            <option key={ps.id} value={ps.id}>
+                              {ps.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : field.name === 'storeCategory' ? (
+                        <select
+                          name='storeCategory'
+                          value={form.storeCategory}
+                          onChange={handleChange}
+                          className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all'
+                        >
+                          {storeCategories.map((cat) => (
+                            <option key={cat}>{cat}</option>
+                          ))}
+                        </select>
+                      ) : field.name === 'inventoryAccountId' ? (
+                        <select
+                          name='inventoryAccountId'
+                          value={form.inventoryAccountId}
+                          onChange={handleChange}
+                          className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all'
+                        >
+                          <option value=''>Select Inventory Account</option>
+                          {accountSettings.map((acc) => (
+                            <option key={acc.id} value={acc.id}>
+                              {acc.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          name={field.name}
+                          value={form[field.name]}
+                          onChange={handleChange}
+                          type={
+                            [
+                              'quantity',
+                              'unitPrice',
+                              'discount',
+                              'tax',
+                              'openingStock',
+                            ].includes(field.name)
+                              ? 'number'
+                              : 'text'
+                          }
+                          className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all'
+                        />
+                      )}
+                    </Grid>
+                  ))}
 
-              <div className='col-span-3 flex justify-end gap-3 mt-2'>
-                <button
-                  type='button'
-                  onClick={addItemToInvoice}
-                  className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg'
-                >
-                  Add to Invoice
-                </button>
-                <button
-                  type='button'
-                  onClick={submitInvoice}
-                  className='bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg'
-                >
-                  Submit Invoice
-                </button>
-                <button
-                  type='button'
-                  onClick={() => setFormVisible(false)}
-                  className='bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg'
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-
-            {invoiceItems.length > 0 && (
-              <div className='mt-4 bg-gray-100 p-3 rounded-lg overflow-x-auto'>
-                <h3 className='font-semibold mb-2'>Invoice Items (Draft)</h3>
-                <table className='w-full text-sm border min-w-[1200px] table-auto'>
-                  <thead className='bg-gray-200 sticky top-0 z-10'>
-                    <tr>
-                      {fields.map((f) => (
-                        <th key={f.name} className='border px-2 py-1'>
-                          {f.label}
-                        </th>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Typography variant="body2" sx={{ mb: 1, fontWeight: 500, color: '#374151' }}>
+                      Payment Type
+                    </Typography>
+                    <select
+                      name='paymentType'
+                      value={form.paymentType}
+                      onChange={handleChange}
+                      className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all'
+                    >
+                      {paymentTypes.map((type) => (
+                        <option key={type} value={type}>
+                          {type}
+                        </option>
                       ))}
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invoiceItems.map((item, idx) => (
-                      <tr key={item.id} className='border-t'>
-                        {fields.map((f) => (
-                          <td key={f.name} className='border px-2 py-1'>
-                            {item[f.name]}
-                          </td>
-                        ))}
-                        <td>
-                          <button
-                            className='text-red-500'
-                            onClick={() =>
-                              setInvoiceItems((prev) =>
-                                prev.filter((_, i) => i !== idx)
-                              )
-                            }
-                          >
-                            Remove
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <div className='text-right font-semibold mt-2'>
-                  Total: <CurrencyDisplay amount={invoiceItems.reduce((sum, i) => sum + Number(i.totalPrice || 0), 0)} />
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+                    </select>
+                  </Grid>
 
-      <div className='bg-white rounded-xl p-4 mt-6 overflow-x-auto'>
-        <div className='flex justify-between items-center mb-4'>
-          <h2 className='text-lg font-semibold'>Purchases History</h2>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setShowAddPurchaseModal(true)}
-            sx={{ borderRadius: 2 }}
-          >
-            Add Purchase
-          </Button>
-        </div>
+                  <Grid item xs={12}>
+                    <Box sx={{ textAlign: 'right', mb: 2 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        Total: <CurrencyDisplay amount={form.totalPrice || 0} />
+                      </Typography>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                      <Button
+                        variant="contained"
+                        onClick={addItemToInvoice}
+                        sx={{ borderRadius: 2 }}
+                      >
+                        Add to Invoice
+                      </Button>
+                      <Button
+                        variant="contained"
+                        onClick={submitInvoice}
+                        sx={{ bgcolor: 'success.main', '&:hover': { bgcolor: 'success.dark' }, borderRadius: 2 }}
+                      >
+                        Submit Invoice
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        onClick={() => setFormVisible(false)}
+                        sx={{ borderRadius: 2 }}
+                      >
+                        Cancel
+                      </Button>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </form>
+
+              {invoiceItems.length > 0 && (
+                <Paper elevation={1} sx={{ mt: 3, p: 2, bgcolor: '#f8fafc' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Invoice Items (Draft)</Typography>
+                  <Box sx={{ overflowX: 'auto' }}>
+                    <table className='w-full text-sm border min-w-[1200px] table-auto bg-white rounded-lg overflow-hidden'>
+                      <thead className='bg-gray-100'>
+                        <tr>
+                          {fields.map((f) => (
+                            <th key={f.name} className='border px-3 py-2 text-left font-semibold text-gray-700'>
+                              {f.label}
+                            </th>
+                          ))}
+                          <th className='border px-3 py-2 text-left font-semibold text-gray-700'>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {invoiceItems.map((item, idx) => (
+                          <tr key={item.id} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                            {fields.map((f) => (
+                              <td key={f.name} className='border px-3 py-2 text-gray-800'>
+                                {item[f.name]}
+                              </td>
+                            ))}
+                            <td className='border px-3 py-2'>
+                              <IconButton
+                                size="small"
+                                onClick={() =>
+                                  setInvoiceItems((prev) =>
+                                    prev.filter((_, i) => i !== idx)
+                                  )
+                                }
+                                sx={{ color: 'error.main' }}
+                              >
+                                <Cancel fontSize="small" />
+                              </IconButton>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <Box sx={{ textAlign: 'right', mt: 2 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        Total: <CurrencyDisplay amount={invoiceItems.reduce((sum, i) => sum + Number(i.totalPrice || 0), 0)} />
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Paper>
+              )}
+            </Paper>
+          </Grid>
+        )}
+      </Grid>
+
+      {/* Professional Purchases History Table */}
+      <Paper elevation={3} sx={{ mt: 4, p: 3, borderRadius: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h5" sx={{ fontWeight: 600 }}>Purchases History</Typography>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setFormVisible(true)}
+              sx={{ borderRadius: 2 }}
+            >
+              Create Invoice
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<AddIcon />}
+              onClick={() => setShowAddPurchaseModal(true)}
+              sx={{ borderRadius: 2 }}
+            >
+              Add Purchase
+            </Button>
+          </Box>
+        </Box>
         <StockTable
           title=''
           data={purchases}
@@ -888,7 +1038,7 @@ export default function PurchasesPage() {
           onEdit={(item) => setSelectedPurchase(item)}
           loading={loading}
         />
-      </div>
+      </Paper>
 
       <AddPurchaseModal
         isOpen={showAddPurchaseModal}
@@ -900,6 +1050,6 @@ export default function PurchasesPage() {
         onClose={() => setSelectedPurchase(null)}
         purchase={selectedPurchase}
       />
-    </div>
+    </Box>
   );
 }

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStock, useStockCurrency } from '../../context/stockContext';
 import { useSales } from '../../context/SalesContext';
 import { usePurchase } from '../../context/PurchaseContext';
+import { useCustomer } from '../../context/CustomerContext';
 import { inventoryService } from '../../services/stock.service';
 import StockTable from '../../components/stock/StockTable';
 import CurrencyDisplay from '../../components/stock/CurrencyDisplay';
@@ -26,6 +27,25 @@ export default function SalesPage() {
     // Journal entry logic moved to context
     console.log('Journal entry:', entry);
   };
+
+  const { customers, fetchCustomers, addCustomer } = useCustomer();
+  const [showCustomerForm, setShowCustomerForm] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
+  const [newCustomerForm, setNewCustomerForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: '',
+    taxId: '',
+    creditLimit: 0,
+    paymentTerms: 'Net 30',
+    status: 'active',
+    notes: '',
+  });
 
   const [formVisible, setFormVisible] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -69,6 +89,7 @@ export default function SalesPage() {
       }
     };
     fetchInventory();
+    fetchCustomers();
   }, []);
 
   const resetForm = () => {
@@ -95,6 +116,36 @@ export default function SalesPage() {
     });
     setEditingId(null);
     setEditMode(false);
+  };
+
+  const handleCreateCustomer = async (e) => {
+    e.preventDefault();
+    if (!newCustomerForm.name || !newCustomerForm.email || !newCustomerForm.phone) {
+      return alert('Please fill in Name, Email, and Phone');
+    }
+    try {
+      const created = await addCustomer(newCustomerForm);
+      setSelectedCustomerId(created.id);
+      setShowCustomerForm(false);
+      setNewCustomerForm({
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        city: '',
+        state: '',
+        postalCode: '',
+        country: '',
+        taxId: '',
+        creditLimit: 0,
+        paymentTerms: 'Net 30',
+        status: 'active',
+        notes: '',
+      });
+      alert('Customer created successfully!');
+    } catch (error) {
+      alert(`Error: ${error.message}`);
+    }
   };
 
   const handleChange = (e) => {
@@ -442,8 +493,297 @@ export default function SalesPage() {
 
   console.log('Final flattened sales:', flattenedSales);
 
+  // Calculate dashboard metrics
+  const totalSales = flattenedSales.length;
+  const totalRevenue = flattenedSales.reduce((sum, item) => sum + Number(item.totalPrice || 0), 0);
+  const totalQuantity = flattenedSales.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const avgOrderValue = totalSales > 0 ? totalRevenue / totalSales : 0;
+
   return (
-    <div className='bg-gray-50 min-h-screen p-6'>
+    <div className='bg-gradient-to-br from-gray-50 via-blue-50 to-gray-50 min-h-screen p-6'>
+      {/* Professional Dashboard Header */}
+      <div className='mb-8'>
+        <div className='flex items-center justify-between mb-6'>
+          <div>
+            <h1 className='text-4xl font-bold text-gray-900 flex items-center gap-3'>
+              <div className='p-3 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl shadow-lg'>
+                <svg className='w-8 h-8 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 10V3L4 14h7v7l9-11h-7z' />
+                </svg>
+              </div>
+              Sales Management
+            </h1>
+            <p className='text-gray-600 mt-2 ml-12'>Track and manage all your sales transactions</p>
+          </div>
+          <div className='text-right'>
+            <p className='text-sm text-gray-600'>Last Updated</p>
+            <p className='text-lg font-semibold text-gray-800'>{new Date().toLocaleDateString()}</p>
+          </div>
+        </div>
+
+        {/* KPI Cards */}
+        <div className='grid grid-cols-4 gap-4'>
+          <div className='bg-white rounded-xl shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <p className='text-gray-600 text-sm font-medium'>Total Sales</p>
+                <p className='text-3xl font-bold text-gray-900 mt-2'>{totalSales}</p>
+              </div>
+              <div className='p-3 bg-blue-100 rounded-lg'>
+                <svg className='w-6 h-6 text-blue-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' />
+                </svg>
+              </div>
+            </div>
+            <p className='text-xs text-gray-500 mt-3'>Transactions recorded</p>
+          </div>
+
+          <div className='bg-white rounded-xl shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <p className='text-gray-600 text-sm font-medium'>Total Revenue</p>
+                <p className='text-3xl font-bold text-green-600 mt-2'><CurrencyDisplay amount={totalRevenue} showSymbol={false} /></p>
+              </div>
+              <div className='p-3 bg-green-100 rounded-lg'>
+                <svg className='w-6 h-6 text-green-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
+                </svg>
+              </div>
+            </div>
+            <p className='text-xs text-gray-500 mt-3'>Total amount generated</p>
+          </div>
+
+          <div className='bg-white rounded-xl shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <p className='text-gray-600 text-sm font-medium'>Avg Order Value</p>
+                <p className='text-3xl font-bold text-purple-600 mt-2'><CurrencyDisplay amount={avgOrderValue} showSymbol={false} /></p>
+              </div>
+              <div className='p-3 bg-purple-100 rounded-lg'>
+                <svg className='w-6 h-6 text-purple-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' />
+                </svg>
+              </div>
+            </div>
+            <p className='text-xs text-gray-500 mt-3'>Average per transaction</p>
+          </div>
+
+          <div className='bg-white rounded-xl shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <p className='text-gray-600 text-sm font-medium'>Total Quantity</p>
+                <p className='text-3xl font-bold text-orange-600 mt-2'>{totalQuantity.toLocaleString()}</p>
+              </div>
+              <div className='p-3 bg-orange-100 rounded-lg'>
+                <svg className='w-6 h-6 text-orange-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' />
+                </svg>
+              </div>
+            </div>
+            <p className='text-xs text-gray-500 mt-3'>Units sold</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Customer Selection Section */}
+      <div className='mb-6 bg-white shadow-lg rounded-xl border border-gray-200 p-6'>
+        <div className='flex items-center justify-between mb-4'>
+          <h3 className='text-lg font-semibold text-gray-800 flex items-center gap-2'>
+            <svg className='w-6 h-6 text-teal-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zM6 20a9 9 0 0118 0v2h2v-2a11 11 0 00-22 0v2h2v-2z' />
+            </svg>
+            Customer Information
+          </h3>
+          <button
+            onClick={() => navigate('/stock/customers')}
+            className='text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2'
+          >
+            <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14' />
+            </svg>
+            Manage Customers
+          </button>
+        </div>
+
+        <div className='grid grid-cols-3 gap-4'>
+          <div className='col-span-2'>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>Select Customer</label>
+            <select
+              value={selectedCustomerId}
+              onChange={(e) => setSelectedCustomerId(e.target.value)}
+              className='w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500'
+            >
+              <option value=''>-- Select a Customer --</option>
+              {customers.map((customer) => (
+                <option key={customer.id} value={customer.id}>
+                  {customer.name} ({customer.email})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>&nbsp;</label>
+            <button
+              onClick={() => setShowCustomerForm(!showCustomerForm)}
+              className='w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2'
+            >
+              <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 6v6m0 0v6m0-6h6m-6 0H6' />
+              </svg>
+              New Customer
+            </button>
+          </div>
+        </div>
+
+        {/* Selected Customer Info */}
+        {selectedCustomerId && (() => {
+          const selected = customers.find(c => c.id === selectedCustomerId);
+          return selected ? (
+            <div className='mt-4 p-4 bg-gradient-to-br from-teal-50 to-cyan-50 border-2 border-teal-300 rounded-lg'>
+              <div className='grid grid-cols-4 gap-4'>
+                <div>
+                  <p className='text-xs text-gray-600 font-medium'>Name</p>
+                  <p className='text-sm font-bold text-gray-800'>{selected.name}</p>
+                </div>
+                <div>
+                  <p className='text-xs text-gray-600 font-medium'>Email</p>
+                  <p className='text-sm font-bold text-gray-800'>{selected.email}</p>
+                </div>
+                <div>
+                  <p className='text-xs text-gray-600 font-medium'>Phone</p>
+                  <p className='text-sm font-bold text-gray-800'>{selected.phone}</p>
+                </div>
+                <div>
+                  <p className='text-xs text-gray-600 font-medium'>Status</p>
+                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                    selected.status === 'active' ? 'bg-green-200 text-green-800' :
+                    selected.status === 'inactive' ? 'bg-gray-200 text-gray-800' :
+                    'bg-red-200 text-red-800'
+                  }`}>
+                    {selected.status}
+                  </span>
+                </div>
+              </div>
+              {selected.creditLimit > 0 && (
+                <div className='mt-3 pt-3 border-t border-teal-200'>
+                  <p className='text-xs text-gray-600 font-medium'>Credit Limit</p>
+                  <p className='text-sm font-bold text-teal-700'>{selected.creditLimit}</p>
+                </div>
+              )}
+            </div>
+          ) : null;
+        })()}
+      </div>
+
+      {/* Create New Customer Form */}
+      {showCustomerForm && (
+        <div className='mb-6 bg-white shadow-2xl border border-gray-200 rounded-2xl p-6'>
+          <div className='flex justify-between items-center mb-4'>
+            <h3 className='text-lg font-semibold text-gray-800'>Create New Customer</h3>
+            <button
+              onClick={() => setShowCustomerForm(false)}
+              className='text-gray-500 hover:text-gray-700'
+            >
+              <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+              </svg>
+            </button>
+          </div>
+
+          <form onSubmit={handleCreateCustomer} className='grid grid-cols-2 gap-4'>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-1'>Name *</label>
+              <input
+                type='text'
+                value={newCustomerForm.name}
+                onChange={(e) => setNewCustomerForm({...newCustomerForm, name: e.target.value})}
+                className='w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500'
+                required
+              />
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-1'>Email *</label>
+              <input
+                type='email'
+                value={newCustomerForm.email}
+                onChange={(e) => setNewCustomerForm({...newCustomerForm, email: e.target.value})}
+                className='w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500'
+                required
+              />
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-1'>Phone *</label>
+              <input
+                type='text'
+                value={newCustomerForm.phone}
+                onChange={(e) => setNewCustomerForm({...newCustomerForm, phone: e.target.value})}
+                className='w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500'
+                required
+              />
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-1'>City</label>
+              <input
+                type='text'
+                value={newCustomerForm.city}
+                onChange={(e) => setNewCustomerForm({...newCustomerForm, city: e.target.value})}
+                className='w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500'
+              />
+            </div>
+            <div className='col-span-2'>
+              <label className='block text-sm font-medium text-gray-700 mb-1'>Address</label>
+              <input
+                type='text'
+                value={newCustomerForm.address}
+                onChange={(e) => setNewCustomerForm({...newCustomerForm, address: e.target.value})}
+                className='w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500'
+              />
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-1'>Credit Limit</label>
+              <input
+                type='number'
+                value={newCustomerForm.creditLimit}
+                onChange={(e) => setNewCustomerForm({...newCustomerForm, creditLimit: Number(e.target.value)})}
+                className='w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500'
+                step='0.01'
+              />
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-1'>Payment Terms</label>
+              <select
+                value={newCustomerForm.paymentTerms}
+                onChange={(e) => setNewCustomerForm({...newCustomerForm, paymentTerms: e.target.value})}
+                className='w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500'
+              >
+                <option value='Net 30'>Net 30</option>
+                <option value='Net 60'>Net 60</option>
+                <option value='Net 90'>Net 90</option>
+                <option value='Due on Receipt'>Due on Receipt</option>
+              </select>
+            </div>
+            <div className='col-span-2 flex gap-3'>
+              <button
+                type='submit'
+                className='flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2'
+              >
+                <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
+                </svg>
+                Create Customer
+              </button>
+              <button
+                type='button'
+                onClick={() => setShowCustomerForm(false)}
+                className='flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg font-medium transition-all'
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {formVisible && (
         <div
           style={{ width: `${formWidth}%`, height: `${formHeight}vh` }}
@@ -1100,9 +1440,33 @@ export default function SalesPage() {
         </div>
       )}
 
-      <div className='bg-white shadow-lg rounded-xl border border-gray-200 overflow-hidden'>
+      {/* Professional Sales Table Section */}
+      <div className='bg-white shadow-xl rounded-2xl border border-gray-200 overflow-hidden'>
+        <div className='bg-gradient-to-r from-teal-600 to-cyan-600 px-8 py-6 flex items-center justify-between'>
+          <div className='flex items-center gap-3'>
+            <svg className='w-8 h-8 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z' />
+            </svg>
+            <div>
+              <h2 className='text-2xl font-bold text-white'>Sales Records</h2>
+              <p className='text-teal-100 text-sm'>Complete transaction history</p>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              setFormVisible(!formVisible);
+              resetForm();
+            }}
+            className='bg-white hover:bg-gray-100 text-teal-600 px-6 py-3 rounded-lg font-semibold transition-all shadow-md flex items-center gap-2'
+          >
+            <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 6v6m0 0v6m0-6h6m-6 0H6' />
+            </svg>
+            New Sale
+          </button>
+        </div>
         <StockTable
-          title='Sales'
+          title=''
           data={flattenedSales}
           fields={fields}
           updateItem={(id, data) => updateItem('sale', id, data)}

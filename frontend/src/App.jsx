@@ -17,6 +17,7 @@ import TaxSettingsPage from './pages/stock/TaxSettingsPage.jsx';
 import TaxReportsPage from './pages/stock/TaxReportsPage.jsx';
 import ChartOfAccountsPage from './pages/stock/ChartOfAccountsPage.jsx';
 import SalesPage from './pages/stock/SalesPage.jsx';
+import CustomerPage from './pages/stock/CustomerPage.jsx';
 import ExpensesPage from './pages/stock/ExpensesPage.jsx';
 import ReportsDashboard from './pages/stock/ReportsDashboard.jsx';
 import FixedAssetsPage from './pages/stock/FixedAssetsPage.jsx';
@@ -25,6 +26,7 @@ import ProductionCostPage from './pages/production/ProductionCostPage.jsx';
 import ProductionPlanningPage from './pages/production/ProductionPlanningPage.jsx';
 import ProductionReportsPage from './pages/production/ProductionReportsPage.jsx';
 import FinishedGoodsPage from './pages/production/FinishedGoodsPage.jsx';
+import FinishedGoodsStockPage from './pages/stock/FinishedGoodsStockPage.jsx';
 import MaterialConsumptionPage from './pages/production/MaterialConsumptionPage.jsx';
 import ProductionCyclePage from './pages/production/ProductionCyclePage.jsx';
 import InvoicePage from './pages/stock/InvoicePage.jsx';
@@ -219,6 +221,7 @@ function AppContent() {
         <Route index element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","FINANCE_MANAGER","SALE_MANAGER","MARKETTING_MANAGER","ACCOUNTANT","STOCK_KEEPER","PROCUREMENT","SALES"]}><StockDashboardOverview /></StockProtectedRoute>} />
         <Route path='inventory' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","STOCK_KEEPER","ACCOUNTANT"]} departments={["Warehouse","Finance"]}><InventoryPage /></StockProtectedRoute>} />
         <Route path='purchases' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PROCUREMENT","ACCOUNTANT"]} departments={["Purchasing","Finance"]}><PurchasesPage /></StockProtectedRoute>} />
+        <Route path='customers' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","SALE_MANAGER","SALES","ACCOUNTANT"]} departments={["Sales","Finance"]}><CustomerPage /></StockProtectedRoute>} />
         <Route path='sales' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","SALE_MANAGER","SALES","ACCOUNTANT"]} departments={["Sales","Finance"]}><SalesPage /></StockProtectedRoute>} />
         <Route path="invoice/:id" element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","SALE_MANAGER","SALES","ACCOUNTANT"]} departments={["Sales","Finance"]}><InvoicePage /></StockProtectedRoute>} />
         <Route path='dispense' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","STOCK_KEEPER","ACCOUNTANT"]} departments={["Warehouse","Finance"]}><DispensePage /></StockProtectedRoute>} />
@@ -237,7 +240,7 @@ function AppContent() {
         <Route path='production-plan' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER"]} departments={["Production"]}><ProductionPlanPage /></StockProtectedRoute>} />
         <Route path='production-cost' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","ACCOUNTANT"]} departments={["Production","Finance"]}><ProductionCostPage /></StockProtectedRoute>} />
         <Route path='production-planning' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER"]} departments={["Production"]}><ProductionPlanningPage /></StockProtectedRoute>} />
-        <Route path='finished-goods' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","STOCK_KEEPER","ACCOUNTANT"]} departments={["Production","Warehouse","Finance"]}><FinishedGoodsPage /></StockProtectedRoute>} />
+        <Route path='finished-goods' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","STOCK_KEEPER","ACCOUNTANT"]} departments={["Production","Warehouse","Finance"]}><FinishedGoodsStockPage /></StockProtectedRoute>} />
         <Route path='production-reports' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","ACCOUNTANT"]} departments={["Production","Finance"]}><ProductionReportsPage /></StockProtectedRoute>} />
         <Route path='Material-consumptions' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","STOCK_KEEPER","ACCOUNTANT"]} departments={["Production","Warehouse","Finance"]}><MaterialConsumptionPage /></StockProtectedRoute>} />
         <Route path='production-cycle' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER"]} departments={["Production"]}><ProductionCyclePage /></StockProtectedRoute>} />
