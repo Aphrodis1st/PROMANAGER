@@ -8,6 +8,7 @@ const StockManagement = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedStock, setSelectedStock] = useState(null);
   const [showFeaturesModal, setShowFeaturesModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const [newStock, setNewStock] = useState({
     name: '',
@@ -25,6 +26,13 @@ const StockManagement = () => {
     { id: 'transfers', name: 'Transfers', category: 'Stock Management' },
     { id: 'adjustments', name: 'Stock Adjustments', category: 'Stock Management' },
     { id: 'returns', name: 'Returns', category: 'Stock Management' },
+    { id: 'invoice', name: 'Invoice Management', category: 'Stock Management' },
+    { id: 'production_plan', name: 'Production Planning', category: 'Production' },
+    { id: 'production_cycle', name: 'Production Cycle', category: 'Production' },
+    { id: 'finished_goods', name: 'Finished Goods', category: 'Production' },
+    { id: 'production_cost', name: 'Production Cost', category: 'Production' },
+    { id: 'material_consumption', name: 'Material Consumption', category: 'Production' },
+    { id: 'production_reports', name: 'Production Reports', category: 'Production' },
     { id: 'general_journal', name: 'General Journal', category: 'Accounting' },
     { id: 'expenses', name: 'Expenses', category: 'Accounting' },
     { id: 'fixed_assets', name: 'Fixed Assets', category: 'Accounting' },
@@ -34,8 +42,7 @@ const StockManagement = () => {
     { id: 'financial_reports', name: 'Financial Reports', category: 'Reports' },
     { id: 'stock_reports', name: 'Stock Reports', category: 'Reports' },
     { id: 'product_settings', name: 'Product Settings', category: 'Settings' },
-    { id: 'user_settings', name: 'User Settings', category: 'Settings' },
-    { id: 'invoice', name: 'Invoice Management', category: 'Stock Management' }
+    { id: 'user_settings', name: 'User Settings', category: 'Settings' }
   ];
 
   const subscriptionPlans = [
@@ -51,11 +58,13 @@ const StockManagement = () => {
   const fetchStocks = async () => {
     try {
       const response = await superAdminService.getAllStocks();
+      console.log('📦 Fetched stocks response:', response);
       if (response.success) {
+        console.log('✅ Stocks data:', response.data);
         setStocks(response.data);
       }
     } catch (error) {
-      console.error('Error fetching stocks:', error);
+      console.error('❌ Error fetching stocks:', error);
     } finally {
       setLoading(false);
     }
@@ -146,7 +155,7 @@ const StockManagement = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-800">Stock Management</h1>
-            <p className="text-gray-600 mt-1">Manage all stock entities in the system</p>
+            <p className="text-gray-600 mt-1">Manage all stock entities in the system ({stocks.length} total)</p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
@@ -157,8 +166,44 @@ const StockManagement = () => {
           </button>
         </div>
 
+        {/* Search Bar */}
+        <div className="bg-white rounded-xl shadow-md p-4 mb-6">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search stocks by name, location, or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <svg
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {stocks.map((stock) => (
+          {stocks
+            .filter((stock) => {
+              const search = searchTerm.toLowerCase();
+              return (
+                stock.name?.toLowerCase().includes(search) ||
+                stock.location?.toLowerCase().includes(search) ||
+                stock.contactInfo?.email?.toLowerCase().includes(search) ||
+                stock.contactInfo?.phone?.toLowerCase().includes(search)
+              );
+            })
+            .map((stock) => (
             <div key={stock.id} className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
@@ -253,11 +298,23 @@ const StockManagement = () => {
           ))}
         </div>
 
-        {stocks.length === 0 && (
+        {stocks.filter((stock) => {
+          const search = searchTerm.toLowerCase();
+          return (
+            stock.name?.toLowerCase().includes(search) ||
+            stock.location?.toLowerCase().includes(search) ||
+            stock.contactInfo?.email?.toLowerCase().includes(search) ||
+            stock.contactInfo?.phone?.toLowerCase().includes(search)
+          );
+        }).length === 0 && (
           <div className="text-center py-12">
-            <div className="text-6xl mb-4 font-bold text-blue-600">S</div>
-            <h3 className="text-xl font-medium text-gray-800 mb-2">No stocks found</h3>
-            <p className="text-gray-600">Create your first stock entity to get started</p>
+            <div className="text-6xl mb-4 font-bold text-blue-600">🔍</div>
+            <h3 className="text-xl font-medium text-gray-800 mb-2">
+              {searchTerm ? 'No stocks match your search' : 'No stocks found'}
+            </h3>
+            <p className="text-gray-600">
+              {searchTerm ? 'Try adjusting your search terms' : 'Create your first stock entity to get started'}
+            </p>
           </div>
         )}
       </div>
@@ -393,7 +450,7 @@ const StockManagement = () => {
             </div>
 
             <div className="max-h-96 overflow-y-auto">
-              {['Stock Management', 'Accounting', 'Reports', 'Settings'].map(category => {
+              {['Stock Management', 'Production', 'Accounting', 'Reports', 'Settings'].map(category => {
                 const categoryFeatures = availableFeatures.filter(f => f.category === category);
                 if (categoryFeatures.length === 0) return null;
                 
