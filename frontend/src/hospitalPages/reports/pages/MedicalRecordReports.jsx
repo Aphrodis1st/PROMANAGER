@@ -13,18 +13,31 @@ const MedicalRecordReports = () => {
     setError(null);
     
     try {
-      const token = localStorage.getItem('hospitalToken');
-      const response = await fetch('/api/v1/hospital/reports/medical-records', {
+      const token = localStorage.getItem('hospitalToken') || localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication token not found. Please login again.');
+      }
+      
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/hospital/reports/medical-records`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
-      if (!response.ok) throw new Error('Failed to generate medical record report');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: Failed to generate medical record report`);
+      }
+      
       const data = await response.json();
-      setReportData(data.report);
+      if (data.success && data.report) {
+        setReportData(data.report);
+      } else {
+        throw new Error('Invalid report data received');
+      }
     } catch (err) {
+      console.error('Report generation error:', err);
       setError(err.message);
     } finally {
       setLoading(false);

@@ -1,8 +1,8 @@
 import axios from "axios";
 import { API_BASE_URL } from '../constants/api';
 
-const HOSPITAL_API_URL = `${API_BASE_URL}/api/v1/hospital`;
-const SUPER_ADMIN_API_URL = `${API_BASE_URL}/api/v1/super-admin`;
+const HOSPITAL_API_URL = `${API_BASE_URL}/hospital`;
+const SUPER_ADMIN_API_URL = `${API_BASE_URL}/super-admin`;
 
 const getAuthHeader = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },

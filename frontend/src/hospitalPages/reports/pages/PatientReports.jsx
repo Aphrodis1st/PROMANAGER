@@ -17,23 +17,36 @@ const PatientReports = () => {
     setError(null);
     
     try {
-      const token = localStorage.getItem('hospitalToken');
+      const token = localStorage.getItem('hospitalToken') || localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication token not found. Please login again.');
+      }
+      
       const params = new URLSearchParams({
         startDate: dateRange.startDate,
         endDate: dateRange.endDate
       });
       
-      const response = await fetch(`/api/v1/hospital/reports/patients?${params}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/hospital/reports/patients?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
-      if (!response.ok) throw new Error('Failed to generate patient report');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: Failed to generate patient report`);
+      }
+      
       const data = await response.json();
-      setReportData(data.report);
+      if (data.success && data.report) {
+        setReportData(data.report);
+      } else {
+        throw new Error('Invalid report data received');
+      }
     } catch (err) {
+      console.error('Report generation error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -86,19 +99,19 @@ const PatientReports = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card className="p-4">
               <h3 className="font-semibold text-gray-600">Total Patients</h3>
-              <p className="text-2xl font-bold text-blue-600">{reportData.summary.totalPatients}</p>
+              <p className="text-2xl font-bold text-blue-600">{reportData.executiveSummary?.totalPatients || 0}</p>
             </Card>
             <Card className="p-4">
               <h3 className="font-semibold text-gray-600">Active Patients</h3>
-              <p className="text-2xl font-bold text-green-600">{reportData.summary.activePatients}</p>
+              <p className="text-2xl font-bold text-green-600">{reportData.executiveSummary?.activePatients || 0}</p>
             </Card>
             <Card className="p-4">
               <h3 className="font-semibold text-gray-600">Average Age</h3>
-              <p className="text-2xl font-bold text-purple-600">{reportData.summary.averageAge.toFixed(1)} years</p>
+              <p className="text-2xl font-bold text-purple-600">{reportData.executiveSummary?.averageAge ? reportData.executiveSummary.averageAge.toFixed(1) : 0} years</p>
             </Card>
             <Card className="p-4">
               <h3 className="font-semibold text-gray-600">Total Admissions</h3>
-              <p className="text-2xl font-bold text-orange-600">{reportData.summary.totalAdmissions}</p>
+              <p className="text-2xl font-bold text-orange-600">{reportData.executiveSummary?.totalAdmissions || 0}</p>
             </Card>
           </div>
 
@@ -107,7 +120,7 @@ const PatientReports = () => {
             <Card className="p-4">
               <h3 className="text-lg font-semibold mb-3">Age Distribution</h3>
               <div className="space-y-2">
-                {Object.entries(reportData.demographics.ageGroups).map(([age, count]) => (
+                {reportData.demographics?.ageDistribution && Object.entries(reportData.demographics.ageDistribution).map(([age, count]) => (
                   <div key={age} className="flex justify-between">
                     <span>{age} years</span>
                     <span className="font-semibold">{count}</span>
@@ -119,7 +132,7 @@ const PatientReports = () => {
             <Card className="p-4">
               <h3 className="text-lg font-semibold mb-3">Gender Distribution</h3>
               <div className="space-y-2">
-                {Object.entries(reportData.demographics.genderDistribution).map(([gender, count]) => (
+                {reportData.demographics?.genderDistribution && Object.entries(reportData.demographics.genderDistribution).map(([gender, count]) => (
                   <div key={gender} className="flex justify-between">
                     <span className="capitalize">{gender}</span>
                     <span className="font-semibold">{count}</span>
@@ -133,7 +146,7 @@ const PatientReports = () => {
           <Card className="p-4">
             <h3 className="text-lg font-semibold mb-3">Department-wise Patient Distribution</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {Object.entries(reportData.demographics.departmentDistribution).map(([dept, count]) => (
+              {reportData.demographics?.departmentDistribution && Object.entries(reportData.demographics.departmentDistribution).map(([dept, count]) => (
                 <div key={dept} className="bg-gray-50 p-3 rounded">
                   <div className="font-medium">{dept}</div>
                   <div className="text-xl font-bold text-blue-600">{count} patients</div>
@@ -157,13 +170,10 @@ const PatientReports = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {reportData.detailedData.patients.slice(0, 10).map((patient, index) => (
+                  {reportData.detailedData?.recentPatients && reportData.detailedData.recentPatients.slice(0, 10).map((patient, index) => (
                     <tr key={index} className="border-t">
-                      <td className="px-4 py-2">{patient.firstName} {patient.lastName}</td>
-                      <td className="px-4 py-2">
-                        {patient.dateOfBirth ? 
-                          new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear() : 'N/A'}
-                      </td>
+                      <td className="px-4 py-2">{patient.name}</td>
+                      <td className="px-4 py-2">{patient.age}</td>
                       <td className="px-4 py-2 capitalize">{patient.gender || 'N/A'}</td>
                       <td className="px-4 py-2">{patient.phone}</td>
                       <td className="px-4 py-2">

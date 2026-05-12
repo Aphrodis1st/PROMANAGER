@@ -14,7 +14,7 @@ const LabReports = () => {
     
     try {
       const token = localStorage.getItem('hospitalToken');
-      const response = await fetch('/api/v1/hospital/reports/lab', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/hospital/reports/lab`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

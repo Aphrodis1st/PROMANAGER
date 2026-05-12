@@ -23,7 +23,7 @@ const FinancialReports = () => {
         endDate: dateRange.endDate
       });
       
-      const response = await fetch(`/api/v1/hospital/reports/financial?${params}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/hospital/reports/financial?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

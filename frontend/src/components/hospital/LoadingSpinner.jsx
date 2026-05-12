@@ -27,12 +27,7 @@ const LoadingSpinner = ({ message = "Loading...", size = "md" }) => {
       />
       <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>{message}</p>
       
-      <style jsx>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
+
     </div>
   );
 };

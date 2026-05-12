@@ -23,7 +23,7 @@ const AuditLogs = () => {
       if (dateRange.end) params.endDate = dateRange.end;
       if (filterAction !== 'all') params.actionType = filterAction;
       
-      const response = await api.get('/api/hospital/reports/audit', { params });
+      const response = await api.get('/hospital/reports/audit', { params });
       setAuditData(response.data.report);
     } catch (error) {
       console.error('Failed to fetch audit data:', error);

@@ -2,7 +2,7 @@ import { API_BASE_URL } from '../constants/api';
 
 class HospitalAdminService {
   constructor() {
-    this.baseURL = `${API_BASE_URL}/api/v1/hospital/admin`;
+    this.baseURL = `${API_BASE_URL}/hospital/admin`;
   }
 
   // Helper method to get auth headers

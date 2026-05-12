@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '../../../components/hospital/card';
 import { Button } from '../../../components/hospital/Button';
 import { LoadingSpinner } from '../../../components/hospital/LoadingSpinner';
-import { Select } from '../../../components/hospital/Select';
 
 const DepartmentReports = () => {
   const [reportData, setReportData] = useState(null);
@@ -21,8 +20,10 @@ const DepartmentReports = () => {
 
   const fetchDepartments = async () => {
     try {
-      const token = localStorage.getItem('hospitalToken');
-      const response = await fetch('/api/v1/hospital/departments', {
+      const token = localStorage.getItem('hospitalToken') || localStorage.getItem('token');
+      if (!token) return;
+      
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/hospital/departments`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -39,24 +40,37 @@ const DepartmentReports = () => {
     setError(null);
     
     try {
-      const token = localStorage.getItem('hospitalToken');
+      const token = localStorage.getItem('hospitalToken') || localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication token not found. Please login again.');
+      }
+      
       const params = new URLSearchParams({
         startDate: dateRange.startDate,
         endDate: dateRange.endDate,
         ...(selectedDepartment && { departmentId: selectedDepartment })
       });
       
-      const response = await fetch(`/api/v1/hospital/reports/departments?${params}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/hospital/reports/departments?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
-      if (!response.ok) throw new Error('Failed to generate department report');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: Failed to generate department report`);
+      }
+      
       const data = await response.json();
-      setReportData(data.report);
+      if (data.success && data.report) {
+        setReportData(data.report);
+      } else {
+        throw new Error('Invalid report data received');
+      }
     } catch (err) {
+      console.error('Report generation error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -184,16 +198,16 @@ const DepartmentReports = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Department Performance Reports</h1>
         <div className="flex space-x-4">
-          <Select
+          <select
             value={selectedDepartment}
             onChange={(e) => setSelectedDepartment(e.target.value)}
-            className="min-w-48"
+            className="border rounded px-3 py-2 min-w-48"
           >
             <option value="">All Departments</option>
             {departments.map(dept => (
               <option key={dept.id} value={dept.id}>{dept.name}</option>
             ))}
-          </Select>
+          </select>
           <input
             type="date"
             value={dateRange.startDate}
@@ -223,8 +237,8 @@ const DepartmentReports = () => {
           {/* Report Header */}
           <Card className="p-4">
             <h2 className="text-xl font-semibold mb-2">{reportData.reportType}</h2>
-            <p className="text-gray-600">Generated on: {new Date(reportData.generatedAt).toLocaleString()}</p>
-            <p className="text-gray-600">Period: {reportData.period.startDate} to {reportData.period.endDate}</p>
+            <p className="text-gray-600">Generated on: {reportData.generatedAt ? new Date(reportData.generatedAt).toLocaleString() : new Date().toLocaleString()}</p>
+            <p className="text-gray-600">Period: {reportData.period?.startDate || dateRange.startDate} to {reportData.period?.endDate || dateRange.endDate}</p>
           </Card>
 
           {/* Department Data */}
