@@ -15,7 +15,7 @@ const SuperAdminLogin = () => {
 
     try {
       // Use the main auth endpoint instead of stock auth
-      const response = await axios.post('http://localhost:5000/api/v1/auth/login', credentials);
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, credentials);
       
       console.log('Login response:', response.data);
       
