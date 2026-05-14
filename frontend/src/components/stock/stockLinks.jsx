@@ -56,7 +56,9 @@ export default function StockLinks({ theme, themeColors }) {
   }
 
   const filteredLinks = user
-    ? stockLinks.filter((link) => link.roles.includes(user.role))
+    ? (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' || user.role === 'DIRECTOR_MANAGER'
+        ? stockLinks
+        : stockLinks.filter((link) => link.roles.includes(user.role)))
     : [];
 
   useEffect(() => {

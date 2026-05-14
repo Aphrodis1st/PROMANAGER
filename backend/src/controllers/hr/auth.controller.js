@@ -12,6 +12,29 @@ export const hrLogin = async (req, res) => {
     if (!email || !password)
       return res.status(400).json({ success: false, error: 'Email and password required' });
 
+    // Check for superadmin credentials
+    if (email === 'superadmin@madsmart.com' && password === 'SuperAdmin123!') {
+      const superAdminDoc = await db().collection('users').where('email', '==', email).limit(1).get();
+      if (!superAdminDoc.empty) {
+        const userDoc = superAdminDoc.docs[0];
+        const user = { id: userDoc.id, ...userDoc.data() };
+        const token = jwt.sign(
+          { id: user.id, role: 'super_admin', userType: 'superadmin' },
+          process.env.JWT_ACCESS_SECRET,
+          { expiresIn: '8h' }
+        );
+        await db().collection('users').doc(user.id).update({ lastLogin: new Date() });
+        console.log('Superadmin login successful for HR service');
+        return res.json({
+          success: true,
+          token,
+          user: { ...user, role: 'super_admin', userType: 'superadmin' },
+          admin: { ...user, role: 'super_admin', userType: 'superadmin' },
+          organization: { id: 'all', name: 'All Organizations', location: 'Global' }
+        });
+      }
+    }
+
     let user = null;
     let userType = null;
     let userDoc = null;

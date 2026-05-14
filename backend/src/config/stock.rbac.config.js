@@ -4,7 +4,7 @@ export const STOCK_ROLES = {
   SUPER_ADMIN: {
     key: 'SUPER_ADMIN',
     name: 'Super Administrator',
-    level: 10,
+    level: 11,
     canAccessAll: true
   },
   ADMIN: {
@@ -85,26 +85,26 @@ export const STOCK_DEPARTMENTS = {
 };
 
 export const STOCK_PAGE_ACCESS = {
-  '/stock': ['ADMIN', 'DIRECTOR_MANAGER', 'PRODUCTION_MANAGER', 'FINANCE_MANAGER', 'SALE_MANAGER', 'MARKETTING_MANAGER', 'ACCOUNTANT', 'STOCK_KEEPER', 'PROCUREMENT', 'SALES'],
-  '/stock/inventory': ['ADMIN', 'DIRECTOR_MANAGER', 'STOCK_KEEPER', 'ACCOUNTANT'],
-  '/stock/purchases': ['ADMIN', 'DIRECTOR_MANAGER', 'PROCUREMENT', 'ACCOUNTANT'],
-  '/stock/sales': ['ADMIN', 'DIRECTOR_MANAGER', 'SALE_MANAGER', 'SALES', 'ACCOUNTANT'],
-  '/stock/dispense': ['ADMIN', 'DIRECTOR_MANAGER', 'STOCK_KEEPER', 'ACCOUNTANT'],
-  '/stock/transfers': ['ADMIN', 'DIRECTOR_MANAGER', 'STOCK_KEEPER', 'ACCOUNTANT'],
-  '/stock/adjustments': ['ADMIN', 'DIRECTOR_MANAGER', 'ACCOUNTANT'],
-  '/stock/returns': ['ADMIN', 'DIRECTOR_MANAGER', 'STOCK_KEEPER', 'ACCOUNTANT'],
-  '/stock/general-journal': ['ADMIN', 'DIRECTOR_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT'],
-  '/stock/charts-of-accounts': ['ADMIN', 'DIRECTOR_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT'],
-  '/stock/expenses': ['ADMIN', 'DIRECTOR_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT'],
-  '/stock/fixed-assets': ['ADMIN', 'DIRECTOR_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT'],
-  '/stock/reports-dashboard': ['ADMIN', 'DIRECTOR_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT'],
-  '/stock/production-plan': ['ADMIN', 'DIRECTOR_MANAGER', 'PRODUCTION_MANAGER'],
-  '/stock/production-cost': ['ADMIN', 'DIRECTOR_MANAGER', 'PRODUCTION_MANAGER', 'ACCOUNTANT'],
-  '/stock/production-planning': ['ADMIN', 'DIRECTOR_MANAGER', 'PRODUCTION_MANAGER'],
-  '/stock/finished-goods': ['ADMIN', 'DIRECTOR_MANAGER', 'PRODUCTION_MANAGER', 'STOCK_KEEPER', 'ACCOUNTANT'],
-  '/stock/production-reports': ['ADMIN', 'DIRECTOR_MANAGER', 'PRODUCTION_MANAGER', 'ACCOUNTANT'],
-  '/stock/Material-consumptions': ['ADMIN', 'DIRECTOR_MANAGER', 'PRODUCTION_MANAGER', 'STOCK_KEEPER', 'ACCOUNTANT'],
-  '/stock/production-cycle': ['ADMIN', 'DIRECTOR_MANAGER', 'PRODUCTION_MANAGER']
+  '/stock': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'PRODUCTION_MANAGER', 'FINANCE_MANAGER', 'SALE_MANAGER', 'MARKETTING_MANAGER', 'ACCOUNTANT', 'STOCK_KEEPER', 'PROCUREMENT', 'SALES'],
+  '/stock/inventory': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'STOCK_KEEPER', 'ACCOUNTANT'],
+  '/stock/purchases': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'PROCUREMENT', 'ACCOUNTANT'],
+  '/stock/sales': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'SALE_MANAGER', 'SALES', 'ACCOUNTANT'],
+  '/stock/dispense': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'STOCK_KEEPER', 'ACCOUNTANT'],
+  '/stock/transfers': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'STOCK_KEEPER', 'ACCOUNTANT'],
+  '/stock/adjustments': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'ACCOUNTANT'],
+  '/stock/returns': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'STOCK_KEEPER', 'ACCOUNTANT'],
+  '/stock/general-journal': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT'],
+  '/stock/charts-of-accounts': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT'],
+  '/stock/expenses': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT'],
+  '/stock/fixed-assets': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT'],
+  '/stock/reports-dashboard': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'FINANCE_MANAGER', 'ACCOUNTANT'],
+  '/stock/production-plan': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'PRODUCTION_MANAGER'],
+  '/stock/production-cost': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'PRODUCTION_MANAGER', 'ACCOUNTANT'],
+  '/stock/production-planning': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'PRODUCTION_MANAGER'],
+  '/stock/finished-goods': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'PRODUCTION_MANAGER', 'STOCK_KEEPER', 'ACCOUNTANT'],
+  '/stock/production-reports': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'PRODUCTION_MANAGER', 'ACCOUNTANT'],
+  '/stock/Material-consumptions': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'PRODUCTION_MANAGER', 'STOCK_KEEPER', 'ACCOUNTANT'],
+  '/stock/production-cycle': ['SUPER_ADMIN', 'ADMIN', 'DIRECTOR_MANAGER', 'PRODUCTION_MANAGER']
 };
 
 export default {

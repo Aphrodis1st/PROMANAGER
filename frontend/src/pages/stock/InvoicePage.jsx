@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { useStock } from "../../context/stockContext";
-import QRCode from "react-qr-code";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
@@ -25,12 +24,21 @@ export default function InvoicePage() {
   const [layout, setLayout] = useState("A4");
 
   useEffect(() => {
-    if (sale) return;
+    if (sale) {
+      console.log('✅ Sale data from location state:', sale);
+      return;
+    }
 
+    console.log('⚠️ No sale in location state, fetching by ID:', id);
     setLoading(true);
     getById("sales", id)
-      .then(setSale)
-      .catch(console.error)
+      .then((data) => {
+        console.log('✅ Fetched sale data:', data);
+        setSale(data);
+      })
+      .catch((error) => {
+        console.error('❌ Error fetching sale:', error);
+      })
       .finally(() => setLoading(false));
   }, [id, sale, getById]);
 
@@ -205,9 +213,9 @@ export default function InvoicePage() {
           <p>Total: {totalPrice.toFixed(2)}</p>
         </div>
 
-        {/* QR Code */}
-        <div className="flex justify-center my-2">
-          <QRCode size={80} value={`Invoice:${sale.id}|Total:${totalPrice.toFixed(2)}`} />
+        {/* Invoice ID */}
+        <div className="text-center my-2 p-2 bg-gray-100 rounded">
+          <p className="text-xs font-mono">{sale.id}</p>
         </div>
 
         <p className="text-center text-xs mt-1">Thank you for your business 🇷🇼</p>

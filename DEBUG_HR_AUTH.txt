@@ -1,0 +1,12 @@
+// Temporary debug - Check your browser console
+// Add this to Performance.jsx temporarily to see what's happening
+
+useEffect(() => {
+  console.log('HR Auth Debug:', {
+    organization,
+    organizationId,
+    localStorage_hrOrganization: localStorage.getItem('hrOrganization'),
+    localStorage_hrToken: localStorage.getItem('hrToken'),
+    localStorage_hrAdmin: localStorage.getItem('hrAdmin')
+  });
+}, [organization, organizationId]);

@@ -73,12 +73,26 @@ export function StockAuthProvider({ children }) {
     const loadUser = async () => {
       if (accessToken) {
         try {
+          // Check if there's a user in localStorage (SuperAdmin case)
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            const parsedUser = JSON.parse(storedUser);
+            if (parsedUser.role === 'super_admin') {
+              // SuperAdmin logged in, use stored user data
+              setUser({ ...parsedUser, role: 'SUPER_ADMIN' });
+              setLoading(false);
+              return;
+            }
+          }
+          
+          // Regular stock user, fetch from stock auth endpoint
           const data = await authService.me();
           setUser(data);
         } catch {
           setUser(null);
           setAccessToken(null);
           localStorage.removeItem("token");
+          localStorage.removeItem("user");
         }
       }
       setLoading(false);
@@ -105,12 +119,15 @@ export function StockAuthProvider({ children }) {
   const logout = async () => {
     try {
       const token = localStorage.getItem("token");
-      if (token) await authService.logout();
+      if (token && user?.role !== 'SUPER_ADMIN') {
+        await authService.logout();
+      }
     } catch {}
     isRefreshingRef.current = false;
     setUser(null);
     setAccessToken(null);
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
   };
 
   const hasRole = (roles) => {

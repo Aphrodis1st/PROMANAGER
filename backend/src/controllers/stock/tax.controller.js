@@ -124,8 +124,8 @@ export const TaxController = {
   // Tax Reports
   async getTaxTransactions(req, res) {
     try {
-      const { startDate, endDate, taxType } = req.query;
-      const filters = { startDate, endDate, taxType };
+      const { startDate, endDate, taxType, transactionType } = req.query;
+      const filters = { startDate, endDate, taxType, transactionType };
       const transactions = await TaxTransactionModel.getAll(filters);
       return res.status(200).json(transactions);
     } catch (err) {

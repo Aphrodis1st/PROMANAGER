@@ -6,8 +6,8 @@ async function createSuperAdmin() {
     // Initialize Firebase first
     await initFirebase();
     
-    const email = 'ngiriyezadavid@gmail.com';
-    const password = 'Supper@123';
+    const email = 'superadmin@madsmart.com';
+    const password = 'SuperAdmin123!';
     const role = 'super_admin';
     
     // Check if super admin already exists

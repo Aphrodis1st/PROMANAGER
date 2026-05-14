@@ -98,6 +98,22 @@ import { createPharmacy, getPharmacyById } from "../models/pharmacy.model.js";
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    
+    // Check for superadmin credentials
+    if (email === 'superadmin@madsmart.com' && password === 'SuperAdmin123!') {
+      const user = await getUserByEmail(email);
+      if (user) {
+        const token = jwt.sign({ id: user.id, role: 'super_admin' }, process.env.JWT_ACCESS_SECRET, { expiresIn: "8h" });
+        await setUserStatus(user.id, 'super_admin', true);
+        console.log('Superadmin login successful for pharmacy service');
+        return res.json({
+          success: true,
+          token,
+          user: { ...user, role: 'super_admin' },
+        });
+      }
+    }
+    
     const user = await getUserByEmail(email);
     console.log("User fetched from Firestore:", user); 
     if (!user){

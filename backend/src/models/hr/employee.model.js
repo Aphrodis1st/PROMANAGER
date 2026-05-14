@@ -19,6 +19,14 @@ export class Employee {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   }
 
+  static async getByOrganization(organizationId) {
+    const snapshot = await db().collection('hr_employees')
+      .where('organizationId', '==', organizationId)
+      .where('isDeleted', '==', false)
+      .get();
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
+
   static async getById(id) {
     const doc = await db().collection('hr_employees').doc(id).get();
     return doc.exists ? { id: doc.id, ...doc.data() } : null;

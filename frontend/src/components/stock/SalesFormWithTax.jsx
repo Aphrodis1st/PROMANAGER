@@ -122,9 +122,11 @@ export default function SalesFormWithTax({
     
     const rate = Number(tax.rate) || 0;
     if (tax.priceType === 'Inclusive') {
-      return (amount * rate) / (100 + rate);
+      // For tax-inclusive prices: Tax = Amount - (Amount / (1 + rate/100))
+      return amount - (amount / (1 + rate / 100));
     }
     
+    // For tax-exclusive prices: Tax = Amount * (rate/100)
     return (amount * rate) / 100;
   };
 

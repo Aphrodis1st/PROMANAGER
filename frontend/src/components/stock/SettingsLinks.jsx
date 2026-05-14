@@ -49,7 +49,9 @@ export default function SettingsLinks({ theme, themeColors }) {
   }
 
   const filteredLinks = user
-    ? settingsLinks.filter((link) => link.roles.includes(user.role))
+    ? (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' || user.role === 'DIRECTOR_MANAGER'
+        ? settingsLinks
+        : settingsLinks.filter((link) => link.roles.includes(user.role)))
     : [];
 
   useEffect(() => {

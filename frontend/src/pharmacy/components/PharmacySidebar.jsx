@@ -10,6 +10,7 @@ export default function PharmacySidebar() {
   const [ordersOpen, setOrdersOpen] = useState(false);
   const [brandingOpen, setBrandingOpen] = useState(false);
   const [paymentsOpen, setPaymentsOpen] = useState(false);
+  const [hrOpen, setHrOpen] = useState(false);
 
   return (
     <>
@@ -159,6 +160,41 @@ export default function PharmacySidebar() {
       >
         <ListItemText primary="Call Center" />
       </ListItemButton>
+
+      {/* HR Department Menu */}
+      <ListItemButton 
+        onClick={() => setHrOpen(!hrOpen)}
+        sx={{ color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+      >
+        <ListItemText primary="HR Department" />
+        {hrOpen ? <ExpandLess /> : <ExpandMore />}
+      </ListItemButton>
+      
+      <Collapse in={hrOpen} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding>
+          <ListItemButton component={Link} to="/pharmacy/hr/employees" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+            <ListItemText primary="Employees" />
+          </ListItemButton>
+          <ListItemButton component={Link} to="/pharmacy/hr/departments" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+            <ListItemText primary="Departments" />
+          </ListItemButton>
+          <ListItemButton component={Link} to="/pharmacy/hr/attendance" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+            <ListItemText primary="Attendance" />
+          </ListItemButton>
+          <ListItemButton component={Link} to="/pharmacy/hr/leave" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+            <ListItemText primary="Leave Management" />
+          </ListItemButton>
+          <ListItemButton component={Link} to="/pharmacy/hr/payroll" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+            <ListItemText primary="Payroll" />
+          </ListItemButton>
+          <ListItemButton component={Link} to="/pharmacy/hr/contracts" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+            <ListItemText primary="Contracts" />
+          </ListItemButton>
+          <ListItemButton component={Link} to="/pharmacy/hr/performance" sx={{ pl: 4, color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+            <ListItemText primary="Performance" />
+          </ListItemButton>
+        </List>
+      </Collapse>
     </>
   );
 }

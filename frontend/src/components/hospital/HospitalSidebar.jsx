@@ -20,6 +20,7 @@ import ManagementLinks from "./hospitalLink/ManagementLinks";
 import FinancialLinks from "./hospitalLink/FinancialLinks";
 import ReportLinks from "./hospitalLink/ReportLinks";
 import AdminLinks from "./hospitalLink/AdminLinks";
+import HRDepartmentLinks from "./hospitalLink/HRDepartmentLinks";
 import { useHospitalAuth } from "../../context/HospitalAuthContext";
 
 const drawerWidth = 320;
@@ -122,6 +123,7 @@ export default function HospitalSidebar() {
             <ClinicalLinks />
             <ManagementLinks />
             <FinancialLinks />
+            <HRDepartmentLinks />
             <ReportLinks />
             <AdminLinks />
 

@@ -160,6 +160,28 @@ import Attendance from './hrPages/Attendance.jsx';
 import LeaveManagement from './hrPages/LeaveManagement.jsx';
 import Payroll from './hrPages/Payroll.jsx';
 import Contracts from './hrPages/Contracts.jsx';
+import Performance from './hrPages/Performance.jsx';
+
+// Property Pages
+import PropertyLayout from './components/property/PropertyLayout.jsx';
+import PropertyDashboard from './propertyPages/dashboard/PropertyDashboard.jsx';
+import PropertiesList from './propertyPages/properties/PropertiesList.jsx';
+import PropertyForm from './propertyPages/properties/PropertyForm.jsx';
+import PropertyDetails from './propertyPages/properties/PropertyDetails.jsx';
+import UnitsList from './propertyPages/units/UnitsList.jsx';
+import TenantsList from './propertyPages/tenants/TenantsList.jsx';
+import TenantForm from './propertyPages/tenants/TenantForm.jsx';
+import LeasesList from './propertyPages/leases/LeasesList.jsx';
+import LeaseForm from './propertyPages/leases/LeaseForm.jsx';
+import PropertyBillingDashboard from './propertyPages/billing/BillingDashboard.jsx';
+import BillingForm from './propertyPages/billing/BillingForm.jsx';
+import MaintenanceList from './propertyPages/maintenance/MaintenanceList.jsx';
+import StaffList from './propertyPages/staff/StaffList.jsx';
+import PropertyReportsDashboard from './propertyPages/reports/ReportsDashboard.jsx';
+import Communication from './propertyPages/communication/Communication.jsx';
+import PropertySettings from './propertyPages/settings/PropertySettings.jsx';
+import OwnerPortal from './propertyPages/owner/OwnerPortal.jsx';
+import TenantPortal from './propertyPages/tenant-portal/TenantPortal.jsx';
 
 // Service Selection and Dashboards
 import ServiceSelection from './pages/ServiceSelection.jsx';
@@ -218,32 +240,39 @@ function AppContent() {
 
       {/* Stock Routes */}
       <Route path='/stock/*' element={<StockLayout />}>
-        <Route index element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","FINANCE_MANAGER","SALE_MANAGER","MARKETTING_MANAGER","ACCOUNTANT","STOCK_KEEPER","PROCUREMENT","SALES"]}><StockDashboardOverview /></StockProtectedRoute>} />
-        <Route path='inventory' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","STOCK_KEEPER","ACCOUNTANT"]} departments={["Warehouse","Finance"]}><InventoryPage /></StockProtectedRoute>} />
-        <Route path='purchases' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PROCUREMENT","ACCOUNTANT"]} departments={["Purchasing","Finance"]}><PurchasesPage /></StockProtectedRoute>} />
-        <Route path='customers' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","SALE_MANAGER","SALES","ACCOUNTANT"]} departments={["Sales","Finance"]}><CustomerPage /></StockProtectedRoute>} />
-        <Route path='sales' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","SALE_MANAGER","SALES","ACCOUNTANT"]} departments={["Sales","Finance"]}><SalesPage /></StockProtectedRoute>} />
-        <Route path="invoice/:id" element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","SALE_MANAGER","SALES","ACCOUNTANT"]} departments={["Sales","Finance"]}><InvoicePage /></StockProtectedRoute>} />
-        <Route path='dispense' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","STOCK_KEEPER","ACCOUNTANT"]} departments={["Warehouse","Finance"]}><DispensePage /></StockProtectedRoute>} />
-        <Route path='transfers' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","STOCK_KEEPER","ACCOUNTANT"]} departments={["Warehouse","Finance"]}><TransfersPage /></StockProtectedRoute>} />
-        <Route path='adjustments' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance","Warehouse"]}><AdjustmentsPage /></StockProtectedRoute>} />
-        <Route path='returns' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","STOCK_KEEPER","ACCOUNTANT"]} departments={["Warehouse","Finance"]}><ReturnsPage /></StockProtectedRoute>} />
-        <Route path='general-journal' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance"]}><GeneralJournalPage /></StockProtectedRoute>} />
-        <Route path='Product-Settings' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER"]}><ProductSettingsPage /></StockProtectedRoute>} />
-        <Route path='tax-settings' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance"]}><TaxSettingsPage /></StockProtectedRoute>} />
-        <Route path='tax-reports' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance"]}><TaxReportsPage /></StockProtectedRoute>} />
-        <Route path='charts-of-accounts' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance"]}><ChartOfAccountsPage /></StockProtectedRoute>} />
-        <Route path='user-settings' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","FINANCE_MANAGER","SALE_MANAGER","MARKETTING_MANAGER","ACCOUNTANT","STOCK_KEEPER","PROCUREMENT","SALES"]}><StockSettingsPage /></StockProtectedRoute>} />
-        <Route path='expenses' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance"]}><ExpensesPage /></StockProtectedRoute>} />
-        <Route path='reports-dashboard' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]}><ReportsDashboard /></StockProtectedRoute>} />
-        <Route path='fixed-assets' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance"]}><FixedAssetsPage /></StockProtectedRoute>} />
-        <Route path='production-plan' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER"]} departments={["Production"]}><ProductionPlanPage /></StockProtectedRoute>} />
-        <Route path='production-cost' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","ACCOUNTANT"]} departments={["Production","Finance"]}><ProductionCostPage /></StockProtectedRoute>} />
-        <Route path='production-planning' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER"]} departments={["Production"]}><ProductionPlanningPage /></StockProtectedRoute>} />
-        <Route path='finished-goods' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","STOCK_KEEPER","ACCOUNTANT"]} departments={["Production","Warehouse","Finance"]}><FinishedGoodsStockPage /></StockProtectedRoute>} />
-        <Route path='production-reports' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","ACCOUNTANT"]} departments={["Production","Finance"]}><ProductionReportsPage /></StockProtectedRoute>} />
-        <Route path='Material-consumptions' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","STOCK_KEEPER","ACCOUNTANT"]} departments={["Production","Warehouse","Finance"]}><MaterialConsumptionPage /></StockProtectedRoute>} />
-        <Route path='production-cycle' element={<StockProtectedRoute roles={["ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER"]} departments={["Production"]}><ProductionCyclePage /></StockProtectedRoute>} />
+        <Route index element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","FINANCE_MANAGER","SALE_MANAGER","MARKETTING_MANAGER","ACCOUNTANT","STOCK_KEEPER","PROCUREMENT","SALES"]}><StockDashboardOverview /></StockProtectedRoute>} />
+        <Route path='inventory' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","STOCK_KEEPER","ACCOUNTANT"]} departments={["Warehouse","Finance"]}><InventoryPage /></StockProtectedRoute>} />
+        <Route path='purchases' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","PROCUREMENT","ACCOUNTANT"]} departments={["Purchasing","Finance"]}><PurchasesPage /></StockProtectedRoute>} />
+        <Route path='customers' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","SALE_MANAGER","SALES","ACCOUNTANT"]} departments={["Sales","Finance"]}><CustomerPage /></StockProtectedRoute>} />
+        <Route path='sales' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","SALE_MANAGER","SALES","ACCOUNTANT"]} departments={["Sales","Finance"]}><SalesPage /></StockProtectedRoute>} />
+        <Route path="invoice/:id" element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","SALE_MANAGER","SALES","ACCOUNTANT"]} departments={["Sales","Finance"]}><InvoicePage /></StockProtectedRoute>} />
+        <Route path='dispense' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","STOCK_KEEPER","ACCOUNTANT"]} departments={["Warehouse","Finance"]}><DispensePage /></StockProtectedRoute>} />
+        <Route path='transfers' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","STOCK_KEEPER","ACCOUNTANT"]} departments={["Warehouse","Finance"]}><TransfersPage /></StockProtectedRoute>} />
+        <Route path='adjustments' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance","Warehouse"]}><AdjustmentsPage /></StockProtectedRoute>} />
+        <Route path='returns' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","STOCK_KEEPER","ACCOUNTANT"]} departments={["Warehouse","Finance"]}><ReturnsPage /></StockProtectedRoute>} />
+        <Route path='general-journal' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance"]}><GeneralJournalPage /></StockProtectedRoute>} />
+        <Route path='Product-Settings' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER"]}><ProductSettingsPage /></StockProtectedRoute>} />
+        <Route path='tax-settings' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance"]}><TaxSettingsPage /></StockProtectedRoute>} />
+        <Route path='tax-reports' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance"]}><TaxReportsPage /></StockProtectedRoute>} />
+        <Route path='charts-of-accounts' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance"]}><ChartOfAccountsPage /></StockProtectedRoute>} />
+        <Route path='user-settings' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","FINANCE_MANAGER","SALE_MANAGER","MARKETTING_MANAGER","ACCOUNTANT","STOCK_KEEPER","PROCUREMENT","SALES"]}><StockSettingsPage /></StockProtectedRoute>} />
+        <Route path='expenses' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance"]}><ExpensesPage /></StockProtectedRoute>} />
+        <Route path='reports-dashboard' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]}><ReportsDashboard /></StockProtectedRoute>} />
+        <Route path='fixed-assets' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance"]}><FixedAssetsPage /></StockProtectedRoute>} />
+        <Route path='production-plan' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER"]} departments={["Production"]}><ProductionPlanPage /></StockProtectedRoute>} />
+        <Route path='production-cost' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","ACCOUNTANT"]} departments={["Production","Finance"]}><ProductionCostPage /></StockProtectedRoute>} />
+        <Route path='production-planning' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER"]} departments={["Production"]}><ProductionPlanningPage /></StockProtectedRoute>} />
+        <Route path='finished-goods' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","STOCK_KEEPER","ACCOUNTANT"]} departments={["Production","Warehouse","Finance"]}><FinishedGoodsStockPage /></StockProtectedRoute>} />
+        <Route path='production-reports' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","ACCOUNTANT"]} departments={["Production","Finance"]}><ProductionReportsPage /></StockProtectedRoute>} />
+        <Route path='Material-consumptions' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","STOCK_KEEPER","ACCOUNTANT"]} departments={["Production","Warehouse","Finance"]}><MaterialConsumptionPage /></StockProtectedRoute>} />
+        <Route path='production-cycle' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER"]} departments={["Production"]}><ProductionCyclePage /></StockProtectedRoute>} />
+        <Route path='hr/employees' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER"]}><Employees /></StockProtectedRoute>} />
+        <Route path='hr/departments' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER"]}><Departments /></StockProtectedRoute>} />
+        <Route path='hr/attendance' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER"]}><Attendance /></StockProtectedRoute>} />
+        <Route path='hr/leave' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER"]}><LeaveManagement /></StockProtectedRoute>} />
+        <Route path='hr/payroll' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER"]}><Payroll /></StockProtectedRoute>} />
+        <Route path='hr/contracts' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER"]}><Contracts /></StockProtectedRoute>} />
+        <Route path='hr/performance' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER"]}><Performance /></StockProtectedRoute>} />
       </Route>
 
       {/* Hospital Routes — RBAC Protected with comprehensive role and department access control */}
@@ -268,6 +297,13 @@ function AppContent() {
         <Route path='payments/reports' element={<PharmacyDashboard />} />
         <Route path='settings' element={<PharmacySettings />} />
         <Route path='callcenter' element={<CallCenter />} />
+        <Route path='hr/employees' element={<Employees />} />
+        <Route path='hr/departments' element={<Departments />} />
+        <Route path='hr/attendance' element={<Attendance />} />
+        <Route path='hr/leave' element={<LeaveManagement />} />
+        <Route path='hr/payroll' element={<Payroll />} />
+        <Route path='hr/contracts' element={<Contracts />} />
+        <Route path='hr/performance' element={<Performance />} />
       </Route>
 
       {/* HR Routes */}
@@ -281,12 +317,40 @@ function AppContent() {
         <Route path='contracts' element={<HRProtectedRoute><Contracts /></HRProtectedRoute>} />
         <Route path='shifts' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
         <Route path='payslips' element={<HRProtectedRoute><Payroll /></HRProtectedRoute>} />
-        <Route path='performance' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
+        <Route path='performance' element={<HRProtectedRoute><Performance /></HRProtectedRoute>} />
         <Route path='documents' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
         <Route path='recruitment' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
         <Route path='reports' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
         <Route path='settings' element={<HRProtectedRoute><HRSettings /></HRProtectedRoute>} />
         <Route path='organizations' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
+      </Route>
+
+      {/* Property Management Routes */}
+      <Route path='/property/*' element={<PropertyLayout />}>
+        <Route index element={<PropertyDashboard />} />
+        <Route path='properties' element={<PropertiesList />} />
+        <Route path='properties/create' element={<PropertyForm />} />
+        <Route path='properties/:id' element={<PropertyDetails />} />
+        <Route path='properties/:id/edit' element={<PropertyForm />} />
+        <Route path='units' element={<UnitsList />} />
+        <Route path='tenants' element={<TenantsList />} />
+        <Route path='tenants/create' element={<TenantForm />} />
+        <Route path='tenants/:id' element={<TenantForm />} />
+        <Route path='tenants/:id/edit' element={<TenantForm />} />
+        <Route path='leases' element={<LeasesList />} />
+        <Route path='leases/create' element={<LeaseForm />} />
+        <Route path='leases/:id' element={<LeaseForm />} />
+        <Route path='leases/:id/edit' element={<LeaseForm />} />
+        <Route path='billing' element={<PropertyBillingDashboard />} />
+        <Route path='billing/create' element={<BillingForm />} />
+        <Route path='billing/:id/edit' element={<BillingForm />} />
+        <Route path='maintenance' element={<MaintenanceList />} />
+        <Route path='staff' element={<StaffList />} />
+        <Route path='reports' element={<PropertyReportsDashboard />} />
+        <Route path='communication' element={<Communication />} />
+        <Route path='settings' element={<PropertySettings />} />
+        <Route path='owner-portal' element={<OwnerPortal />} />
+        <Route path='tenant-portal' element={<TenantPortal />} />
       </Route>
     </Routes>
   );

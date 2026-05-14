@@ -42,7 +42,8 @@ import {
   PlayArrow as PlayIcon,
   GetApp as DownloadIcon,
   Explore as ExploreIcon,
-  People as HRIcon
+  People as HRIcon,
+  Home as PropertyIcon
 } from '@mui/icons-material';
 
 export default function ServiceSelection() {
@@ -926,6 +927,121 @@ export default function ServiceSelection() {
                   Access HR System
                 </Button>
               </Box>
+            </Grid>
+          </Grid>
+        </Paper>
+
+        {/* Property Management System Section */}
+        <Paper 
+          elevation={12}
+          sx={{ 
+            p: 6, 
+            mb: 8, 
+            background: 'rgba(255,255,255,0.98)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: 4
+          }}
+        >
+          <Grid container spacing={6} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <Box sx={{ textAlign: { xs: 'center', md: 'left' } }}>
+                <Avatar
+                  sx={{
+                    width: 120,
+                    height: 120,
+                    bgcolor: '#d32f2f',
+                    mx: { xs: 'auto', md: 0 },
+                    mb: 4
+                  }}
+                >
+                  <PropertyIcon sx={{ fontSize: 60 }} />
+                </Avatar>
+                
+                <Typography variant="h3" gutterBottom sx={{ fontWeight: 700, color: '#d32f2f' }}>
+                  Property Management System
+                </Typography>
+                
+                <Typography variant="h6" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
+                  The PROMANAGER Property Management System is a comprehensive
+                  solution for managing properties, units, tenants, leases,
+                  billing, and maintenance operations.
+                </Typography>
+                
+                <Typography variant="body1" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
+                  From property listings to tenant portals, automated rent collection
+                  to maintenance tracking, the system provides complete visibility
+                  and control over all property management operations.
+                </Typography>
+                
+                <Typography variant="body1" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
+                  With advanced reporting, owner portals, and tenant self-service,
+                  property managers can streamline operations and improve tenant satisfaction.
+                </Typography>
+
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={() => navigate('/property')}
+                  sx={{
+                    bgcolor: '#d32f2f',
+                    py: 2,
+                    px: 4,
+                    fontSize: '1.1rem',
+                    fontWeight: 700,
+                    borderRadius: 3,
+                    textTransform: 'none',
+                    mt: 3
+                  }}
+                >
+                  Access Property Management
+                </Button>
+              </Box>
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <Paper elevation={4} sx={{ p: 4, bgcolor: '#ffebee', borderRadius: 3 }}>
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, color: '#d32f2f', mb: 3 }}>
+                  Property Management Features
+                </Typography>
+                <List>
+                  <ListItem sx={{ px: 0, py: 1 }}>
+                    <ListItemIcon sx={{ minWidth: 32 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Properties & Units Management" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                  </ListItem>
+                  <ListItem sx={{ px: 0, py: 1 }}>
+                    <ListItemIcon sx={{ minWidth: 32 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Tenant & Lease Management" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                  </ListItem>
+                  <ListItem sx={{ px: 0, py: 1 }}>
+                    <ListItemIcon sx={{ minWidth: 32 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Automated Billing & Invoicing" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                  </ListItem>
+                  <ListItem sx={{ px: 0, py: 1 }}>
+                    <ListItemIcon sx={{ minWidth: 32 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Maintenance & Work Orders" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                  </ListItem>
+                  <ListItem sx={{ px: 0, py: 1 }}>
+                    <ListItemIcon sx={{ minWidth: 32 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Owner & Tenant Portals" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                  </ListItem>
+                  <ListItem sx={{ px: 0, py: 1 }}>
+                    <ListItemIcon sx={{ minWidth: 32 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Reports & Analytics" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                  </ListItem>
+                </List>
+              </Paper>
             </Grid>
           </Grid>
         </Paper>

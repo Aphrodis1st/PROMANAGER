@@ -94,6 +94,10 @@ export const stockService = {
     console.log(`📥 Adding new ${type}:`, data);
     const res = await axios.post(`${API_URL}/${type}`, data, getAuthHeader());
     console.log(`✅ Added ${type}:`, res.data);
+    // For sales, return the sale object from the response
+    if (type === 'sales' && res.data.sale) {
+      return res.data.sale;
+    }
     return res.data;
   },
 

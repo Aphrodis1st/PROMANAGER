@@ -55,7 +55,15 @@ const HospitalManagement = () => {
     { id: 'queue_management', name: 'Queue Management', category: 'Operations' },
     { id: 'receptionist', name: 'Receptionist Module', category: 'Operations' },
     { id: 'nurse', name: 'Nurse Module', category: 'Operations' },
-    { id: 'doctor_portal', name: 'Doctor Portal', category: 'Core' }
+    { id: 'doctor_portal', name: 'Doctor Portal', category: 'Core' },
+    { id: 'hr_employees', name: 'Employee Management', category: 'HR' },
+    { id: 'hr_departments', name: 'Department Management', category: 'HR' },
+    { id: 'hr_payroll', name: 'Payroll Management', category: 'HR' },
+    { id: 'hr_attendance', name: 'Attendance Tracking', category: 'HR' },
+    { id: 'hr_leave', name: 'Leave Management', category: 'HR' },
+    { id: 'hr_performance', name: 'Performance Reviews', category: 'HR' },
+    { id: 'hr_contracts', name: 'Contract Management', category: 'HR' },
+    { id: 'hr_settings', name: 'HR Settings', category: 'HR' }
   ];
 
   const subscriptionPlans = [
@@ -413,7 +421,7 @@ const HospitalManagement = () => {
             </div>
 
             <div className="max-h-96 overflow-y-auto">
-              {['Core', 'Clinical', 'Financial', 'Operations', 'Administration', 'Analytics', 'Settings'].map(category => {
+              {['Core', 'Clinical', 'Financial', 'Operations', 'Administration', 'Analytics', 'HR', 'Settings'].map(category => {
                 const categoryFeatures = availableFeatures.filter(f => f.category === category);
                 if (categoryFeatures.length === 0) return null;
                 

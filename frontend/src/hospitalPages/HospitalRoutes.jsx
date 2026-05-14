@@ -77,6 +77,14 @@ import AdminSettings from './admin/pages/AdminSettings';
 import AdminAnalytics from './admin/pages/AdminAnalytics';
 import SystemSettings from './admin/pages/SystemSettings';
 import AuditLogs from './admin/pages/AuditLogs';
+import Employees from '../hrPages/Employees';
+import Departments from '../hrPages/Departments';
+import Attendance from '../hrPages/Attendance';
+import LeaveManagement from '../hrPages/LeaveManagement';
+import Payroll from '../hrPages/Payroll';
+import Contracts from '../hrPages/Contracts';
+import HRDashboard from '../hrPages/HRDashboard';
+import Performance from '../hrPages/Performance';
 
 const HospitalRoutes = () => {
   const { user } = useAuth();
@@ -906,6 +914,84 @@ const HospitalRoutes = () => {
 
         {/* Catch all - redirect to dashboard */}
         <Route path="*" element={<Navigate to="dashboard" replace />} />
+
+        {/* HR Department Routes */}
+        <Route 
+          path="hr/employees" 
+          element={
+            <ProtectedRoute roles={[HOSPITAL_ROLES.ADMIN, HOSPITAL_ROLES.HOSPITAL_ADMIN]}>
+              <HospitalLayout>
+                <Employees />
+              </HospitalLayout>
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route 
+          path="hr/departments" 
+          element={
+            <ProtectedRoute roles={[HOSPITAL_ROLES.ADMIN, HOSPITAL_ROLES.HOSPITAL_ADMIN]}>
+              <HospitalLayout>
+                <Departments />
+              </HospitalLayout>
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route 
+          path="hr/attendance" 
+          element={
+            <ProtectedRoute roles={[HOSPITAL_ROLES.ADMIN, HOSPITAL_ROLES.HOSPITAL_ADMIN]}>
+              <HospitalLayout>
+                <Attendance />
+              </HospitalLayout>
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route 
+          path="hr/leave" 
+          element={
+            <ProtectedRoute roles={[HOSPITAL_ROLES.ADMIN, HOSPITAL_ROLES.HOSPITAL_ADMIN]}>
+              <HospitalLayout>
+                <LeaveManagement />
+              </HospitalLayout>
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route 
+          path="hr/payroll" 
+          element={
+            <ProtectedRoute roles={[HOSPITAL_ROLES.ADMIN, HOSPITAL_ROLES.HOSPITAL_ADMIN]}>
+              <HospitalLayout>
+                <Payroll />
+              </HospitalLayout>
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route 
+          path="hr/contracts" 
+          element={
+            <ProtectedRoute roles={[HOSPITAL_ROLES.ADMIN, HOSPITAL_ROLES.HOSPITAL_ADMIN]}>
+              <HospitalLayout>
+                <Contracts />
+              </HospitalLayout>
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route 
+          path="hr/performance" 
+          element={
+            <ProtectedRoute roles={[HOSPITAL_ROLES.ADMIN, HOSPITAL_ROLES.HOSPITAL_ADMIN]}>
+              <HospitalLayout>
+                <Performance />
+              </HospitalLayout>
+            </ProtectedRoute>
+          } 
+        />
       </Routes>
     </RBACProvider>
   );

@@ -65,6 +65,26 @@ export const authenticateToken = async (req, res, next) => {
     let userDoc;
     let userData;
 
+    // Check if super admin first
+    if (decoded.role === 'super_admin' || decoded.role === 'SUPER_ADMIN') {
+      userDoc = await db().collection('users').doc(userId).get();
+      if (userDoc.exists) {
+        userData = userDoc.data();
+        console.log('✅ Super admin found');
+        req.user = {
+          uid: userDoc.id,
+          id: userDoc.id,
+          email: userData.email,
+          role: 'super_admin',
+          hospitalId: decoded.hospitalId || userData.hospitalId,
+          permissions: { '*': true }, // Full permissions
+          ...userData
+        };
+        console.log('✅ Super admin authentication successful');
+        return next();
+      }
+    }
+
     // Try hospitalAdmins collection first (for hospital admins)
     userDoc = await db().collection('hospitalAdmins').doc(userId).get();
     if (userDoc.exists) {
@@ -99,8 +119,9 @@ export const authenticateToken = async (req, res, next) => {
       return res.status(401).json({ success: false, error: 'User not found' });
     }
 
-    // Check if user is active
-    const isActive = userData.isActive !== false && userData.status !== 'inactive';
+    // Check if user is active (super admin bypasses this check)
+    const isSuperAdmin = userData.role === 'super_admin' || userData.role === 'SUPER_ADMIN';
+    const isActive = isSuperAdmin || userData.isActive !== false && userData.status !== 'inactive';
     if (!isActive) {
       console.warn('❌ User is inactive:', userId);
       return res.status(403).json({ success: false, error: 'User account is inactive' });
@@ -134,7 +155,17 @@ export const authenticateToken = async (req, res, next) => {
 
 export const requireRole = (...roles) => {
   return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    if (!req.user) {
+      return res.status(403).json({ 
+        success: false, 
+        error: 'Insufficient permissions' 
+      });
+    }
+    // Super admin has access to everything
+    if (req.user.role === 'super_admin' || req.user.role === 'SUPER_ADMIN') {
+      return next();
+    }
+    if (!roles.includes(req.user.role)) {
       return res.status(403).json({ 
         success: false, 
         error: 'Insufficient permissions' 

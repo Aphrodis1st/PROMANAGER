@@ -11,8 +11,10 @@ export const createPerformance = async (req, res) => {
 
 export const getPerformance = async (req, res) => {
   try {
-    const { employeeId } = req.query;
-    const performance = await Performance.getByEmployee(employeeId);
+    const { organizationId, employeeId } = req.query;
+    const performance = organizationId 
+      ? await Performance.getByOrganization(organizationId)
+      : await Performance.getByEmployee(employeeId);
     res.json(performance);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -23,6 +25,15 @@ export const updatePerformance = async (req, res) => {
   try {
     const performance = await Performance.update(req.params.id, req.body);
     res.json(performance);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const deletePerformance = async (req, res) => {
+  try {
+    await Performance.delete(req.params.id);
+    res.json({ message: 'Performance review deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -42,7 +42,15 @@ const StockManagement = () => {
     { id: 'financial_reports', name: 'Financial Reports', category: 'Reports' },
     { id: 'stock_reports', name: 'Stock Reports', category: 'Reports' },
     { id: 'product_settings', name: 'Product Settings', category: 'Settings' },
-    { id: 'user_settings', name: 'User Settings', category: 'Settings' }
+    { id: 'user_settings', name: 'User Settings', category: 'Settings' },
+    { id: 'hr_employees', name: 'Employee Management', category: 'HR' },
+    { id: 'hr_departments', name: 'Department Management', category: 'HR' },
+    { id: 'hr_payroll', name: 'Payroll Management', category: 'HR' },
+    { id: 'hr_attendance', name: 'Attendance Tracking', category: 'HR' },
+    { id: 'hr_leave', name: 'Leave Management', category: 'HR' },
+    { id: 'hr_performance', name: 'Performance Reviews', category: 'HR' },
+    { id: 'hr_contracts', name: 'Contract Management', category: 'HR' },
+    { id: 'hr_settings', name: 'HR Settings', category: 'HR' }
   ];
 
   const subscriptionPlans = [
@@ -450,7 +458,7 @@ const StockManagement = () => {
             </div>
 
             <div className="max-h-96 overflow-y-auto">
-              {['Stock Management', 'Production', 'Accounting', 'Reports', 'Settings'].map(category => {
+              {['Stock Management', 'Production', 'Accounting', 'Reports', 'HR', 'Settings'].map(category => {
                 const categoryFeatures = availableFeatures.filter(f => f.category === category);
                 if (categoryFeatures.length === 0) return null;
                 

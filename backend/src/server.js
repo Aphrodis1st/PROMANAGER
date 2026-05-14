@@ -119,6 +119,15 @@ import hrDashboardRoutes from './routes/hr/dashboard.routes.js';
 import hrAuthRoutes from './routes/hr/auth.routes.js';
 import currencyRoutes from './routes/currency.routes.js';
 
+// Property Routes
+import propertyRoutes from './routes/property/property.routes.js';
+import unitRoutes from './routes/property/unit.routes.js';
+import tenantRoutes from './routes/property/tenant.routes.js';
+import leaseRoutes from './routes/property/lease.routes.js';
+import propertyBillingRoutes from './routes/property/billing.routes.js';
+import maintenanceRoutes from './routes/property/maintenance.routes.js';
+import propertyStaffRoutes from './routes/property/staff.routes.js';
+
 // Middlewares
 app.use(
   helmet(),
@@ -248,6 +257,15 @@ app.use('/api/v1/hr/payroll', hrPayrollRoutes);
 app.use('/api/v1/hr/contracts', hrContractRoutes);
 app.use('/api/v1/hr/performance', hrPerformanceRoutes);
 app.use('/api/v1/hr/dashboard', hrDashboardRoutes);
+
+// Property routes
+app.use('/api/v1/property/properties', requireFirebase, propertyRoutes);
+app.use('/api/v1/property/units', requireFirebase, unitRoutes);
+app.use('/api/v1/property/tenants', requireFirebase, tenantRoutes);
+app.use('/api/v1/property/leases', requireFirebase, leaseRoutes);
+app.use('/api/v1/property/billing', requireFirebase, propertyBillingRoutes);
+app.use('/api/v1/property/maintenance', requireFirebase, maintenanceRoutes);
+app.use('/api/v1/property/staff', requireFirebase, propertyStaffRoutes);
 
 // Catch-all for debugging
 app.use('*', (req, res) => {

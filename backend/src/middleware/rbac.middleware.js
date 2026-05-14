@@ -11,6 +11,26 @@ export const hospitalAuth = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
     
+    // Super admin has full access to hospital system
+    if (decoded.role === 'super_admin' || decoded.role === 'SUPER_ADMIN') {
+      const userDoc = await db().collection('users').doc(decoded.id).get();
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+        req.user = {
+          id: decoded.id,
+          hospitalId: decoded.hospitalId,
+          role: 'super_admin',
+          userType: 'super_admin',
+          departmentId: null,
+          permissions: { '*': true },
+          firstName: userData.firstName || 'Super',
+          lastName: userData.lastName || 'Admin',
+          email: userData.email
+        };
+        return next();
+      }
+    }
+    
     // Get user details from database to ensure fresh permissions
     let userDoc;
     let userData;
@@ -27,8 +47,9 @@ export const hospitalAuth = async (req, res, next) => {
     
     userData = { id: userDoc.id, ...userDoc.data() };
     
-    // Check if user is active
-    if (userData.status !== 'active' && userData.isActive !== true) {
+    // Check if user is active (super admin bypasses this check)
+    const isSuperAdmin = userData.role === 'super_admin' || userData.role === 'SUPER_ADMIN';
+    if (!isSuperAdmin && userData.status !== 'active' && userData.isActive !== true) {
       return res.status(403).json({ success: false, error: 'Account is inactive' });
     }
     
@@ -59,6 +80,11 @@ export const requireRole = (allowedRoles) => {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
     
+    // Super admin bypasses role checks
+    if (req.user.role === 'super_admin' || req.user.role === 'SUPER_ADMIN') {
+      return next();
+    }
+    
     const userRole = req.user.role;
     const allowedRolesList = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
     
@@ -80,8 +106,8 @@ export const requireDepartment = (allowedDepartments) => {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
     
-    // Hospital admins can access all departments
-    if (req.user.role === 'admin' || req.user.role === 'hospital_admin') {
+    // Super admin and hospital admins can access all departments
+    if (req.user.role === 'super_admin' || req.user.role === 'SUPER_ADMIN' || req.user.role === 'admin' || req.user.role === 'hospital_admin') {
       return next();
     }
     
@@ -111,6 +137,11 @@ export const requireRoleAndDepartment = (allowedRoles, allowedDepartments) => {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+    
+    // Super admin bypasses all checks
+    if (req.user.role === 'super_admin' || req.user.role === 'SUPER_ADMIN') {
+      return next();
     }
     
     const userRole = req.user.role;
@@ -157,8 +188,8 @@ export const requirePermission = (permission) => {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
     
-    // Hospital admins have all permissions
-    if (req.user.role === 'admin' || req.user.role === 'hospital_admin') {
+    // Super admin and hospital admins have all permissions
+    if (req.user.role === 'super_admin' || req.user.role === 'SUPER_ADMIN' || req.user.role === 'admin' || req.user.role === 'hospital_admin') {
       return next();
     }
     
@@ -187,8 +218,8 @@ export const requireAccess = (config) => {
     const userDepartment = req.user.departmentId;
     const userPermissions = req.user.permissions || {};
     
-    // Hospital admins bypass most restrictions
-    if (userRole === 'admin' || userRole === 'hospital_admin') {
+    // Super admin and hospital admins bypass most restrictions
+    if (userRole === 'super_admin' || userRole === 'SUPER_ADMIN' || userRole === 'admin' || userRole === 'hospital_admin') {
       return next();
     }
     
@@ -251,8 +282,8 @@ export const requirePatientAccess = async (req, res, next) => {
       return res.status(400).json({ success: false, error: 'Patient ID required' });
     }
     
-    // Hospital admins can access all patient data
-    if (req.user.role === 'admin' || req.user.role === 'hospital_admin') {
+    // Super admin and hospital admins can access all patient data
+    if (req.user.role === 'super_admin' || req.user.role === 'SUPER_ADMIN' || req.user.role === 'admin' || req.user.role === 'hospital_admin') {
       return next();
     }
     

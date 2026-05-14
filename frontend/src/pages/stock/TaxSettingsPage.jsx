@@ -9,7 +9,7 @@ import { Add, Edit, Delete } from '@mui/icons-material';
 import axios from 'axios';
 import { API_BASE_URL } from '../../constants/api';
 
-const API_URL = `${API_BASE_URL}/api/v1`;
+const API_URL = API_BASE_URL;
 
 const TAX_TYPES = [
   { value: 'VAT', label: 'Value Added Tax (VAT)' },

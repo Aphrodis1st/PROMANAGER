@@ -18,6 +18,14 @@ export class Performance {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   }
 
+  static async getByOrganization(organizationId) {
+    const snapshot = await db().collection('hr_performance')
+      .where('organizationId', '==', organizationId)
+      .orderBy('createdAt', 'desc')
+      .get();
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
+
   static async getById(id) {
     const doc = await db().collection('hr_performance').doc(id).get();
     return doc.exists ? { id: doc.id, ...doc.data() } : null;
@@ -26,5 +34,9 @@ export class Performance {
   static async update(id, data) {
     await db().collection('hr_performance').doc(id).update({ ...data, updatedAt: new Date() });
     return this.getById(id);
+  }
+
+  static async delete(id) {
+    await db().collection('hr_performance').doc(id).delete();
   }
 }

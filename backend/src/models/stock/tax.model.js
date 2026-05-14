@@ -98,9 +98,35 @@ export const TaxModel = {
     
     const rate = Number(taxConfig.rate) || 0;
     if (taxConfig.priceType === "Inclusive") {
-      return (amount * rate) / (100 + rate);
+      // For tax-inclusive prices: Tax = Amount - (Amount / (1 + rate/100))
+      return amount - (amount / (1 + rate / 100));
     }
     
+    // For tax-exclusive prices: Tax = Amount * (rate/100)
     return (amount * rate) / 100;
+  },
+
+  // Calculate net amount (excluding tax) from gross amount (including tax)
+  calculateNetAmount(grossAmount, taxConfig) {
+    if (!taxConfig || !taxConfig.isActive) return grossAmount;
+    
+    if (taxConfig.priceType === "Inclusive") {
+      const rate = Number(taxConfig.rate) || 0;
+      return grossAmount / (1 + rate / 100);
+    }
+    
+    return grossAmount;
+  },
+
+  // Calculate gross amount (including tax) from net amount (excluding tax)
+  calculateGrossAmount(netAmount, taxConfig) {
+    if (!taxConfig || !taxConfig.isActive) return netAmount;
+    
+    if (taxConfig.calculationType === "Fixed") {
+      return netAmount + (Number(taxConfig.fixedAmount) || 0);
+    }
+    
+    const rate = Number(taxConfig.rate) || 0;
+    return netAmount * (1 + rate / 100);
   },
 };

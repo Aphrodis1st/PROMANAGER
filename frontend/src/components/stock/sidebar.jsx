@@ -17,6 +17,7 @@ import StockLinks from "./stockLinks";
 import SettingsLinks from "./SettingsLinks";
 import ReportLinks from "./ReportsLinks";
 import Production from "./ProductionLink";
+import HRDepartmentLinks from "./HRDepartmentLinks";
 
 const drawerWidth = 320;
 
@@ -140,6 +141,7 @@ export default function Sidebar() {
             <SettingsLinks theme={theme} themeColors={currentTheme} />
             <StockLinks theme={theme} themeColors={currentTheme} />
             <Production theme={theme} themeColors={currentTheme} />
+            <HRDepartmentLinks theme={theme} themeColors={currentTheme} />
             <ReportLinks theme={theme} themeColors={currentTheme} />
           </Box>
         </Box>

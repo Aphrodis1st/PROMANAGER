@@ -372,7 +372,15 @@ export default function SalesPage() {
 
       console.log('Sale data to save:', saleData);
 
-      const saved = await addSale(saleData);
+      let saved;
+      try {
+        saved = await addSale(saleData);
+      } catch (saleError) {
+        console.error('Sale error:', saleError);
+        const errorMsg = saleError.response?.data?.error || saleError.message || 'Failed to save sale';
+        alert(`Error: ${errorMsg}`);
+        return;
+      }
       
       console.log('Saved sale:', saved);
 
@@ -401,12 +409,15 @@ export default function SalesPage() {
         lines: journalLines,
       });
 
+      // Navigate with sale data in state
       navigate(`/stock/invoice/${saved.id}`, { state: { sale: saved } });
       setCartItems([]);
       resetForm();
       setFormVisible(false);
     } catch (err) {
-      console.error(err);
+      console.error('Submit error:', err);
+      const errorMsg = err.response?.data?.error || err.message || 'An error occurred';
+      alert(`Error: ${errorMsg}`);
     }
   };
 
@@ -1289,6 +1300,7 @@ export default function SalesPage() {
                 type='submit'
                 disabled={cartItems.length === 0}
                 className='bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-medium transition-all shadow-md'
+                title={cartItems.length === 0 ? 'Add items to cart first' : (cartItems[0]?.paymentAccountId && cartItems[0]?.revenueAccountId) ? 'Save sale' : 'Select Payment & Revenue accounts in first item'}
               >
                 <span className='flex items-center gap-2'>
                   <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>

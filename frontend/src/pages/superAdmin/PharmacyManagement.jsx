@@ -51,7 +51,15 @@ const PharmacyManagement = () => {
     { id: 'dashboard', name: 'Pharmacy Dashboard', category: 'Analytics' },
     { id: 'analytics', name: 'Pharmacy Analytics', category: 'Analytics' },
     { id: 'sales_reports', name: 'Sales Reports', category: 'Analytics' },
-    { id: 'inventory_reports', name: 'Inventory Reports', category: 'Analytics' }
+    { id: 'inventory_reports', name: 'Inventory Reports', category: 'Analytics' },
+    { id: 'hr_employees', name: 'Employee Management', category: 'HR' },
+    { id: 'hr_departments', name: 'Department Management', category: 'HR' },
+    { id: 'hr_payroll', name: 'Payroll Management', category: 'HR' },
+    { id: 'hr_attendance', name: 'Attendance Tracking', category: 'HR' },
+    { id: 'hr_leave', name: 'Leave Management', category: 'HR' },
+    { id: 'hr_performance', name: 'Performance Reviews', category: 'HR' },
+    { id: 'hr_contracts', name: 'Contract Management', category: 'HR' },
+    { id: 'hr_settings', name: 'HR Settings', category: 'HR' }
   ];
 
   const subscriptionPlans = [
@@ -409,7 +417,7 @@ const PharmacyManagement = () => {
             </div>
 
             <div className="max-h-96 overflow-y-auto">
-              {['Core Pharmacy', 'Sales', 'Inventory', 'Network', 'Financial', 'Marketing', 'Customer Service', 'Analytics'].map(category => {
+              {['Core Pharmacy', 'Sales', 'Inventory', 'Network', 'Financial', 'Marketing', 'Customer Service', 'Analytics', 'HR'].map(category => {
                 const categoryFeatures = availableFeatures.filter(f => f.category === category);
                 if (categoryFeatures.length === 0) return null;
                 

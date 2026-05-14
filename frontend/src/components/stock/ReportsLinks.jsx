@@ -46,7 +46,9 @@ export default function ReportLinks({ theme, themeColors }) {
   }
 
   const filteredLinks = user
-    ? reportLinks.filter((link) => link.roles.includes(user.role))
+    ? (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' || user.role === 'DIRECTOR_MANAGER'
+        ? reportLinks
+        : reportLinks.filter((link) => link.roles.includes(user.role)))
     : [];
 
   useEffect(() => {

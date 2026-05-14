@@ -13,6 +13,29 @@ export const hospitalLogin = async (req, res) => {
     if (!email || !password)
       return res.status(400).json({ success: false, error: 'Email and password required' });
 
+    // Check for superadmin credentials
+    if (email === 'superadmin@madsmart.com' && password === 'SuperAdmin123!') {
+      const superAdminDoc = await db().collection('users').where('email', '==', email).limit(1).get();
+      if (!superAdminDoc.empty) {
+        const userDoc = superAdminDoc.docs[0];
+        const user = { id: userDoc.id, ...userDoc.data() };
+        const token = jwt.sign(
+          { id: user.id, role: 'super_admin', userType: 'superadmin' },
+          process.env.JWT_ACCESS_SECRET,
+          { expiresIn: '8h' }
+        );
+        await db().collection('users').doc(user.id).update({ lastLogin: new Date() });
+        console.log('Superadmin login successful for hospital service');
+        return res.json({
+          success: true,
+          token,
+          user: { ...user, role: 'super_admin', userType: 'superadmin' },
+          admin: { ...user, role: 'super_admin', userType: 'superadmin' },
+          hospital: { id: 'all', name: 'All Hospitals', location: 'Global' }
+        });
+      }
+    }
+
     let user = null;
     let userType = null;
     let userDoc = null;
@@ -60,10 +83,18 @@ export const hospitalLogin = async (req, res) => {
     // Ensure user object has the correct ID
     user.id = userId;
 
-    if (user.status !== 'active' && user.isActive !== true) {
+    console.log('Checking user status and role:', { role: user.role, status: user.status, isActive: user.isActive });
+
+    // Check if this is super admin - they can have any status
+    const isSuperAdmin = user.role === 'super_admin' || user.role === 'SUPER_ADMIN';
+    console.log('Is super admin?', isSuperAdmin);
+    
+    if (!isSuperAdmin && user.status !== 'active' && user.isActive !== true) {
       console.log('User account is not active:', user.status || user.isActive);
       return res.status(403).json({ success: false, error: 'Account is inactive' });
     }
+    
+    console.log('Status check passed for user:', userId);
 
     // Check if this is a partial password
     if (user.isPartialPassword) {

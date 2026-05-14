@@ -29,12 +29,17 @@ export const InventoryLedgerModel = {
 
   async findByProduct(productId) {
     const collection = getCollection();
+    // Temporary workaround: Use single where clause and filter/sort in memory
+    // TODO: Create composite index for better performance
     const snapshot = await collection
       .where("productId", "==", productId)
-      .where("remainingQuantity", ">", 0)
-      .orderBy("transactionDate", "asc")
       .get();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    // Filter and sort in memory
+    return snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(item => item.remainingQuantity > 0)
+      .sort((a, b) => new Date(a.transactionDate) - new Date(b.transactionDate));
   },
 
   async updateRemainingQuantity(id, newQuantity) {

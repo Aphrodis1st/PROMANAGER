@@ -55,7 +55,9 @@ export default function ProductionLinks({ theme, themeColors }) {
   }
 
   const filteredLinks = user
-    ? productionLinks.filter((link) => link.roles.includes(user.role))
+    ? (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' || user.role === 'DIRECTOR_MANAGER'
+        ? productionLinks
+        : productionLinks.filter((link) => link.roles.includes(user.role)))
     : [];
 
   useEffect(() => {

@@ -35,20 +35,26 @@ export const TaxTransactionModel = {
 
   async getAll(filters = {}) {
     const collection = getTaxTransactionCollection();
-    let query = collection.orderBy("transactionDate", "desc");
+    let query = collection;
 
+    if (filters.transactionType) {
+      query = query.where("transactionType", "==", filters.transactionType);
+    }
+    if (filters.taxType) {
+      query = query.where("taxType", "==", filters.taxType);
+    }
     if (filters.startDate) {
       query = query.where("transactionDate", ">=", filters.startDate);
     }
     if (filters.endDate) {
       query = query.where("transactionDate", "<=", filters.endDate);
     }
-    if (filters.taxType) {
-      query = query.where("taxType", "==", filters.taxType);
-    }
+
+    query = query.orderBy("transactionDate", "asc");
 
     const snapshot = await query.get();
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const results = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    return results.reverse();
   },
 
   async getByTaxType(taxType, startDate, endDate) {
@@ -62,8 +68,9 @@ export const TaxTransactionModel = {
       query = query.where("transactionDate", "<=", endDate);
     }
 
-    const snapshot = await query.orderBy("transactionDate", "desc").get();
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const snapshot = await query.orderBy("transactionDate", "asc").get();
+    const results = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    return results.reverse();
   },
 
   async getTaxSummary(startDate, endDate) {
