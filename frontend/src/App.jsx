@@ -185,6 +185,7 @@ import TenantPortal from './propertyPages/tenant-portal/TenantPortal.jsx';
 
 // Service Selection and Dashboards
 import ServiceSelection from './pages/ServiceSelection.jsx';
+import ModernLandingPage from './pages/ModernLandingPage.jsx';
 import StockDashboard from './pages/StockDashboard.jsx';
 import PharmacyServicesDashboard from './pages/PharmacyServicesDashboard.jsx';
 
@@ -213,8 +214,9 @@ import PayrollManagement from './pages/superAdmin/PayrollManagement.jsx';
 function AppContent() {
   return (
     <Routes>
-      {/* Service Selection - Main Entry Point */}
-      <Route path='/' element={<ServiceSelection />} />
+      {/* Modern Landing Page - Main Entry Point */}
+      <Route path='/' element={<ModernLandingPage />} />
+      <Route path='/services' element={<ServiceSelection />} />
 
       {/* Authentication Routes */}
       <Route path='/stock/login' element={<StockLogin />} />

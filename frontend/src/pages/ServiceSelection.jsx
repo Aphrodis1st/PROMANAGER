@@ -1,5 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar.jsx';
+import Footer from '../components/Footer.jsx';
 import { 
   Box, 
   Container, 
@@ -162,10 +164,12 @@ export default function ServiceSelection() {
   ];
 
   return (
-    <Box
+    <>
+      <Navbar />
+      <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         position: 'relative',
         overflow: 'hidden'
       }}
@@ -183,7 +187,7 @@ export default function ServiceSelection() {
         }}
       />
       
-      <Container maxWidth="xl" sx={{ py: 6, position: 'relative', zIndex: 1 }}>
+      <Container maxWidth="xl" sx={{ py: { xs: 4, sm: 6, md: 8 }, position: 'relative', zIndex: 1 }}>
         {/* Enhanced Hero Section */}
         <Box textAlign="center" mb={10}>
           <Typography 
@@ -191,14 +195,15 @@ export default function ServiceSelection() {
             component="h1" 
             gutterBottom
             sx={{ 
-              fontSize: { xs: '3rem', md: '5rem' },
+              fontSize: { xs: '2rem', sm: '3rem', md: '4rem', lg: '5rem' },
               fontWeight: 900,
               background: 'linear-gradient(45deg, #ffffff 30%, #e3f2fd 90%)',
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
-              mb: 2
+              mb: { xs: 2, sm: 3 },
+              letterSpacing: '-0.02em'
             }}
           >
             PROMANAGER
@@ -211,132 +216,80 @@ export default function ServiceSelection() {
             sx={{ 
               color: 'rgba(255,255,255,0.95)',
               fontWeight: 600,
-              mb: 4,
-              fontSize: { xs: '1.8rem', md: '2.8rem' }
+              mb: { xs: 1.5, sm: 2 },
+              fontSize: { xs: '1.25rem', sm: '1.75rem', md: '2.5rem' }
             }}
           >
             The Complete Digital Management Platform
           </Typography>
           
           <Typography 
-            variant="h5" 
+            variant="h6" 
             sx={{ 
-              color: 'rgba(255,255,255,0.9)',
+              color: 'rgba(255,255,255,0.85)',
               maxWidth: 900,
               mx: 'auto',
-              lineHeight: 1.6,
-              mb: 4,
-              fontSize: { xs: '1.1rem', md: '1.4rem' }
+              lineHeight: 1.8,
+              mb: { xs: 3, sm: 4, md: 5 },
+              fontSize: { xs: '0.875rem', sm: '1rem', md: '1.25rem' },
+              fontWeight: 400,
+              px: { xs: 2, sm: 0 }
             }}
           >
             A powerful all-in-one management ecosystem designed to help organizations
             streamline operations, improve decision-making, and scale efficiently.
           </Typography>
-          
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              color: 'rgba(255,255,255,0.85)',
-              maxWidth: 1000,
-              mx: 'auto',
-              lineHeight: 1.7,
-              mb: 6,
-              fontSize: { xs: '1rem', md: '1.2rem' }
-            }}
-          >
-            PROMANAGER integrates multiple intelligent business systems into a single
-            secure cloud platform, enabling companies to manage inventory, healthcare
-            operations, pharmacy services, and financial data with unmatched efficiency.
-          </Typography>
-
-          {/* Hero Benefits */}
-          <Grid container spacing={3} sx={{ mb: 6, maxWidth: 1200, mx: 'auto' }}>
-            {heroFeatures.map((feature, index) => (
-              <Grid item xs={12} md={4} key={index}>
-                <Box 
-                  sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    color: 'white',
-                    fontSize: '1.1rem'
-                  }}
-                >
-                  <CheckIcon sx={{ color: '#4caf50', mr: 2, fontSize: 28 }} />
-                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                    {feature}
-                  </Typography>
-                </Box>
-              </Grid>
-            ))}
-          </Grid>
 
           {/* Hero Buttons */}
           <Stack 
             direction={{ xs: 'column', sm: 'row' }} 
-            spacing={3} 
+            spacing={{ xs: 2, sm: 3 }} 
             justifyContent="center"
-            sx={{ mb: 8 }}
+            sx={{ mb: { xs: 6, sm: 8 }, px: { xs: 2, sm: 0 } }}
           >
             <Button
               variant="contained"
               size="large"
               startIcon={<PlayIcon />}
               sx={{
-                bgcolor: '#4caf50',
-                py: 2,
-                px: 4,
-                fontSize: '1.2rem',
+                bgcolor: 'white',
+                color: '#667eea',
+                py: { xs: 1.5, sm: 2 },
+                px: { xs: 3, sm: 4, md: 5 },
+                fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
                 fontWeight: 700,
                 borderRadius: 3,
                 textTransform: 'none',
-                boxShadow: '0 8px 20px rgba(76, 175, 80, 0.4)',
+                boxShadow: '0 10px 30px rgba(255, 255, 255, 0.3)',
                 '&:hover': {
-                  bgcolor: '#388e3c',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 12px 24px rgba(76, 175, 80, 0.5)',
+                  bgcolor: '#f5f5f5',
+                  transform: 'translateY(-3px)',
+                  boxShadow: '0 15px 40px rgba(255, 255, 255, 0.4)',
                 }
               }}
             >
-              Start Free Trial
+              Get Started Free
             </Button>
             <Button
               variant="outlined"
               size="large"
-              startIcon={<PlayIcon />}
-              sx={{
-                color: 'white',
-                borderColor: 'white',
-                py: 2,
-                px: 4,
-                fontSize: '1.2rem',
-                fontWeight: 700,
-                borderRadius: 3,
-                textTransform: 'none',
-                '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.1)',
-                  borderColor: 'white',
-                  transform: 'translateY(-2px)',
-                }
-              }}
-            >
-              View Platform Demo
-            </Button>
-            <Button
-              variant="text"
-              size="large"
               startIcon={<ExploreIcon />}
               sx={{
                 color: 'white',
-                py: 2,
-                px: 4,
-                fontSize: '1.2rem',
+                borderColor: 'white',
+                borderWidth: 2,
+                py: { xs: 1.5, sm: 2 },
+                px: { xs: 3, sm: 4, md: 5 },
+                fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
                 fontWeight: 700,
                 borderRadius: 3,
                 textTransform: 'none',
                 '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.1)',
-                  transform: 'translateY(-2px)',
+                  bgcolor: 'rgba(255,255,255,0.15)',
+                  borderColor: 'white',
+                  borderWidth: 2,
+                  transform: 'translateY(-3px)',
+                  boxShadow: '0 10px 30px rgba(255, 255, 255, 0.2)',
                 }
               }}
             >
@@ -346,40 +299,40 @@ export default function ServiceSelection() {
         </Box>
 
         {/* Platform Statistics */}
-        <Paper 
-          elevation={12}
+        <Box 
           sx={{ 
-            p: 6, 
-            mb: 8, 
-            background: 'rgba(255,255,255,0.95)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: 4,
+            p: { xs: 3, sm: 4, md: 5 }, 
+            mb: { xs: 4, sm: 5, md: 6 }, 
             textAlign: 'center'
           }}
         >
-          <Grid container spacing={4}>
+          <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} justifyContent="center">
             {statistics.map((stat, index) => (
               <Grid item xs={6} md={3} key={index}>
-                <Typography 
-                  variant="h2" 
-                  sx={{ 
-                    fontWeight: 900, 
-                    color: '#1976d2',
-                    fontSize: { xs: '2rem', md: '3rem' }
-                  }}
-                >
-                  {stat.number}
-                </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 600 }}>
-                  {stat.label}
-                </Typography>
+                <Box>
+                  <Typography 
+                    variant="h2" 
+                    sx={{ 
+                      fontWeight: 900, 
+                      color: 'white',
+                      fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
+                      mb: { xs: 0.5, sm: 1 },
+                      textShadow: '2px 2px 8px rgba(0,0,0,0.3)'
+                    }}
+                  >
+                    {stat.number}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600, fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem' } }}>
+                    {stat.label}
+                  </Typography>
+                </Box>
               </Grid>
             ))}
           </Grid>
-        </Paper>
+        </Box>
 
         {/* Industries We Serve */}
-        <Box mb={10}>
+        <Box mb={{ xs: 6, sm: 8, md: 10 }}>
           <Typography 
             variant="h3" 
             textAlign="center" 
@@ -387,8 +340,9 @@ export default function ServiceSelection() {
             sx={{ 
               fontWeight: 700, 
               color: 'white',
-              mb: 3,
-              fontSize: { xs: '2rem', md: '3rem' }
+              mb: { xs: 2, sm: 3 },
+              fontSize: { xs: '1.5rem', sm: '2rem', md: '3rem' },
+              px: { xs: 2, sm: 0 }
             }}
           >
             Designed for Modern Businesses Across Multiple Industries
@@ -426,7 +380,7 @@ export default function ServiceSelection() {
             reporting, and operational control.
           </Typography>
 
-          <Grid container spacing={4}>
+          <Grid container spacing={{ xs: 3, sm: 4 }}>
             {industries.map((industry, index) => (
               <Grid item xs={12} md={6} key={index}>
                 <Card
@@ -442,23 +396,28 @@ export default function ServiceSelection() {
                     }
                   }}
                 >
-                  <CardContent sx={{ p: 4 }}>
-                    <Box display="flex" alignItems="center" mb={3}>
-                      <Avatar
+                  <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
+                    <Box display="flex" alignItems="center" mb={{ xs: 2, sm: 3 }}>
+                      <Box
                         sx={{
                           bgcolor: industry.color,
-                          width: 64,
-                          height: 64,
-                          mr: 3
+                          width: { xs: 48, sm: 56, md: 64 },
+                          height: { xs: 48, sm: 56, md: 64 },
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          mr: { xs: 2, sm: 3 },
+                          color: 'white'
                         }}
                       >
                         {industry.icon}
-                      </Avatar>
-                      <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                      </Box>
+                      <Typography variant="h5" sx={{ fontWeight: 700, fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' } }}>
                         {industry.title}
                       </Typography>
                     </Box>
-                    <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.7, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
                       {industry.description}
                     </Typography>
                   </CardContent>
@@ -470,66 +429,68 @@ export default function ServiceSelection() {
 
         {/* Enhanced Stock Management Section */}
         <Paper 
-          elevation={12}
+          elevation={0}
           sx={{ 
-            p: 6, 
-            mb: 8, 
-            background: 'rgba(255,255,255,0.98)',
+            p: 3, 
+            mb: 3, 
+            background: 'linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%)',
             backdropFilter: 'blur(20px)',
-            borderRadius: 4
+            borderRadius: 3,
+            border: '2px solid rgba(25, 118, 210, 0.15)',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: '0 12px 40px rgba(25, 118, 210, 0.15)',
+              border: '2px solid rgba(25, 118, 210, 0.3)',
+            }
           }}
         >
-          <Grid container spacing={6} alignItems="center">
+          <Grid container spacing={3} alignItems="center">
             <Grid item xs={12} md={6}>
               <Box sx={{ textAlign: { xs: 'center', md: 'left' } }}>
-                <Avatar
+                <Box
                   sx={{
-                    width: 120,
-                    height: 120,
+                    width: 60,
+                    height: 60,
                     bgcolor: '#1976d2',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     mx: { xs: 'auto', md: 0 },
-                    mb: 4
+                    mb: 2,
+                    color: 'white'
                   }}
                 >
-                  <StockIcon sx={{ fontSize: 60 }} />
-                </Avatar>
+                  <StockIcon sx={{ fontSize: 32 }} />
+                </Box>
                 
-                <Typography variant="h3" gutterBottom sx={{ fontWeight: 700, color: '#1976d2' }}>
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, color: '#1976d2', mb: 1 }}>
                   Stock Management System
                 </Typography>
                 
-                <Typography variant="h6" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
-                  The PROMANAGER Stock Management System provides a complete
-                  inventory intelligence platform designed to help organizations
-                  control stock levels, reduce operational costs, and prevent
-                  revenue losses caused by stockouts or overstocking.
-                </Typography>
-                
-                <Typography variant="body1" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
-                  Through advanced automation and real-time monitoring,
-                  businesses gain full visibility into procurement,
-                  warehouse movement, supplier performance, and sales analytics.
-                </Typography>
-                
-                <Typography variant="body1" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
-                  Whether managing a single store or multiple warehouses,
-                  PROMANAGER ensures accurate inventory tracking,
-                  improved demand forecasting, and optimized supply chain operations.
+                <Typography variant="body2" paragraph sx={{ color: '#666', lineHeight: 1.5, mb: 2 }}>
+                  Complete inventory intelligence platform for stock control, procurement automation, and supply chain optimization.
                 </Typography>
 
                 <Button
                   variant="contained"
-                  size="large"
+                  size="small"
                   onClick={() => navigate('/stock/login')}
                   sx={{
                     bgcolor: '#1976d2',
-                    py: 2,
-                    px: 4,
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                    borderRadius: 3,
+                    py: 1,
+                    px: 2.5,
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    borderRadius: 2,
                     textTransform: 'none',
-                    mt: 3
+                    boxShadow: '0 4px 14px rgba(25, 118, 210, 0.3)',
+                    '&:hover': {
+                      bgcolor: '#1565c0',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(25, 118, 210, 0.4)',
+                    }
                   }}
                 >
                   Access Stock Management
@@ -538,21 +499,21 @@ export default function ServiceSelection() {
             </Grid>
             
             <Grid item xs={12} md={6}>
-              <Paper elevation={4} sx={{ p: 4, bgcolor: '#f8f9fa', borderRadius: 3 }}>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, color: '#1976d2', mb: 3 }}>
-                  Operational Capabilities
+              <Paper elevation={2} sx={{ p: 2, bgcolor: 'rgba(25, 118, 210, 0.08)', borderRadius: 2, border: '1px solid rgba(25, 118, 210, 0.2)' }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: '#1976d2', mb: 1.5 }}>
+                  Key Features
                 </Typography>
-                <List>
-                  {stockCapabilities.map((capability, index) => (
-                    <ListItem key={index} sx={{ px: 0, py: 1 }}>
-                      <ListItemIcon sx={{ minWidth: 32 }}>
-                        <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                <List dense>
+                  {stockCapabilities.slice(0, 4).map((capability, index) => (
+                    <ListItem key={index} sx={{ px: 0, py: 0.3 }}>
+                      <ListItemIcon sx={{ minWidth: 24 }}>
+                        <CheckIcon sx={{ color: '#4caf50', fontSize: 16 }} />
                       </ListItemIcon>
                       <ListItemText 
                         primary={capability}
                         primaryTypographyProps={{ 
-                          variant: 'body1',
-                          sx: { fontWeight: 500 }
+                          variant: 'body2',
+                          sx: { fontWeight: 500, fontSize: '0.85rem' }
                         }}
                       />
                     </ListItem>
@@ -565,32 +526,39 @@ export default function ServiceSelection() {
 
         {/* Enhanced Hospital Management Section */}
         <Paper 
-          elevation={12}
+          elevation={0}
           sx={{ 
-            p: 6, 
-            mb: 8, 
-            background: 'rgba(255,255,255,0.98)',
+            p: 3, 
+            mb: 3, 
+            background: 'linear-gradient(135deg, #e8f5e9 0%, #ffffff 100%)',
             backdropFilter: 'blur(20px)',
-            borderRadius: 4
+            borderRadius: 3,
+            border: '2px solid rgba(56, 142, 60, 0.15)',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: '0 12px 40px rgba(56, 142, 60, 0.15)',
+              border: '2px solid rgba(56, 142, 60, 0.3)',
+            }
           }}
         >
-          <Grid container spacing={6} alignItems="center">
+          <Grid container spacing={3} alignItems="center">
             <Grid item xs={12} md={6} order={{ xs: 2, md: 1 }}>
-              <Paper elevation={4} sx={{ p: 4, bgcolor: '#f1f8e9', borderRadius: 3 }}>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, color: '#388e3c', mb: 3 }}>
-                  Clinical Modules
+              <Paper elevation={2} sx={{ p: 2, bgcolor: 'rgba(56, 142, 60, 0.08)', borderRadius: 2, border: '1px solid rgba(56, 142, 60, 0.2)' }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: '#388e3c', mb: 1.5 }}>
+                  Key Features
                 </Typography>
-                <List>
-                  {clinicalModules.map((module, index) => (
-                    <ListItem key={index} sx={{ px: 0, py: 1 }}>
-                      <ListItemIcon sx={{ minWidth: 32 }}>
-                        <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                <List dense>
+                  {clinicalModules.slice(0, 4).map((module, index) => (
+                    <ListItem key={index} sx={{ px: 0, py: 0.3 }}>
+                      <ListItemIcon sx={{ minWidth: 24 }}>
+                        <CheckIcon sx={{ color: '#4caf50', fontSize: 16 }} />
                       </ListItemIcon>
                       <ListItemText 
                         primary={module}
                         primaryTypographyProps={{ 
-                          variant: 'body1',
-                          sx: { fontWeight: 500 }
+                          variant: 'body2',
+                          sx: { fontWeight: 500, fontSize: '0.85rem' }
                         }}
                       />
                     </ListItem>
@@ -601,53 +569,49 @@ export default function ServiceSelection() {
             
             <Grid item xs={12} md={6} order={{ xs: 1, md: 2 }}>
               <Box sx={{ textAlign: { xs: 'center', md: 'left' } }}>
-                <Avatar
+                <Box
                   sx={{
-                    width: 120,
-                    height: 120,
+                    width: 60,
+                    height: 60,
                     bgcolor: '#388e3c',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     mx: { xs: 'auto', md: 0 },
-                    mb: 4
+                    mb: 2,
+                    color: 'white'
                   }}
                 >
-                  <HospitalIcon sx={{ fontSize: 60 }} />
-                </Avatar>
+                  <HospitalIcon sx={{ fontSize: 32 }} />
+                </Box>
                 
-                <Typography variant="h3" gutterBottom sx={{ fontWeight: 700, color: '#388e3c' }}>
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, color: '#388e3c', mb: 1 }}>
                   Hospital Management System
                 </Typography>
                 
-                <Typography variant="h6" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
-                  The PROMANAGER Hospital Management System is a comprehensive
-                  digital healthcare platform designed to streamline clinical,
-                  administrative, and financial operations within medical institutions.
-                </Typography>
-                
-                <Typography variant="body1" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
-                  The system integrates patient management, appointment scheduling,
-                  laboratory diagnostics, pharmacy coordination, and hospital billing
-                  into a single unified ecosystem.
-                </Typography>
-                
-                <Typography variant="body1" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
-                  By reducing paperwork and automating critical workflows,
-                  healthcare professionals can focus more on patient care
-                  while administrators gain full visibility into hospital performance.
+                <Typography variant="body2" paragraph sx={{ color: '#666', lineHeight: 1.5, mb: 2 }}>
+                  Comprehensive digital healthcare platform for clinical, administrative, and financial operations.
                 </Typography>
 
                 <Button
                   variant="contained"
-                  size="large"
+                  size="small"
                   onClick={() => navigate('/hospital/admin/dashboard')}
                   sx={{
                     bgcolor: '#388e3c',
-                    py: 2,
-                    px: 4,
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                    borderRadius: 3,
+                    py: 1,
+                    px: 2.5,
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    borderRadius: 2,
                     textTransform: 'none',
-                    mt: 3
+                    boxShadow: '0 4px 14px rgba(56, 142, 60, 0.3)',
+                    '&:hover': {
+                      bgcolor: '#2e7d32',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(56, 142, 60, 0.4)',
+                    }
                   }}
                 >
                   Access Hospital System
@@ -661,28 +625,29 @@ export default function ServiceSelection() {
         <Paper 
           elevation={12}
           sx={{ 
-            p: 6, 
-            mb: 8, 
+            p: { xs: 4, sm: 5, md: 6 }, 
+            mb: { xs: 6, sm: 7, md: 8 }, 
             background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
             backdropFilter: 'blur(20px)',
             borderRadius: 4,
             color: 'white',
-            textAlign: 'center'
+            textAlign: 'center',
+            boxShadow: '0 20px 60px rgba(238, 90, 36, 0.3)'
           }}
         >
           <Avatar
             sx={{
-              width: 100,
-              height: 100,
+              width: { xs: 80, sm: 90, md: 100 },
+              height: { xs: 80, sm: 90, md: 100 },
               bgcolor: 'rgba(255,255,255,0.2)',
               mx: 'auto',
-              mb: 3
+              mb: { xs: 2, sm: 3 }
             }}
           >
-            <SecurityIcon sx={{ fontSize: 50 }} />
+            <SecurityIcon sx={{ fontSize: { xs: 40, sm: 45, md: 50 } }} />
           </Avatar>
           
-          <Typography variant="h3" gutterBottom sx={{ fontWeight: 700 }}>
+          <Typography variant="h3" gutterBottom sx={{ fontWeight: 700, fontSize: { xs: '1.75rem', sm: '2.25rem', md: '3rem' } }}>
             Super Admin Access
           </Typography>
           
@@ -722,66 +687,68 @@ export default function ServiceSelection() {
 
         {/* Enhanced Pharmacy Services Section */}
         <Paper 
-          elevation={12}
+          elevation={0}
           sx={{ 
-            p: 6, 
-            mb: 8, 
-            background: 'rgba(255,255,255,0.98)',
+            p: 3, 
+            mb: 3, 
+            background: 'linear-gradient(135deg, #fff3e0 0%, #ffffff 100%)',
             backdropFilter: 'blur(20px)',
-            borderRadius: 4
+            borderRadius: 3,
+            border: '2px solid rgba(245, 124, 0, 0.15)',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: '0 12px 40px rgba(245, 124, 0, 0.15)',
+              border: '2px solid rgba(245, 124, 0, 0.3)',
+            }
           }}
         >
-          <Grid container spacing={6} alignItems="center">
+          <Grid container spacing={3} alignItems="center">
             <Grid item xs={12} md={6}>
               <Box sx={{ textAlign: { xs: 'center', md: 'left' } }}>
-                <Avatar
+                <Box
                   sx={{
-                    width: 120,
-                    height: 120,
+                    width: 60,
+                    height: 60,
                     bgcolor: '#f57c00',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     mx: { xs: 'auto', md: 0 },
-                    mb: 4
+                    mb: 2,
+                    color: 'white'
                   }}
                 >
-                  <PharmacyIcon sx={{ fontSize: 60 }} />
-                </Avatar>
+                  <PharmacyIcon sx={{ fontSize: 32 }} />
+                </Box>
                 
-                <Typography variant="h3" gutterBottom sx={{ fontWeight: 700, color: '#f57c00' }}>
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, color: '#f57c00', mb: 1 }}>
                   Pharmacy Services System
                 </Typography>
                 
-                <Typography variant="h6" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
-                  The PROMANAGER Pharmacy Services System enables pharmacies
-                  and pharmaceutical distributors to operate with maximum
-                  accuracy, regulatory compliance, and operational efficiency.
-                </Typography>
-                
-                <Typography variant="body1" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
-                  The platform simplifies prescription processing,
-                  inventory management, customer orders, and compliance reporting,
-                  while ensuring pharmaceutical products are tracked
-                  through every stage of the supply chain.
-                </Typography>
-                
-                <Typography variant="body1" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
-                  With integrated analytics and automation,
-                  pharmacies can reduce medication errors,
-                  optimize stock availability, and improve patient safety.
+                <Typography variant="body2" paragraph sx={{ color: '#666', lineHeight: 1.5, mb: 2 }}>
+                  Pharmacy management with prescription processing, inventory control, and compliance reporting.
                 </Typography>
 
                 <Button
                   variant="contained"
-                  size="large"
+                  size="small"
                   onClick={() => navigate('/pharmacy/dashboard')}
                   sx={{
                     bgcolor: '#f57c00',
-                    py: 2,
-                    px: 4,
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                    borderRadius: 3,
+                    py: 1,
+                    px: 2.5,
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    borderRadius: 2,
                     textTransform: 'none',
-                    mt: 3
+                    boxShadow: '0 4px 14px rgba(245, 124, 0, 0.3)',
+                    '&:hover': {
+                      bgcolor: '#ef6c00',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(245, 124, 0, 0.4)',
+                    }
                   }}
                 >
                   Access Pharmacy System
@@ -790,21 +757,21 @@ export default function ServiceSelection() {
             </Grid>
             
             <Grid item xs={12} md={6}>
-              <Paper elevation={4} sx={{ p: 4, bgcolor: '#fff3e0', borderRadius: 3 }}>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, color: '#f57c00', mb: 3 }}>
-                  Pharmacy Capabilities
+              <Paper elevation={2} sx={{ p: 2, bgcolor: 'rgba(245, 124, 0, 0.08)', borderRadius: 2, border: '1px solid rgba(245, 124, 0, 0.2)' }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: '#f57c00', mb: 1.5 }}>
+                  Key Features
                 </Typography>
-                <List>
-                  {pharmacyCapabilities.map((capability, index) => (
-                    <ListItem key={index} sx={{ px: 0, py: 1 }}>
-                      <ListItemIcon sx={{ minWidth: 32 }}>
-                        <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                <List dense>
+                  {pharmacyCapabilities.slice(0, 4).map((capability, index) => (
+                    <ListItem key={index} sx={{ px: 0, py: 0.3 }}>
+                      <ListItemIcon sx={{ minWidth: 24 }}>
+                        <CheckIcon sx={{ color: '#4caf50', fontSize: 16 }} />
                       </ListItemIcon>
                       <ListItemText 
                         primary={capability}
                         primaryTypographyProps={{ 
-                          variant: 'body1',
-                          sx: { fontWeight: 500 }
+                          variant: 'body2',
+                          sx: { fontWeight: 500, fontSize: '0.85rem' }
                         }}
                       />
                     </ListItem>
@@ -817,57 +784,52 @@ export default function ServiceSelection() {
 
         {/* HR & Payroll System Section */}
         <Paper 
-          elevation={12}
+          elevation={0}
           sx={{ 
-            p: 6, 
-            mb: 8, 
-            background: 'rgba(255,255,255,0.98)',
+            p: 3, 
+            mb: 3, 
+            background: 'linear-gradient(135deg, #f3e5f5 0%, #ffffff 100%)',
             backdropFilter: 'blur(20px)',
-            borderRadius: 4
+            borderRadius: 3,
+            border: '2px solid rgba(94, 53, 177, 0.15)',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: '0 12px 40px rgba(94, 53, 177, 0.15)',
+              border: '2px solid rgba(94, 53, 177, 0.3)',
+            }
           }}
         >
-          <Grid container spacing={6} alignItems="center">
+          <Grid container spacing={3} alignItems="center">
             <Grid item xs={12} md={6} order={{ xs: 2, md: 1 }}>
-              <Paper elevation={4} sx={{ p: 4, bgcolor: '#e8eaf6', borderRadius: 3 }}>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, color: '#5e35b1', mb: 3 }}>
-                  HR Modules
+              <Paper elevation={2} sx={{ p: 2, bgcolor: 'rgba(94, 53, 177, 0.08)', borderRadius: 2, border: '1px solid rgba(94, 53, 177, 0.2)' }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: '#5e35b1', mb: 1.5 }}>
+                  Key Features
                 </Typography>
-                <List>
-                  <ListItem sx={{ px: 0, py: 1 }}>
-                    <ListItemIcon sx={{ minWidth: 32 }}>
-                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                <List dense>
+                  <ListItem sx={{ px: 0, py: 0.3 }}>
+                    <ListItemIcon sx={{ minWidth: 24 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 16 }} />
                     </ListItemIcon>
-                    <ListItemText primary="Employee Management" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                    <ListItemText primary="Employee Management" primaryTypographyProps={{ variant: 'body2', sx: { fontWeight: 500, fontSize: '0.85rem' } }} />
                   </ListItem>
-                  <ListItem sx={{ px: 0, py: 1 }}>
-                    <ListItemIcon sx={{ minWidth: 32 }}>
-                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                  <ListItem sx={{ px: 0, py: 0.3 }}>
+                    <ListItemIcon sx={{ minWidth: 24 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 16 }} />
                     </ListItemIcon>
-                    <ListItemText primary="Attendance & Shift Management" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                    <ListItemText primary="Attendance & Shift Management" primaryTypographyProps={{ variant: 'body2', sx: { fontWeight: 500, fontSize: '0.85rem' } }} />
                   </ListItem>
-                  <ListItem sx={{ px: 0, py: 1 }}>
-                    <ListItemIcon sx={{ minWidth: 32 }}>
-                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                  <ListItem sx={{ px: 0, py: 0.3 }}>
+                    <ListItemIcon sx={{ minWidth: 24 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 16 }} />
                     </ListItemIcon>
-                    <ListItemText primary="Leave Management & Approvals" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                    <ListItemText primary="Payroll with Tax Calculation" primaryTypographyProps={{ variant: 'body2', sx: { fontWeight: 500, fontSize: '0.85rem' } }} />
                   </ListItem>
-                  <ListItem sx={{ px: 0, py: 1 }}>
-                    <ListItemIcon sx={{ minWidth: 32 }}>
-                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                  <ListItem sx={{ px: 0, py: 0.3 }}>
+                    <ListItemIcon sx={{ minWidth: 24 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 16 }} />
                     </ListItemIcon>
-                    <ListItemText primary="Payroll Engine with Tax Calculation" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
-                  </ListItem>
-                  <ListItem sx={{ px: 0, py: 1 }}>
-                    <ListItemIcon sx={{ minWidth: 32 }}>
-                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
-                    </ListItemIcon>
-                    <ListItemText primary="Contract & Performance Management" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
-                  </ListItem>
-                  <ListItem sx={{ px: 0, py: 1 }}>
-                    <ListItemIcon sx={{ minWidth: 32 }}>
-                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
-                    </ListItemIcon>
-                    <ListItemText primary="Multi-Organization Support" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                    <ListItemText primary="Performance Management" primaryTypographyProps={{ variant: 'body2', sx: { fontWeight: 500, fontSize: '0.85rem' } }} />
                   </ListItem>
                 </List>
               </Paper>
@@ -875,53 +837,49 @@ export default function ServiceSelection() {
             
             <Grid item xs={12} md={6} order={{ xs: 1, md: 2 }}>
               <Box sx={{ textAlign: { xs: 'center', md: 'left' } }}>
-                <Avatar
+                <Box
                   sx={{
-                    width: 120,
-                    height: 120,
+                    width: 60,
+                    height: 60,
                     bgcolor: '#5e35b1',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     mx: { xs: 'auto', md: 0 },
-                    mb: 4
+                    mb: 2,
+                    color: 'white'
                   }}
                 >
-                  <HRIcon sx={{ fontSize: 60 }} />
-                </Avatar>
+                  <HRIcon sx={{ fontSize: 32 }} />
+                </Box>
                 
-                <Typography variant="h3" gutterBottom sx={{ fontWeight: 700, color: '#5e35b1' }}>
-                  HR & Payroll Management System
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, color: '#5e35b1', mb: 1 }}>
+                  HR & Payroll Management
                 </Typography>
                 
-                <Typography variant="h6" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
-                  The PROMANAGER HR & Payroll System is an enterprise-level
-                  human resource management platform designed to streamline
-                  employee management, attendance tracking, and payroll processing.
-                </Typography>
-                
-                <Typography variant="body1" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
-                  From employee onboarding to payroll generation,
-                  the system automates HR workflows, manages leave requests,
-                  tracks performance, and ensures accurate salary calculations
-                  with tax and deduction support.
-                </Typography>
-                
-                <Typography variant="body1" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
-                  With multi-organization support, businesses can manage
-                  HR operations across multiple companies from a single platform.
+                <Typography variant="body2" paragraph sx={{ color: '#666', lineHeight: 1.5, mb: 2 }}>
+                  Enterprise HR platform for employee management, attendance tracking, and payroll processing.
                 </Typography>
 
                 <Button
                   variant="contained"
-                  size="large"
+                  size="small"
                   onClick={() => navigate('/hr/dashboard')}
                   sx={{
                     bgcolor: '#5e35b1',
-                    py: 2,
-                    px: 4,
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                    borderRadius: 3,
+                    py: 1,
+                    px: 2.5,
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    borderRadius: 2,
                     textTransform: 'none',
-                    mt: 3
+                    boxShadow: '0 4px 14px rgba(94, 53, 177, 0.3)',
+                    '&:hover': {
+                      bgcolor: '#512da8',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(94, 53, 177, 0.4)',
+                    }
                   }}
                 >
                   Access HR System
@@ -933,64 +891,68 @@ export default function ServiceSelection() {
 
         {/* Property Management System Section */}
         <Paper 
-          elevation={12}
+          elevation={0}
           sx={{ 
-            p: 6, 
-            mb: 8, 
-            background: 'rgba(255,255,255,0.98)',
+            p: 3, 
+            mb: 3, 
+            background: 'linear-gradient(135deg, #ffebee 0%, #ffffff 100%)',
             backdropFilter: 'blur(20px)',
-            borderRadius: 4
+            borderRadius: 3,
+            border: '2px solid rgba(211, 47, 47, 0.15)',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: '0 12px 40px rgba(211, 47, 47, 0.15)',
+              border: '2px solid rgba(211, 47, 47, 0.3)',
+            }
           }}
         >
-          <Grid container spacing={6} alignItems="center">
+          <Grid container spacing={3} alignItems="center">
             <Grid item xs={12} md={6}>
               <Box sx={{ textAlign: { xs: 'center', md: 'left' } }}>
-                <Avatar
+                <Box
                   sx={{
-                    width: 120,
-                    height: 120,
+                    width: 60,
+                    height: 60,
                     bgcolor: '#d32f2f',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     mx: { xs: 'auto', md: 0 },
-                    mb: 4
+                    mb: 2,
+                    color: 'white'
                   }}
                 >
-                  <PropertyIcon sx={{ fontSize: 60 }} />
-                </Avatar>
+                  <PropertyIcon sx={{ fontSize: 32 }} />
+                </Box>
                 
-                <Typography variant="h3" gutterBottom sx={{ fontWeight: 700, color: '#d32f2f' }}>
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, color: '#d32f2f', mb: 1 }}>
                   Property Management System
                 </Typography>
                 
-                <Typography variant="h6" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
-                  The PROMANAGER Property Management System is a comprehensive
-                  solution for managing properties, units, tenants, leases,
-                  billing, and maintenance operations.
-                </Typography>
-                
-                <Typography variant="body1" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
-                  From property listings to tenant portals, automated rent collection
-                  to maintenance tracking, the system provides complete visibility
-                  and control over all property management operations.
-                </Typography>
-                
-                <Typography variant="body1" paragraph sx={{ color: '#666', lineHeight: 1.7 }}>
-                  With advanced reporting, owner portals, and tenant self-service,
-                  property managers can streamline operations and improve tenant satisfaction.
+                <Typography variant="body2" paragraph sx={{ color: '#666', lineHeight: 1.5, mb: 2 }}>
+                  Complete solution for managing properties, tenants, leases, billing, and maintenance operations.
                 </Typography>
 
                 <Button
                   variant="contained"
-                  size="large"
+                  size="small"
                   onClick={() => navigate('/property')}
                   sx={{
                     bgcolor: '#d32f2f',
-                    py: 2,
-                    px: 4,
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                    borderRadius: 3,
+                    py: 1,
+                    px: 2.5,
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    borderRadius: 2,
                     textTransform: 'none',
-                    mt: 3
+                    boxShadow: '0 4px 14px rgba(211, 47, 47, 0.3)',
+                    '&:hover': {
+                      bgcolor: '#c62828',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(211, 47, 47, 0.4)',
+                    }
                   }}
                 >
                   Access Property Management
@@ -999,46 +961,34 @@ export default function ServiceSelection() {
             </Grid>
             
             <Grid item xs={12} md={6}>
-              <Paper elevation={4} sx={{ p: 4, bgcolor: '#ffebee', borderRadius: 3 }}>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, color: '#d32f2f', mb: 3 }}>
-                  Property Management Features
+              <Paper elevation={2} sx={{ p: 2, bgcolor: 'rgba(211, 47, 47, 0.08)', borderRadius: 2, border: '1px solid rgba(211, 47, 47, 0.2)' }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: '#d32f2f', mb: 1.5 }}>
+                  Key Features
                 </Typography>
-                <List>
-                  <ListItem sx={{ px: 0, py: 1 }}>
-                    <ListItemIcon sx={{ minWidth: 32 }}>
-                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                <List dense>
+                  <ListItem sx={{ px: 0, py: 0.3 }}>
+                    <ListItemIcon sx={{ minWidth: 24 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 16 }} />
                     </ListItemIcon>
-                    <ListItemText primary="Properties & Units Management" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                    <ListItemText primary="Properties & Units Management" primaryTypographyProps={{ variant: 'body2', sx: { fontWeight: 500, fontSize: '0.85rem' } }} />
                   </ListItem>
-                  <ListItem sx={{ px: 0, py: 1 }}>
-                    <ListItemIcon sx={{ minWidth: 32 }}>
-                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                  <ListItem sx={{ px: 0, py: 0.3 }}>
+                    <ListItemIcon sx={{ minWidth: 24 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 16 }} />
                     </ListItemIcon>
-                    <ListItemText primary="Tenant & Lease Management" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                    <ListItemText primary="Tenant & Lease Management" primaryTypographyProps={{ variant: 'body2', sx: { fontWeight: 500, fontSize: '0.85rem' } }} />
                   </ListItem>
-                  <ListItem sx={{ px: 0, py: 1 }}>
-                    <ListItemIcon sx={{ minWidth: 32 }}>
-                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                  <ListItem sx={{ px: 0, py: 0.3 }}>
+                    <ListItemIcon sx={{ minWidth: 24 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 16 }} />
                     </ListItemIcon>
-                    <ListItemText primary="Automated Billing & Invoicing" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                    <ListItemText primary="Automated Billing & Invoicing" primaryTypographyProps={{ variant: 'body2', sx: { fontWeight: 500, fontSize: '0.85rem' } }} />
                   </ListItem>
-                  <ListItem sx={{ px: 0, py: 1 }}>
-                    <ListItemIcon sx={{ minWidth: 32 }}>
-                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                  <ListItem sx={{ px: 0, py: 0.3 }}>
+                    <ListItemIcon sx={{ minWidth: 24 }}>
+                      <CheckIcon sx={{ color: '#4caf50', fontSize: 16 }} />
                     </ListItemIcon>
-                    <ListItemText primary="Maintenance & Work Orders" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
-                  </ListItem>
-                  <ListItem sx={{ px: 0, py: 1 }}>
-                    <ListItemIcon sx={{ minWidth: 32 }}>
-                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
-                    </ListItemIcon>
-                    <ListItemText primary="Owner & Tenant Portals" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
-                  </ListItem>
-                  <ListItem sx={{ px: 0, py: 1 }}>
-                    <ListItemIcon sx={{ minWidth: 32 }}>
-                      <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
-                    </ListItemIcon>
-                    <ListItemText primary="Reports & Analytics" primaryTypographyProps={{ variant: 'body1', sx: { fontWeight: 500 } }} />
+                    <ListItemText primary="Owner & Tenant Portals" primaryTypographyProps={{ variant: 'body2', sx: { fontWeight: 500, fontSize: '0.85rem' } }} />
                   </ListItem>
                 </List>
               </Paper>
@@ -1484,5 +1434,7 @@ export default function ServiceSelection() {
         }
       `}</style>
     </Box>
+    <Footer />
+    </>
   );
 }

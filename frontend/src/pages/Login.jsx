@@ -68,11 +68,11 @@ const styles = {
     alignItems: 'center',
     minHeight: 'calc(100vh - 128px)',
     backgroundColor: '#f5f5f5',
-    padding: '20px',
+    padding: '16px',
   },
   form: {
     backgroundColor: 'rgb(44,145,145)',
-    padding: '32px',
+    padding: '24px',
     borderRadius: '12px',
     maxWidth: '360px',
     width: '100%',
@@ -84,7 +84,7 @@ const styles = {
   heading: {
     textAlign: 'center',
     marginBottom: '16px',
-    fontSize: '24px',
+    fontSize: '20px',
   },
   input: {
     padding: '10px',
@@ -102,11 +102,12 @@ const styles = {
     color: '#fff',
     fontWeight: '600',
     cursor: 'pointer',
-    transition: 'all 0.3s', // smooth transition
+    transition: 'all 0.3s',
+    fontSize: '14px',
   },
   userInfo: {
     marginTop: '12px',
-    fontSize: '14px',
+    fontSize: '13px',
     color: '#fff',
   },
   logoutButton: {

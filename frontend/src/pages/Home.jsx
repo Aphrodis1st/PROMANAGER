@@ -320,19 +320,19 @@ export default function Home() {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-3 sm:p-4 md:p-6 bg-gray-50 min-h-screen">
       {/* Header */}
-      <div className="mb-8">
-        <Typography variant="h4" sx={{ fontWeight: 700, color: '#1a1a1a', mb: 1 }}>
+      <div className="mb-6 sm:mb-8">
+        <Typography variant="h5" sx={{ fontWeight: 700, color: '#1a1a1a', mb: 1, fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
           Welcome back{user?.name ? `, ${user.name}` : ''}! 👋
         </Typography>
-        <Typography variant="body1" sx={{ color: '#666' }}>
+        <Typography variant="body2" sx={{ color: '#666', fontSize: { xs: '0.875rem', sm: '1rem' } }}>
           Here's what's happening with your E-Pharmacy today
         </Typography>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
         {stats.map((stat, index) => (
           <Card 
             key={index} 
@@ -391,7 +391,7 @@ export default function Home() {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {/* Sales Trend Chart */}
         <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e0e0e0' }}>
           <CardContent>
@@ -440,10 +440,10 @@ export default function Home() {
 
       {/* Quick Links */}
       <div className="mb-6">
-        <Typography variant="h5" sx={{ fontWeight: 600, mb: 3, color: '#1a1a1a' }}>
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 sm:mb-3, color: '#1a1a1a', fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>
           Quick Links
         </Typography>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           {pages.map((page, index) => (
             <Link 
               key={index} 
