@@ -45,6 +45,7 @@ import {
   GetApp as DownloadIcon,
   Explore as ExploreIcon,
   People as HRIcon,
+  VolunteerActivism as NGOIcon,
   Home as PropertyIcon
 } from '@mui/icons-material';
 
@@ -78,6 +79,12 @@ export default function ServiceSelection() {
       description: 'Ensure regulatory compliance while managing prescriptions, drug inventories, and customer service operations efficiently.',
       icon: <PharmacyIcon sx={{ fontSize: 48 }} />,
       color: '#f57c00'
+    },
+    {
+      title: 'NGOs, Churches & Humanitarian Organizations',
+      description: 'Coordinate programs, donors, beneficiaries, grants, church operations, field teams, and impact reporting.',
+      icon: <NGOIcon sx={{ fontSize: 48 }} />,
+      color: '#00897b'
     },
     {
       title: 'Multi-Branch Organizations',
@@ -161,6 +168,14 @@ export default function ServiceSelection() {
     'Supplier purchase automation',
     'Insurance billing integration',
     'Pharmacy sales analytics'
+  ];
+
+  const ngoCapabilities = [
+    'Multi-NGO, branch, church, and department management',
+    'Project, grant, donor, beneficiary, and volunteer tracking',
+    'Church finance, tithes, offerings, pledges, and pastoral records',
+    'M&E indicators, surveys, impact dashboards, and GIS field operations',
+    'Asset, HR, payroll, inventory, procurement, and communication center'
   ];
 
   return (
@@ -889,6 +904,103 @@ export default function ServiceSelection() {
           </Grid>
         </Paper>
 
+        {/* NGO Management System Section */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            mb: 3,
+            background: 'linear-gradient(135deg, #e0f2f1 0%, #ffffff 100%)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: 3,
+            border: '2px solid rgba(0, 137, 123, 0.15)',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: '0 12px 40px rgba(0, 137, 123, 0.15)',
+              border: '2px solid rgba(0, 137, 123, 0.3)',
+            }
+          }}
+        >
+          <Grid container spacing={3} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <Box sx={{ textAlign: { xs: 'center', md: 'left' } }}>
+                <Box
+                  sx={{
+                    width: 60,
+                    height: 60,
+                    bgcolor: '#00897b',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mx: { xs: 'auto', md: 0 },
+                    mb: 2,
+                    color: 'white'
+                  }}
+                >
+                  <NGOIcon sx={{ fontSize: 32 }} />
+                </Box>
+
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, color: '#00897b', mb: 1 }}>
+                  NGO Management System
+                </Typography>
+
+                <Typography variant="body2" paragraph sx={{ color: '#666', lineHeight: 1.5, mb: 2 }}>
+                  Complete operating platform for NGOs, churches, humanitarian relief teams, grants, donors, beneficiaries, volunteers, finance, and field impact.
+                </Typography>
+
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => navigate('/ngo')}
+                  sx={{
+                    bgcolor: '#00897b',
+                    py: 1,
+                    px: 2.5,
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    boxShadow: '0 4px 14px rgba(0, 137, 123, 0.3)',
+                    '&:hover': {
+                      bgcolor: '#00796b',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(0, 137, 123, 0.4)',
+                    }
+                  }}
+                >
+                  Access NGO Management
+                </Button>
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Paper elevation={2} sx={{ p: 2, bgcolor: 'rgba(0, 137, 123, 0.08)', borderRadius: 2, border: '1px solid rgba(0, 137, 123, 0.2)' }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: '#00897b', mb: 1.5 }}>
+                  Key Features
+                </Typography>
+                <List dense>
+                  {ngoCapabilities.slice(0, 4).map((capability, index) => (
+                    <ListItem key={index} sx={{ px: 0, py: 0.3 }}>
+                      <ListItemIcon sx={{ minWidth: 24 }}>
+                        <CheckIcon sx={{ color: '#4caf50', fontSize: 16 }} />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={capability}
+                        primaryTypographyProps={{
+                          variant: 'body2',
+                          sx: { fontWeight: 500, fontSize: '0.85rem' }
+                        }}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </Paper>
+            </Grid>
+          </Grid>
+        </Paper>
+
         {/* Property Management System Section */}
         <Paper 
           elevation={0}
@@ -1136,7 +1248,8 @@ export default function ServiceSelection() {
                 </Typography>
                 <Typography variant="body2" sx={{ mb: 1 }}>Inventory Engine</Typography>
                 <Typography variant="body2" sx={{ mb: 1 }}>Healthcare Engine</Typography>
-                <Typography variant="body2">Pharmacy Engine</Typography>
+                <Typography variant="body2" sx={{ mb: 1 }}>Pharmacy Engine</Typography>
+                <Typography variant="body2">NGO Impact Engine</Typography>
               </Card>
             </Grid>
             
@@ -1314,6 +1427,13 @@ export default function ServiceSelection() {
                   onClick={() => navigate('/pharmacy/dashboard')}
                 >
                   Pharmacy System
+                </Button>
+                <Button
+                  variant="text"
+                  sx={{ justifyContent: 'flex-start', color: '#666' }}
+                  onClick={() => navigate('/ngo')}
+                >
+                  NGO Management
                 </Button>
                 <Button 
                   variant="text" 

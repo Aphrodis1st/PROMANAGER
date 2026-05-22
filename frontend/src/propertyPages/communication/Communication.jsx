@@ -1,97 +1,158 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+
+const API = 'http://localhost:3001/api/v1/property';
 
 export default function Communication() {
-  const [message, setMessage] = useState({ subject: '', body: '', recipients: 'all' });
+  const [message, setMessage] = useState({ subject: '', body: '', recipients: 'all', propertyId: '', tenantId: '', channel: 'email' });
+  const [tenants, setTenants] = useState([]);
+  const [properties, setProperties] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [tickets, setTickets] = useState([]);
+  const [recentMessages, setRecentMessages] = useState([]);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchJson = async (path) => {
+    const response = await fetch(`${API}${path}`);
+    if (!response.ok) throw new Error(`Failed to load ${path}`);
+    return response.json();
+  };
+
+  const fetchData = async () => {
+    try {
+      const [tenantData, propertyData, invoiceData, ticketData] = await Promise.all([
+        fetchJson('/tenants'),
+        fetchJson('/properties'),
+        fetchJson('/billing'),
+        fetchJson('/maintenance')
+      ]);
+      setTenants(tenantData);
+      setProperties(propertyData);
+      setInvoices(invoiceData);
+      setTickets(ticketData);
+    } catch (error) {
+      console.error('Error loading communication data:', error);
+    }
+  };
+
+  const recipients = useMemo(() => {
+    if (message.recipients === 'individual') return tenants.filter(tenant => tenant.id === message.tenantId);
+    if (message.recipients === 'property') return tenants.filter(tenant => tenant.propertyId === message.propertyId);
+    return tenants;
+  }, [message, tenants]);
 
   const handleSend = async (e) => {
     e.preventDefault();
-    alert('Message sent successfully!');
-    setMessage({ subject: '', body: '', recipients: 'all' });
+    setRecentMessages(prev => [{
+      id: Date.now(),
+      subject: message.subject,
+      channel: message.channel,
+      count: recipients.length,
+      sentAt: new Date().toLocaleString()
+    }, ...prev]);
+    setMessage({ subject: '', body: '', recipients: 'all', propertyId: '', tenantId: '', channel: 'email' });
+  };
+
+  const useTemplate = (type) => {
+    if (type === 'payment') {
+      const overdue = invoices.filter(invoice => invoice.status === 'overdue' || invoice.status === 'pending').length;
+      setMessage(prev => ({
+        ...prev,
+        subject: 'Payment Reminder',
+        body: `This is a reminder that your property account has an outstanding balance. Please review your invoice and complete payment. Current pending invoice count: ${overdue}.`
+      }));
+    }
+    if (type === 'lease') {
+      setMessage(prev => ({
+        ...prev,
+        subject: 'Lease Renewal Notice',
+        body: 'Your lease is approaching its renewal period. Please contact the property office to review renewal terms and next steps.'
+      }));
+    }
+    if (type === 'maintenance') {
+      const openTickets = tickets.filter(ticket => ticket.status !== 'completed').length;
+      setMessage(prev => ({
+        ...prev,
+        subject: 'Maintenance Update',
+        body: `We are actively coordinating maintenance work across the property. Open maintenance requests currently tracked: ${openTickets}.`
+      }));
+    }
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Communication & Notices</h1>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-gray-900">Communication & Notices</h1>
+        <p className="mt-2 text-gray-600">Send portfolio-wide, property-specific, or tenant-specific notices from live tenant records.</p>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-bold mb-4">Send Message</h2>
-          <form onSubmit={handleSend}>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Recipients</label>
-              <select
-                value={message.recipients}
-                onChange={(e) => setMessage({...message, recipients: e.target.value})}
-                className="w-full border rounded px-3 py-2"
-              >
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-xl font-bold text-gray-900">Send Message</h2>
+          <form onSubmit={handleSend} className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <select value={message.channel} onChange={(e) => setMessage({ ...message, channel: e.target.value })} className="rounded-lg border border-gray-200 px-4 py-3">
+                <option value="email">Email</option>
+                <option value="sms">SMS</option>
+                <option value="notice">Portal Notice</option>
+              </select>
+              <select value={message.recipients} onChange={(e) => setMessage({ ...message, recipients: e.target.value })} className="rounded-lg border border-gray-200 px-4 py-3">
                 <option value="all">All Tenants</option>
                 <option value="property">By Property</option>
-                <option value="unit">By Unit</option>
                 <option value="individual">Individual Tenant</option>
               </select>
             </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Subject</label>
-              <input
-                type="text"
-                value={message.subject}
-                onChange={(e) => setMessage({...message, subject: e.target.value})}
-                className="w-full border rounded px-3 py-2"
-                required
-              />
-            </div>
+            {message.recipients === 'property' && (
+              <select value={message.propertyId} onChange={(e) => setMessage({ ...message, propertyId: e.target.value })} className="w-full rounded-lg border border-gray-200 px-4 py-3">
+                <option value="">Select property</option>
+                {properties.map(property => <option key={property.id} value={property.id}>{property.name}</option>)}
+              </select>
+            )}
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Message</label>
-              <textarea
-                value={message.body}
-                onChange={(e) => setMessage({...message, body: e.target.value})}
-                className="w-full border rounded px-3 py-2"
-                rows="6"
-                required
-              />
-            </div>
+            {message.recipients === 'individual' && (
+              <select value={message.tenantId} onChange={(e) => setMessage({ ...message, tenantId: e.target.value })} className="w-full rounded-lg border border-gray-200 px-4 py-3">
+                <option value="">Select tenant</option>
+                {tenants.map(tenant => <option key={tenant.id} value={tenant.id}>{tenant.firstName} {tenant.lastName}</option>)}
+              </select>
+            )}
 
-            <div className="flex gap-4">
-              <button type="submit" className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
-                Send SMS
-              </button>
-              <button type="submit" className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600">
-                Send Email
-              </button>
+            <input value={message.subject} onChange={(e) => setMessage({ ...message, subject: e.target.value })} className="w-full rounded-lg border border-gray-200 px-4 py-3" placeholder="Subject" required />
+            <textarea value={message.body} onChange={(e) => setMessage({ ...message, body: e.target.value })} className="w-full rounded-lg border border-gray-200 px-4 py-3" rows="7" placeholder="Message" required />
+
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-600">{recipients.length} recipient(s) selected</p>
+              <button type="submit" className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700">Send Message</button>
             </div>
           </form>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-bold mb-4">Quick Actions</h2>
-          <div className="space-y-3">
-            <button className="w-full bg-yellow-500 text-white px-4 py-3 rounded hover:bg-yellow-600 text-left">
-              Send Payment Reminder
-            </button>
-            <button className="w-full bg-purple-500 text-white px-4 py-3 rounded hover:bg-purple-600 text-left">
-              Lease Renewal Notice
-            </button>
-            <button className="w-full bg-red-500 text-white px-4 py-3 rounded hover:bg-red-600 text-left">
-              Maintenance Update
-            </button>
-            <button className="w-full bg-blue-500 text-white px-4 py-3 rounded hover:bg-blue-600 text-left">
-              General Announcement
-            </button>
+        <div className="space-y-6">
+          <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-xl font-bold text-gray-900">Professional Templates</h2>
+            <div className="grid grid-cols-1 gap-3">
+              <button onClick={() => useTemplate('payment')} className="rounded-lg bg-amber-50 px-4 py-3 text-left font-medium text-amber-800 hover:bg-amber-100">Payment Reminder</button>
+              <button onClick={() => useTemplate('lease')} className="rounded-lg bg-purple-50 px-4 py-3 text-left font-medium text-purple-800 hover:bg-purple-100">Lease Renewal Notice</button>
+              <button onClick={() => useTemplate('maintenance')} className="rounded-lg bg-red-50 px-4 py-3 text-left font-medium text-red-800 hover:bg-red-100">Maintenance Update</button>
+            </div>
           </div>
 
-          <div className="mt-6">
-            <h3 className="font-bold mb-3">Recent Messages</h3>
-            <div className="space-y-2">
-              <div className="border-l-4 border-blue-500 pl-3 py-2">
-                <p className="font-medium">Payment Reminder</p>
-                <p className="text-sm text-gray-600">Sent to 15 tenants - 2 hours ago</p>
-              </div>
-              <div className="border-l-4 border-green-500 pl-3 py-2">
-                <p className="font-medium">Maintenance Notice</p>
-                <p className="text-sm text-gray-600">Sent to Building A - Yesterday</p>
-              </div>
+          <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-900">Recent Messages</h2>
+              <Link to="/property/tenant-portal" className="text-sm font-medium text-blue-600">Tenant portal</Link>
+            </div>
+            <div className="space-y-3">
+              {recentMessages.map(item => (
+                <div key={item.id} className="rounded-lg border-l-4 border-blue-500 bg-blue-50 p-3">
+                  <p className="font-medium text-gray-900">{item.subject}</p>
+                  <p className="text-sm text-gray-600">Sent by {item.channel} to {item.count} recipient(s) - {item.sentAt}</p>
+                </div>
+              ))}
+              {!recentMessages.length && <p className="text-sm text-gray-500">No messages sent in this session.</p>}
             </div>
           </div>
         </div>

@@ -104,6 +104,22 @@ import superAdminStockRoutes from './routes/superAdmin/stock.routes.js';
 import superAdminPharmacyRoutes from './routes/superAdmin/pharmacy.routes.js';
 import superAdminHROrganizationRoutes from './routes/superAdmin/hrOrganization.routes.js';
 import superAdminPayrollRoutes from './routes/superAdmin/payroll.routes.js';
+import superAdminNGORoutes from './routes/superAdmin/ngo.routes.js';
+import ngoOperationsRoutes from './routes/ngo/operations.routes.js';
+import ngoProjectRoutes from './routes/ngo/project.routes.js';
+import ngoTenderRoutes from './routes/ngo/tender.routes.js';
+import ngoContractRoutes from './routes/ngo/contract.routes.js';
+import ngoImpactRoutes from './routes/ngo/impact.routes.js';
+import ngoEvaluationRoutes from './routes/ngo/evaluation.routes.js';
+import ngoIntegrationRoutes from './routes/ngo/integration.routes.js';
+import ngoOrganizationRoutes from './routes/ngo/organization.routes.js';
+import ngoBranchRoutes from './routes/ngo/branch.routes.js';
+import ngoDepartmentRoutes from './routes/ngo/department.routes.js';
+import ngoOrgChartRoutes from './routes/ngo/orgChart.routes.js';
+import ngoRoleRoutes from './routes/ngo/role.routes.js';
+import ngoFinanceRoutes from './routes/ngo/finance.routes.js';
+import ngoAuditRoutes from './routes/ngo/audit.routes.js';
+import ngoBeneficialOwnerRoutes from './routes/ngo/beneficialOwner.routes.js';
 
 // HR Routes
 import hrOrganizationRoutes from './routes/hr/organization.routes.js';
@@ -241,6 +257,22 @@ app.use('/api/v1/super-admin/stocks', superAdminStockRoutes);
 app.use('/api/v1/super-admin/pharmacies', superAdminPharmacyRoutes);
 app.use('/api/v1/super-admin/hr-organizations', superAdminHROrganizationRoutes);
 app.use('/api/v1/super-admin/payroll', superAdminPayrollRoutes);
+app.use('/api/v1/super-admin/ngos', superAdminNGORoutes);
+app.use('/api/v1/ngo', requireFirebase, ngoOperationsRoutes);
+app.use('/api/v1/ngo/projects', requireFirebase, ngoProjectRoutes);
+app.use('/api/v1/ngo/tenders', requireFirebase, ngoTenderRoutes);
+app.use('/api/v1/ngo/contracts', requireFirebase, ngoContractRoutes);
+app.use('/api/v1/ngo/impacts', requireFirebase, ngoImpactRoutes);
+app.use('/api/v1/ngo/evaluations', requireFirebase, ngoEvaluationRoutes);
+app.use('/api/v1/ngo/integration', requireFirebase, ngoIntegrationRoutes);
+app.use('/api/v1/ngo/organizations', requireFirebase, ngoOrganizationRoutes);
+app.use('/api/v1/ngo/branches', requireFirebase, ngoBranchRoutes);
+app.use('/api/v1/ngo/departments', requireFirebase, ngoDepartmentRoutes);
+app.use('/api/v1/ngo/org-charts', requireFirebase, ngoOrgChartRoutes);
+app.use('/api/v1/ngo/roles', requireFirebase, ngoRoleRoutes);
+app.use('/api/v1/ngo/finances', requireFirebase, ngoFinanceRoutes);
+app.use('/api/v1/ngo/audits', requireFirebase, ngoAuditRoutes);
+app.use('/api/v1/ngo/beneficial-owners', requireFirebase, ngoBeneficialOwnerRoutes);
 
 // Currency routes
 app.use('/api/v1/currency', currencyRoutes);

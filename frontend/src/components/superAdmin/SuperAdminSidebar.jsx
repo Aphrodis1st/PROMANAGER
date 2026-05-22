@@ -30,6 +30,12 @@ const SuperAdminSidebar = () => {
       active: location.pathname.includes('/super-admin/stocks')
     },
     {
+      title: 'NGO Management',
+      icon: 'N',
+      path: '/super-admin/ngos',
+      active: location.pathname.includes('/super-admin/ngos')
+    },
+    {
       title: 'Pharmacy Management',
       icon: 'P',
       path: '/super-admin/pharmacies',
@@ -71,7 +77,7 @@ const SuperAdminSidebar = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold">Super Admin</h1>
-            <p className="text-blue-200 text-sm">Hospital Management</p>
+            <p className="text-blue-200 text-sm">Service Management</p>
           </div>
         </div>
       </div>

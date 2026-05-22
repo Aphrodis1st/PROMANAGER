@@ -769,6 +769,47 @@ export const superAdminService = {
     return res.data;
   },
 
+  // NGO Management
+  getAllNGOs: async () => {
+    const res = await axios.get(`${SUPER_ADMIN_API_URL}/ngos`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  getNGO: async (id) => {
+    const res = await axios.get(`${SUPER_ADMIN_API_URL}/ngos/${id}`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  createNGO: async (data) => {
+    const res = await axios.post(`${SUPER_ADMIN_API_URL}/ngos`, data, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  updateNGO: async (id, data) => {
+    const res = await axios.put(`${SUPER_ADMIN_API_URL}/ngos/${id}`, data, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  updateNGOStatus: async (id, status) => {
+    const res = await axios.patch(`${SUPER_ADMIN_API_URL}/ngos/${id}/status`, { status }, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  updateNGOFeatures: async (id, features) => {
+    const res = await axios.patch(`${SUPER_ADMIN_API_URL}/ngos/${id}/features`, { features }, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  softDeleteNGO: async (id) => {
+    const res = await axios.patch(`${SUPER_ADMIN_API_URL}/ngos/${id}/soft-delete`, {}, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
+  hardDeleteNGO: async (id) => {
+    const res = await axios.delete(`${SUPER_ADMIN_API_URL}/ngos/${id}`, getSuperAdminAuthHeader());
+    return res.data;
+  },
+
   // Pharmacy Management
   getAllPharmacies: async () => {
     const res = await axios.get(`${SUPER_ADMIN_API_URL}/pharmacies`, getSuperAdminAuthHeader());

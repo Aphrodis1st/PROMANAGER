@@ -46,9 +46,11 @@ export default function TenantForm() {
     if (formData.propertyId) {
       const filtered = units.filter(u => u.propertyId === formData.propertyId);
       setFilteredUnits(filtered);
-      setFormData(prev => ({ ...prev, unitId: '' }));
+      if (formData.unitId && !filtered.some(u => u.id === formData.unitId)) {
+        setFormData(prev => ({ ...prev, unitId: '' }));
+      }
     }
-  }, [formData.propertyId, units]);
+  }, [formData.propertyId, formData.unitId, units]);
 
   const fetchProperties = async () => {
     try {

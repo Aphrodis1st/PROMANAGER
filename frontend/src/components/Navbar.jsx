@@ -50,6 +50,9 @@ export default function Navbar() {
                   <Link to="/hr/login" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
                     HR Management
                   </Link>
+                  <Link to="/ngo" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                    NGO Management
+                  </Link>
                   <Link to="/property" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
                     Property Management
                   </Link>
@@ -120,6 +123,9 @@ export default function Navbar() {
                   </Link>
                   <Link to="/hr/login" className="block text-gray-600 hover:text-blue-600 transition-colors">
                     HR Management
+                  </Link>
+                  <Link to="/ngo" className="block text-gray-600 hover:text-blue-600 transition-colors">
+                    NGO Management
                   </Link>
                   <Link to="/property" className="block text-gray-600 hover:text-blue-600 transition-colors">
                     Property Management

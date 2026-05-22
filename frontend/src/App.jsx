@@ -175,6 +175,7 @@ import LeasesList from './propertyPages/leases/LeasesList.jsx';
 import LeaseForm from './propertyPages/leases/LeaseForm.jsx';
 import PropertyBillingDashboard from './propertyPages/billing/BillingDashboard.jsx';
 import BillingForm from './propertyPages/billing/BillingForm.jsx';
+import PropertyInvoiceView from './propertyPages/billing/InvoiceView.jsx';
 import MaintenanceList from './propertyPages/maintenance/MaintenanceList.jsx';
 import StaffList from './propertyPages/staff/StaffList.jsx';
 import PropertyReportsDashboard from './propertyPages/reports/ReportsDashboard.jsx';
@@ -210,6 +211,8 @@ import StockManagement from './pages/superAdmin/StockManagement.jsx';
 import PharmacyManagement from './pages/superAdmin/PharmacyManagement.jsx';
 import HRManagement from './pages/superAdmin/HRManagement.jsx';
 import PayrollManagement from './pages/superAdmin/PayrollManagement.jsx';
+import NGOManagement from './pages/superAdmin/NGOManagement.jsx';
+import NGODashboard from './pages/ngo/NGODashboard.jsx';
 
 function AppContent() {
   return (
@@ -233,6 +236,7 @@ function AppContent() {
       <Route path='/super-admin/hospitals' element={<HospitalManagement />} />
       <Route path='/super-admin/hospital-admins' element={<HospitalAdminManagement />} />
       <Route path='/super-admin/stocks' element={<StockManagement />} />
+      <Route path='/super-admin/ngos' element={<NGOManagement />} />
       <Route path='/super-admin/pharmacies' element={<PharmacyManagement />} />
       <Route path='/super-admin/hr' element={<HRManagement />} />
       <Route path='/super-admin/payroll' element={<PayrollManagement />} />
@@ -345,15 +349,25 @@ function AppContent() {
         <Route path='leases/:id/edit' element={<LeaseForm />} />
         <Route path='billing' element={<PropertyBillingDashboard />} />
         <Route path='billing/create' element={<BillingForm />} />
+        <Route path='billing/:id' element={<PropertyInvoiceView />} />
         <Route path='billing/:id/edit' element={<BillingForm />} />
         <Route path='maintenance' element={<MaintenanceList />} />
+        <Route path='maintenance/create' element={<MaintenanceList />} />
+        <Route path='maintenance/:id' element={<MaintenanceList />} />
         <Route path='staff' element={<StaffList />} />
+        <Route path='staff/create' element={<StaffList />} />
+        <Route path='staff/:id' element={<StaffList />} />
+        <Route path='staff/:id/schedule' element={<StaffList />} />
         <Route path='reports' element={<PropertyReportsDashboard />} />
+        <Route path='reports/:reportType' element={<PropertyReportsDashboard />} />
         <Route path='communication' element={<Communication />} />
         <Route path='settings' element={<PropertySettings />} />
         <Route path='owner-portal' element={<OwnerPortal />} />
         <Route path='tenant-portal' element={<TenantPortal />} />
       </Route>
+
+      {/* NGO Management Routes */}
+      <Route path='/ngo' element={<NGODashboard />} />
     </Routes>
   );
 }

@@ -3,6 +3,7 @@ import { HospitalAdmin } from '../../models/superAdmin/hospitalAdmin.model.js';
 import { Stock } from '../../models/superAdmin/stock.model.js';
 import { Pharmacy } from '../../models/superAdmin/pharmacy.model.js';
 import { HROrganization } from '../../models/superAdmin/hrOrganization.model.js';
+import { NGO } from '../../models/superAdmin/ngo.model.js';
 import { db } from '../../../utils/firebase.js';
 
 export const getDashboardStats = async (req, res) => {
@@ -12,6 +13,7 @@ export const getDashboardStats = async (req, res) => {
     const stocks = await Stock.getAll();
     const pharmacies = await Pharmacy.getAll();
     const hrOrganizations = await HROrganization.getAll();
+    const ngos = await NGO.getAll();
     
     const stats = {
       totalHospitals: hospitals.length,
@@ -29,6 +31,9 @@ export const getDashboardStats = async (req, res) => {
       totalHROrganizations: hrOrganizations.length,
       activeHROrganizations: hrOrganizations.filter(h => h.status === 'active').length,
       suspendedHROrganizations: hrOrganizations.filter(h => h.status === 'suspended').length,
+      totalNGOs: ngos.length,
+      activeNGOs: ngos.filter(n => n.status === 'active').length,
+      suspendedNGOs: ngos.filter(n => n.status === 'suspended').length,
       subscriptionPlans: {
         basic: hospitals.filter(h => h.subscriptionPlan === 'basic').length,
         premium: hospitals.filter(h => h.subscriptionPlan === 'premium').length,

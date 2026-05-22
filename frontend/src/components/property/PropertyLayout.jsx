@@ -53,6 +53,12 @@ export default function PropertyLayout() {
             <Link to="/property/communication" className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${isActive('/property/communication') ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-50'}`}>
               Communication
             </Link>
+            <Link to="/property/owner-portal" className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${isActive('/property/owner-portal') ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-50'}`}>
+              Owner Portal
+            </Link>
+            <Link to="/property/tenant-portal" className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${isActive('/property/tenant-portal') ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-50'}`}>
+              Tenant Portal
+            </Link>
             <Link to="/property/settings" className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${isActive('/property/settings') ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-50'}`}>
               Settings
             </Link>

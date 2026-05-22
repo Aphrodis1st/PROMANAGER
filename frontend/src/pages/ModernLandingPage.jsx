@@ -7,6 +7,7 @@ import {
   Users, 
   Pill,
   Home,
+  HeartHandshake,
   ArrowRight,
   CheckCircle,
   TrendingUp,
@@ -67,7 +68,7 @@ const HeroSection = ({ navigate }) => {
           </h1>
           
           <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-6 sm:mb-8 md:mb-10 px-4">
-            Streamline operations across retail, healthcare, pharmacy, HR, and property management 
+            Streamline operations across retail, healthcare, pharmacy, NGO, church, HR, and property management 
             with our unified, intelligent platform designed for modern businesses.
           </p>
 
@@ -138,6 +139,12 @@ const IndustrySolutions = () => {
       title: 'Pharmaceutical Businesses',
       description: 'Ensure regulatory compliance while managing prescriptions, drug inventories, and customer service operations efficiently.',
       color: 'from-purple-500 to-purple-600'
+    },
+    {
+      icon: <HeartHandshake className="w-8 h-8" />,
+      title: 'NGOs, Churches & Humanitarian Organizations',
+      description: 'Manage donors, beneficiaries, volunteers, projects, grants, church activities, field teams, and impact reporting.',
+      color: 'from-emerald-500 to-teal-600'
     },
     {
       icon: <Building className="w-8 h-8" />,
@@ -218,6 +225,14 @@ const CoreModules = ({ navigate }) => {
       path: '/hr/login'
     },
     {
+      icon: <HeartHandshake className="w-10 h-10" />,
+      title: 'NGO Management System',
+      description: 'Complete platform for NGOs, churches, humanitarian relief, donors, programs, grants, and field impact.',
+      features: ['Donor and beneficiary CRM', 'Projects and grants', 'Church and volunteer management', 'M&E and GIS analytics'],
+      color: 'from-emerald-500 to-teal-600',
+      path: '/ngo'
+    },
+    {
       icon: <Home className="w-10 h-10" />,
       title: 'Property Management System',
       description: 'Complete solution for managing properties, tenants, and maintenance operations.',
@@ -288,7 +303,7 @@ const SuperAdminCallout = ({ navigate }) => {
           Super Admin Access
         </h2>
         <p className="text-sm sm:text-base text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
-          System administrators can access the Super Admin panel to manage hospitals, 
+          System administrators can access the Super Admin panel to manage hospitals, NGOs, 
           monitor system-wide activities, and configure platform settings.
         </p>
         
@@ -315,7 +330,7 @@ const PlatformArchitecture = () => {
     {
       icon: <Layers className="w-8 h-8" />,
       title: 'Application Services',
-      description: 'Inventory Engine • Healthcare Engine • Pharmacy Engine',
+      description: 'Inventory Engine • Healthcare Engine • Pharmacy Engine • NGO Impact Engine',
       color: 'from-indigo-500 to-indigo-600'
     },
     {
@@ -379,6 +394,7 @@ const Footer = ({ navigate }) => {
               <li className="hover:text-white cursor-pointer" onClick={() => navigate('/stock/login')}>Stock Management</li>
               <li className="hover:text-white cursor-pointer" onClick={() => navigate('/hospital/login')}>Hospital Management</li>
               <li className="hover:text-white cursor-pointer" onClick={() => navigate('/pharmacy/login')}>Pharmacy Services</li>
+              <li className="hover:text-white cursor-pointer" onClick={() => navigate('/ngo')}>NGO Management</li>
               <li className="hover:text-white cursor-pointer" onClick={() => navigate('/hr/login')}>HR Management</li>
             </ul>
           </div>

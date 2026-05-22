@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Search, Filter, Download, Plus, Mail, Phone, MapPin, Home, Calendar, DollarSign, AlertCircle, CheckCircle, Clock, Eye, Edit, Trash2, TrendingUp, Grid3x3, List, MoreVertical } from 'lucide-react';
+import { Users, Search, Filter, Download, Plus, Mail, Phone, MapPin, Home, Calendar, DollarSign, AlertCircle, CheckCircle, Clock, Eye, Edit, Trash2, TrendingUp, Grid3x3, List, MoreVertical, FileText } from 'lucide-react';
 
 export default function TenantsList() {
   const [tenants, setTenants] = useState([]);
