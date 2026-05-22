@@ -12,8 +12,8 @@ const router = express.Router();
 
 router.post('/', createBranch);
 router.get('/', getAllBranches);
-router.get('/:id', getBranch);
 router.get('/organization/:organizationId', getBranchesByOrganization);
+router.get('/:id', getBranch);
 router.put('/:id', updateBranch);
 router.delete('/:id', deleteBranch);
 

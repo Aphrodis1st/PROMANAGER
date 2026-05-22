@@ -12,8 +12,8 @@ const router = express.Router();
 
 router.post('/', createOrganization);
 router.get('/', getAllOrganizations);
-router.get('/:id', getOrganization);
 router.get('/:id/stats', getOrganizationStats);
+router.get('/:id', getOrganization);
 router.put('/:id', updateOrganization);
 router.delete('/:id', deleteOrganization);
 

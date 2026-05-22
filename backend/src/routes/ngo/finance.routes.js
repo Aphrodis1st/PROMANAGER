@@ -13,9 +13,9 @@ const router = express.Router();
 
 router.post('/', createFinance);
 router.get('/', getAllFinances);
-router.get('/:id', getFinance);
 router.get('/summary/:organizationId', getFinancialSummary);
 router.get('/project/:projectId', getFinancesByProject);
+router.get('/:id', getFinance);
 router.put('/:id', updateFinance);
 router.delete('/:id', deleteFinance);
 

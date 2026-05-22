@@ -14,11 +14,11 @@ const router = express.Router();
 
 router.post('/', createBeneficialOwner);
 router.get('/', getAllBeneficialOwners);
-router.get('/:id', getBeneficialOwner);
 router.get('/structure/:organizationId', getOwnershipStructure);
 router.get('/pep/:organizationId', getPoliticallyExposed);
-router.put('/:id', updateBeneficialOwner);
+router.get('/:id', getBeneficialOwner);
 router.put('/:id/verify', verifyBeneficialOwner);
+router.put('/:id', updateBeneficialOwner);
 router.delete('/:id', deleteBeneficialOwner);
 
 export default router;

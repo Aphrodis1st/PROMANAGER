@@ -14,11 +14,11 @@ const router = express.Router();
 
 router.post('/', createRole);
 router.get('/', getAllRoles);
-router.get('/:id', getRole);
 router.get('/department/:departmentId', getRolesByDepartment);
 router.get('/hierarchy/:organizationId', getRoleHierarchy);
-router.put('/:id', updateRole);
+router.get('/:id', getRole);
 router.put('/:id/permissions', assignPermissions);
+router.put('/:id', updateRole);
 router.delete('/:id', deleteRole);
 
 export default router;

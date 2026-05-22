@@ -13,9 +13,9 @@ const router = express.Router();
 
 router.post('/', createDepartment);
 router.get('/', getAllDepartments);
-router.get('/:id', getDepartment);
 router.get('/branch/:branchId', getDepartmentsByBranch);
 router.get('/hierarchy/:organizationId', getDepartmentHierarchy);
+router.get('/:id', getDepartment);
 router.put('/:id', updateDepartment);
 router.delete('/:id', deleteDepartment);
 

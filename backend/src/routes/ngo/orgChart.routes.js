@@ -13,9 +13,9 @@ const router = express.Router();
 
 router.post('/', createOrgChart);
 router.get('/', getAllOrgCharts);
-router.get('/:id', getOrgChart);
 router.get('/active/:organizationId', getActiveOrgChart);
 router.get('/generate/:organizationId', generateOrgChart);
+router.get('/:id', getOrgChart);
 router.put('/:id', updateOrgChart);
 router.delete('/:id', deleteOrgChart);
 

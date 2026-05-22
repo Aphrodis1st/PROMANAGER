@@ -14,11 +14,11 @@ const router = express.Router();
 
 router.post('/', createAudit);
 router.get('/', getAllAudits);
-router.get('/:id', getAudit);
 router.get('/trail/history', getAuditTrail);
 router.get('/compliance/:organizationId', getComplianceStatus);
-router.put('/:id', updateAudit);
+router.get('/:id', getAudit);
 router.post('/:id/findings', addAuditFinding);
+router.put('/:id', updateAudit);
 router.delete('/:id', deleteAudit);
 
 export default router;
