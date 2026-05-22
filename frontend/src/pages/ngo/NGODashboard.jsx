@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import ServiceControlCenter from './ServiceControlCenter.jsx';
 import NGOSettingsController from './NGOSettingsController.jsx';
 import {
@@ -528,30 +528,50 @@ const blankOrganization = {
 };
 
 const blankGrant = {
+  id: '',
+  projectId: '',
   name: '',
   donor: '',
   budget: 0,
   spent: 0,
   deadline: '',
   compliance: 'On Track',
-  reportStatus: 'Draft'
+  reportStatus: 'Draft',
+  approvalStatus: 'Pending',
+  approvedBy: '',
+  approvedAt: ''
 };
 
 const blankPayroll = {
+  id: '',
+  projectId: '',
   period: '',
   staffCount: 0,
   grossPay: 0,
   approvals: 'Pending',
-  status: 'Draft'
+  status: 'Draft',
+  preparedBy: '',
+  reviewedBy: '',
+  approvedBy: '',
+  approvedAt: ''
 };
 
 const blankDonorReport = {
+  id: '',
+  projectId: '',
+  grantId: '',
   title: '',
   donor: '',
   period: '',
   income: 0,
   expenses: 0,
-  status: 'Draft'
+  revenueAccount: '4010',
+  expenseAccount: '5000',
+  recognitionBasis: 'Accrual',
+  status: 'Draft',
+  reviewedBy: '',
+  approvedBy: '',
+  approvedAt: ''
 };
 
 const blankAccount = {
@@ -658,6 +678,7 @@ const blankEvaluation = {
 };
 
 const blankBankAccount = {
+  id: '',
   accountCode: '',
   name: '',
   bankName: '',
@@ -669,6 +690,9 @@ const blankBankAccount = {
 };
 
 const blankPayment = {
+  id: '',
+  projectId: '',
+  grantId: '',
   voucherNo: '',
   payee: '',
   date: '',
@@ -678,10 +702,19 @@ const blankPayment = {
   method: 'Bank Transfer',
   approvalStatus: 'Pending',
   paymentStatus: 'Draft',
-  restriction: 'Unrestricted'
+  restriction: 'Unrestricted',
+  documentationStatus: 'Pending',
+  preparedBy: '',
+  reviewedBy: '',
+  approvedBy: '',
+  approvedAt: '',
+  notes: ''
 };
 
 const blankJournalEntry = {
+  id: '',
+  projectId: '',
+  grantId: '',
   date: '',
   reference: '',
   description: '',
@@ -689,7 +722,11 @@ const blankJournalEntry = {
   creditAccount: '',
   amount: 0,
   fund: 'Unrestricted',
-  posted: false
+  posted: false,
+  approvalStatus: 'Pending',
+  preparedBy: '',
+  approvedBy: '',
+  approvedAt: ''
 };
 
 const blankFieldSite = {
@@ -1024,6 +1061,7 @@ function formatFileSize(size = 0) {
 export default function NGODashboard() {
   const [workspace, setWorkspace] = useState(readWorkspace);
   const [activeTab, setActiveTab] = useState('organization');
+  const [financeSection, setFinanceSection] = useState('income');
   const [branchForm, setBranchForm] = useState(blankBranch);
   const [departmentForm, setDepartmentForm] = useState(blankDepartment);
   const [staffForm, setStaffForm] = useState(blankStaff);
@@ -2222,33 +2260,62 @@ export default function NGODashboard() {
     );
   };
 
+  const upsertFinanceRecord = (collection, record, idPrefix, numericFields, label) => {
+    const id = record.id || createId(idPrefix);
+    const normalized = {
+      ...record,
+      id,
+      organizationId: currentOrganization.id
+    };
+
+    numericFields.forEach(field => {
+      normalized[field] = Number(normalized[field] || 0);
+    });
+
+    updateWorkspace(
+      current => {
+        const exists = current[collection].some(item => item.id === id);
+        return {
+          ...current,
+          [collection]: exists
+            ? current[collection].map(item => item.id === id ? normalized : item)
+            : [...current[collection], normalized]
+        };
+      },
+      `${label} ${record.id ? 'updated' : 'created'}`
+    );
+  };
+
+  const updateFinanceStatus = (collection, id, updates, label) => {
+    updateWorkspace(
+      current => ({
+        ...current,
+        [collection]: current[collection].map(item =>
+          item.id === id ? { ...item, ...updates } : item
+        )
+      }),
+      label
+    );
+  };
+
   const createGrant = (event) => {
     event.preventDefault();
     if (!grantForm.name.trim() || !grantForm.donor.trim()) return;
-    updateWorkspace(
-      current => ({ ...current, grants: [...current.grants, { ...grantForm, organizationId: currentOrganization.id, id: createId('grant'), budget: Number(grantForm.budget || 0), spent: Number(grantForm.spent || 0) }] }),
-      `Grant created: ${grantForm.name}`
-    );
+    upsertFinanceRecord('grants', grantForm, 'grant', ['budget', 'spent'], `Grant ${grantForm.name}`);
     setGrantForm(blankGrant);
   };
 
   const createPayroll = (event) => {
     event.preventDefault();
     if (!payrollForm.period.trim()) return;
-    updateWorkspace(
-      current => ({ ...current, payrollRuns: [...current.payrollRuns, { ...payrollForm, organizationId: currentOrganization.id, id: createId('pay'), staffCount: Number(payrollForm.staffCount || 0), grossPay: Number(payrollForm.grossPay || 0) }] }),
-      `Payroll run added: ${payrollForm.period}`
-    );
+    upsertFinanceRecord('payrollRuns', payrollForm, 'pay', ['staffCount', 'grossPay'], `Payroll ${payrollForm.period}`);
     setPayrollForm(blankPayroll);
   };
 
   const createDonorReport = (event) => {
     event.preventDefault();
     if (!donorReportForm.title.trim() || !donorReportForm.donor.trim()) return;
-    updateWorkspace(
-      current => ({ ...current, donorReports: [...current.donorReports, { ...donorReportForm, organizationId: currentOrganization.id, id: createId('report'), income: Number(donorReportForm.income || 0), expenses: Number(donorReportForm.expenses || 0) }] }),
-      `Donor report added: ${donorReportForm.title}`
-    );
+    upsertFinanceRecord('donorReports', donorReportForm, 'report', ['income', 'expenses'], `Donor report ${donorReportForm.title}`);
     setDonorReportForm(blankDonorReport);
   };
 
@@ -2288,31 +2355,77 @@ export default function NGODashboard() {
   const createBankAccount = (event) => {
     event.preventDefault();
     if (!bankForm.name.trim()) return;
-    updateWorkspace(
-      current => ({ ...current, bankAccounts: [...current.bankAccounts, { ...bankForm, organizationId: currentOrganization.id, id: createId('bank'), openingBalance: Number(bankForm.openingBalance || 0), reconciledBalance: Number(bankForm.reconciledBalance || 0) }] }),
-      `Bank account created: ${bankForm.name}`
-    );
+    upsertFinanceRecord('bankAccounts', bankForm, 'bank', ['openingBalance', 'reconciledBalance'], `Bank account ${bankForm.name}`);
     setBankForm(blankBankAccount);
   };
 
   const createPayment = (event) => {
     event.preventDefault();
     if (!paymentForm.voucherNo.trim() || !paymentForm.payee.trim()) return;
-    updateWorkspace(
-      current => ({ ...current, payments: [...current.payments, { ...paymentForm, organizationId: currentOrganization.id, id: createId('payment'), amount: Number(paymentForm.amount || 0) }] }),
-      `Payment voucher created: ${paymentForm.voucherNo}`
-    );
+    upsertFinanceRecord('payments', paymentForm, 'payment', ['amount'], `Payment voucher ${paymentForm.voucherNo}`);
     setPaymentForm(blankPayment);
   };
 
   const createJournalEntry = (event) => {
     event.preventDefault();
     if (!journalForm.debitAccount || !journalForm.creditAccount || !journalForm.amount) return;
-    updateWorkspace(
-      current => ({ ...current, journalEntries: [...current.journalEntries, { ...journalForm, organizationId: currentOrganization.id, id: createId('je'), amount: Number(journalForm.amount || 0) }] }),
-      `Journal entry created: ${journalForm.reference || journalForm.description}`
-    );
+    upsertFinanceRecord('journalEntries', journalForm, 'je', ['amount'], `Journal entry ${journalForm.reference || journalForm.description}`);
     setJournalForm(blankJournalEntry);
+  };
+
+  const approvePayment = (payment) => {
+    updateFinanceStatus(
+      'payments',
+      payment.id,
+      {
+        approvalStatus: 'Approved',
+        paymentStatus: payment.paymentStatus === 'Draft' ? 'Ready' : payment.paymentStatus,
+        approvedBy: currentOrganization.primaryContact?.name || currentOrganization.governance?.executiveDirector || 'Finance Approver',
+        approvedAt: new Date().toISOString()
+      },
+      `Payment voucher approved: ${payment.voucherNo}`
+    );
+  };
+
+  const approvePayroll = (payroll) => {
+    updateFinanceStatus(
+      'payrollRuns',
+      payroll.id,
+      {
+        approvals: 'Approved',
+        status: payroll.status === 'Draft' ? 'Ready' : payroll.status,
+        approvedBy: currentOrganization.primaryContact?.name || currentOrganization.governance?.executiveDirector || 'Finance Approver',
+        approvedAt: new Date().toISOString()
+      },
+      `Payroll approved: ${payroll.period}`
+    );
+  };
+
+  const publishDonorReport = (report) => {
+    updateFinanceStatus(
+      'donorReports',
+      report.id,
+      {
+        status: 'Published',
+        approvedBy: currentOrganization.primaryContact?.name || currentOrganization.governance?.executiveDirector || 'Finance Approver',
+        approvedAt: new Date().toISOString()
+      },
+      `Donor report published: ${report.title}`
+    );
+  };
+
+  const postJournalEntry = (entry) => {
+    updateFinanceStatus(
+      'journalEntries',
+      entry.id,
+      {
+        posted: true,
+        approvalStatus: 'Approved',
+        approvedBy: currentOrganization.primaryContact?.name || currentOrganization.governance?.executiveDirector || 'Finance Approver',
+        approvedAt: new Date().toISOString()
+      },
+      `Journal entry posted: ${entry.reference || entry.description}`
+    );
   };
 
   const createBeneficialOwner = (event) => {
@@ -2447,6 +2560,16 @@ export default function NGODashboard() {
     );
   };
 
+  const financeSections = [
+    { id: 'income', label: 'Income & Grants', icon: DollarSign },
+    { id: 'expenses', label: 'Expenses & Payments', icon: CreditCard },
+    { id: 'banking', label: 'Banking', icon: Landmark },
+    { id: 'journals', label: 'Journals', icon: ClipboardCheck },
+    { id: 'payroll', label: 'Payroll', icon: Users },
+    { id: 'reports', label: 'Reports', icon: FileText },
+    { id: 'accounts', label: 'Accounts', icon: BarChart3 }
+  ];
+
   const exportWorkspace = () => {
     const blob = new Blob([JSON.stringify(workspace, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -2463,7 +2586,8 @@ export default function NGODashboard() {
     { id: 'departments', label: 'Departments', icon: Network },
     { id: 'staff', label: 'Org Chart', icon: Users },
     { id: 'roles', label: 'Roles', icon: ShieldCheck },
-    { id: 'finance', label: 'Finance Audit', icon: Landmark },
+    { id: 'finance', label: 'Finance', icon: DollarSign },
+    { id: 'audit', label: 'Audit', icon: Landmark },
     { id: 'owners', label: 'Beneficial Owners', icon: ShieldCheck },
     { id: 'projects', label: 'Projects & Tenders', icon: BriefcaseBusiness },
     { id: 'contracts', label: 'Contracts & Storage', icon: FileText },
@@ -2501,7 +2625,7 @@ export default function NGODashboard() {
                 <p className="text-sm font-semibold text-emerald-700 mb-2">Professional NGO operations console</p>
                 <h2 className="text-3xl font-bold tracking-tight">{currentOrganization.name}</h2>
                 <p className="text-gray-600 mt-2">
-                  {currentOrganization.type} • {currentOrganization.headquarters} • {currentOrganization.defaultLanguage} • {currentOrganization.defaultCurrency}
+                  {currentOrganization.type} â€¢ {currentOrganization.headquarters} â€¢ {currentOrganization.defaultLanguage} â€¢ {currentOrganization.defaultCurrency}
                 </p>
               </div>
               <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">
@@ -2566,7 +2690,7 @@ export default function NGODashboard() {
                             <span className="font-semibold">{organization.name}</span>
                             <span className="rounded-full bg-white px-2 py-1 text-xs font-semibold text-gray-600">{organization.status}</span>
                           </div>
-                          <p className="mt-1 text-sm text-gray-600">{organization.type} • {organization.headquarters}</p>
+                          <p className="mt-1 text-sm text-gray-600">{organization.type} â€¢ {organization.headquarters}</p>
                           <p className="mt-1 text-xs text-gray-500">{getFullAddress(organization)}</p>
                         </button>
                       ))}
@@ -2694,7 +2818,7 @@ export default function NGODashboard() {
                             <div key={imageId} className="flex items-center justify-between gap-3 rounded-md bg-gray-50 px-3 py-2 text-sm">
                               <div className="min-w-0">
                                 <span className="block truncate font-semibold">{image.name || `Organization image ${index + 1}`}</span>
-                                <span className="text-xs text-gray-500">{formatFileSize(image.originalSize || image.size)}{index === 0 ? ' • Primary' : ''}</span>
+                                <span className="text-xs text-gray-500">{formatFileSize(image.originalSize || image.size)}{index === 0 ? ' â€¢ Primary' : ''}</span>
                               </div>
                               <button type="button" onClick={() => removeOrganizationImage(imageId)} className="text-red-600 font-semibold">Remove</button>
                             </div>
@@ -2745,7 +2869,7 @@ export default function NGODashboard() {
                           <div>
                             <p className="font-semibold text-gray-800">{document.name}</p>
                             <p className="text-xs text-gray-500">
-                              {document.category} • {formatFileSize(document.size)} • {document.uploadedAt ? new Date(document.uploadedAt).toLocaleString() : 'Uploaded'}
+                              {document.category} â€¢ {formatFileSize(document.size)} â€¢ {document.uploadedAt ? new Date(document.uploadedAt).toLocaleString() : 'Uploaded'}
                             </p>
                             {!document.dataUrl && (
                               <p className="mt-1 text-xs font-medium text-amber-700">Large file saved as metadata to keep the page stable.</p>
@@ -2811,7 +2935,7 @@ export default function NGODashboard() {
                       <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Branches will be linked to</p>
                       <h4 className="mt-1 text-xl font-bold text-emerald-950">{currentOrganization.name}</h4>
                       <p className="mt-1 text-sm text-emerald-800">
-                        {currentOrganization.type} • {currentOrganization.registrationNo || 'No registration'} • {currentOrganization.headquarters || 'No headquarters'}
+                        {currentOrganization.type} â€¢ {currentOrganization.registrationNo || 'No registration'} â€¢ {currentOrganization.headquarters || 'No headquarters'}
                       </p>
                     </div>
                     <div className="w-full lg:w-72">
@@ -2883,7 +3007,7 @@ export default function NGODashboard() {
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
                         <div>
                           <h4 className="text-xl font-bold">{selectedBranch.name}</h4>
-                          <p className="text-sm text-gray-600">{selectedBranch.type} • {getBranchAddress(selectedBranch)}</p>
+                          <p className="text-sm text-gray-600">{selectedBranch.type} â€¢ {getBranchAddress(selectedBranch)}</p>
                         </div>
                         <SelectInput label="Select Branch" value={selectedBranch.id} options={scopedBranches.map(branch => ({ label: branch.name, value: branch.id }))} onChange={setSelectedBranchId} />
                       </div>
@@ -3012,7 +3136,7 @@ export default function NGODashboard() {
                                 <div key={imageId} className="flex items-center justify-between gap-3 rounded-md bg-gray-50 px-3 py-2 text-sm">
                                   <div className="min-w-0">
                                     <span className="block truncate font-semibold">{image.name || `Branch image ${index + 1}`}</span>
-                                    <span className="text-xs text-gray-500">{formatFileSize(image.originalSize || image.size)}{index === 0 ? ' • Primary' : ''}</span>
+                                    <span className="text-xs text-gray-500">{formatFileSize(image.originalSize || image.size)}{index === 0 ? ' â€¢ Primary' : ''}</span>
                                   </div>
                                   <button type="button" onClick={() => removeBranchImage(selectedBranch.id, imageId)} className="text-red-600 font-semibold">Remove</button>
                                 </div>
@@ -3047,7 +3171,7 @@ export default function NGODashboard() {
                           {(selectedBranch.documents || []).map(document => (
                             <div key={document.id} className="rounded-md border border-gray-200 p-3">
                               <p className="font-semibold">{document.name}</p>
-                              <p className="text-xs text-gray-500">{document.category} • {formatFileSize(document.size)}</p>
+                              <p className="text-xs text-gray-500">{document.category} â€¢ {formatFileSize(document.size)}</p>
                               <div className="mt-2 flex gap-2">
                                 {document.dataUrl && <a href={document.dataUrl} download={document.name} className="rounded-md border border-gray-300 px-3 py-1 text-sm font-semibold hover:bg-gray-50">Download</a>}
                                 <button type="button" onClick={() => removeBranchDocument(selectedBranch.id, document.id)} className="rounded-md border border-red-200 px-3 py-1 text-sm font-semibold text-red-700 hover:bg-red-50">Remove</button>
@@ -3070,7 +3194,7 @@ export default function NGODashboard() {
                       <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Departments will be created under</p>
                       <h4 className="mt-1 text-xl font-bold text-emerald-950">{currentOrganization.name}</h4>
                       <p className="mt-1 text-sm text-emerald-800">
-                        {currentOrganization.type} • {currentOrganization.registrationNo || 'No registration'} • {scopedBranches.length} linked branch{scopedBranches.length === 1 ? '' : 'es'}
+                        {currentOrganization.type} â€¢ {currentOrganization.registrationNo || 'No registration'} â€¢ {scopedBranches.length} linked branch{scopedBranches.length === 1 ? '' : 'es'}
                       </p>
                     </div>
                     <div className="w-full lg:w-72">
@@ -3155,7 +3279,7 @@ export default function NGODashboard() {
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
                         <div>
                           <h4 className="text-xl font-bold">{selectedDepartment.name}</h4>
-                          <p className="text-sm text-gray-600">{branchById[selectedDepartment.branchId]?.name || 'Unassigned'} • {money(selectedDepartment.budget, currentOrganization.defaultCurrency)}</p>
+                          <p className="text-sm text-gray-600">{branchById[selectedDepartment.branchId]?.name || 'Unassigned'} â€¢ {money(selectedDepartment.budget, currentOrganization.defaultCurrency)}</p>
                         </div>
                         <SelectInput label="Select Department" value={selectedDepartment.id} options={scopedDepartments.map(department => ({ label: department.name, value: department.id }))} onChange={setSelectedDepartmentId} />
                       </div>
@@ -3280,7 +3404,7 @@ export default function NGODashboard() {
                                 <div key={imageId} className="flex items-center justify-between gap-3 rounded-md bg-gray-50 px-3 py-2 text-sm">
                                   <div className="min-w-0">
                                     <span className="block truncate font-semibold">{image.name || `Department image ${index + 1}`}</span>
-                                    <span className="text-xs text-gray-500">{formatFileSize(image.originalSize || image.size)}{index === 0 ? ' • Primary' : ''}</span>
+                                    <span className="text-xs text-gray-500">{formatFileSize(image.originalSize || image.size)}{index === 0 ? ' â€¢ Primary' : ''}</span>
                                   </div>
                                   <button type="button" onClick={() => removeDepartmentImage(selectedDepartment.id, imageId)} className="text-red-600 font-semibold">Remove</button>
                                 </div>
@@ -3315,7 +3439,7 @@ export default function NGODashboard() {
                           {(selectedDepartment.documents || []).map(document => (
                             <div key={document.id} className="rounded-md border border-gray-200 p-3">
                               <p className="font-semibold">{document.name}</p>
-                              <p className="text-xs text-gray-500">{document.category} • {formatFileSize(document.size)}</p>
+                              <p className="text-xs text-gray-500">{document.category} â€¢ {formatFileSize(document.size)}</p>
                               <div className="mt-2 flex gap-2">
                                 {document.dataUrl && <a href={document.dataUrl} download={document.name} className="rounded-md border border-gray-300 px-3 py-1 text-sm font-semibold hover:bg-gray-50">Download</a>}
                                 <button type="button" onClick={() => removeDepartmentDocument(selectedDepartment.id, document.id)} className="rounded-md border border-red-200 px-3 py-1 text-sm font-semibold text-red-700 hover:bg-red-50">Remove</button>
@@ -3338,7 +3462,7 @@ export default function NGODashboard() {
                       <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Staff will be assigned under</p>
                       <h4 className="mt-1 text-xl font-bold text-emerald-950">{staffFormOrganization.name}</h4>
                       <p className="mt-1 text-sm text-emerald-800">
-                        {staffFormOrganization.type} • {staffFormOrganization.registrationNo || 'No registration'} • {staffFormBranches.length} branch{staffFormBranches.length === 1 ? '' : 'es'} available
+                        {staffFormOrganization.type} â€¢ {staffFormOrganization.registrationNo || 'No registration'} â€¢ {staffFormBranches.length} branch{staffFormBranches.length === 1 ? '' : 'es'} available
                       </p>
                     </div>
                     <div className="w-full lg:w-72">
@@ -3460,7 +3584,7 @@ export default function NGODashboard() {
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
                         <div>
                           <h4 className="text-xl font-bold">{selectedStaff.name}</h4>
-                          <p className="text-sm text-gray-600">{selectedStaff.role} • {branchById[selectedStaff.branchId]?.name || 'Unassigned'} • {departmentById[selectedStaff.departmentId]?.name || 'Unassigned'}</p>
+                          <p className="text-sm text-gray-600">{selectedStaff.role} â€¢ {branchById[selectedStaff.branchId]?.name || 'Unassigned'} â€¢ {departmentById[selectedStaff.departmentId]?.name || 'Unassigned'}</p>
                         </div>
                         <SelectInput label="Select Staff" value={selectedStaff.id} options={scopedStaff.map(member => ({ label: member.name, value: member.id }))} onChange={setSelectedStaffId} />
                       </div>
@@ -3601,7 +3725,7 @@ export default function NGODashboard() {
                                 <div key={photoId} className="flex items-center justify-between gap-3 rounded-md bg-gray-50 px-3 py-2 text-sm">
                                   <div className="min-w-0">
                                     <span className="block truncate font-semibold">{photo.name || `Staff photo ${index + 1}`}</span>
-                                    <span className="text-xs text-gray-500">{formatFileSize(photo.originalSize || photo.size)}{index === 0 ? ' • Primary' : ''}</span>
+                                    <span className="text-xs text-gray-500">{formatFileSize(photo.originalSize || photo.size)}{index === 0 ? ' â€¢ Primary' : ''}</span>
                                   </div>
                                   <button type="button" onClick={() => removeStaffPhoto(selectedStaff.id, photoId)} className="text-red-600 font-semibold">Remove</button>
                                 </div>
@@ -3636,7 +3760,7 @@ export default function NGODashboard() {
                           {(selectedStaff.documents || []).map(document => (
                             <div key={document.id} className="rounded-md border border-gray-200 p-3">
                               <p className="font-semibold">{document.name}</p>
-                              <p className="text-xs text-gray-500">{document.category} • {formatFileSize(document.size)}</p>
+                              <p className="text-xs text-gray-500">{document.category} â€¢ {formatFileSize(document.size)}</p>
                               <div className="mt-2 flex gap-2">
                                 {document.dataUrl && <a href={document.dataUrl} download={document.name} className="rounded-md border border-gray-300 px-3 py-1 text-sm font-semibold hover:bg-gray-50">Download</a>}
                                 <button type="button" onClick={() => removeStaffDocument(selectedStaff.id, document.id)} className="rounded-md border border-red-200 px-3 py-1 text-sm font-semibold text-red-700 hover:bg-red-50">Remove</button>
@@ -3659,7 +3783,7 @@ export default function NGODashboard() {
                       <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Roles will be configured for</p>
                       <h4 className="mt-1 text-xl font-bold text-emerald-950">{roleFormOrganization.name}</h4>
                       <p className="mt-1 text-sm text-emerald-800">
-                        {roleFormOrganization.type} • {roleFormOrganization.registrationNo || 'No registration'} • {scopedStaff.length} staff available
+                        {roleFormOrganization.type} â€¢ {roleFormOrganization.registrationNo || 'No registration'} â€¢ {scopedStaff.length} staff available
                       </p>
                     </div>
                     <div className="w-full lg:w-72">
@@ -3764,7 +3888,7 @@ export default function NGODashboard() {
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
                         <div>
                           <h4 className="text-xl font-bold">{selectedRole.name}</h4>
-                          <p className="text-sm text-gray-600">{selectedRole.scope || 'Organization'} scope • {(selectedRole.permissions || []).length} permissions</p>
+                          <p className="text-sm text-gray-600">{selectedRole.scope || 'Organization'} scope â€¢ {(selectedRole.permissions || []).length} permissions</p>
                         </div>
                         <SelectInput label="Select Role" value={selectedRole.id} options={scopedRoles.map(role => ({ label: role.name, value: role.id }))} onChange={setSelectedRoleId} />
                       </div>
@@ -3896,7 +4020,28 @@ export default function NGODashboard() {
 
                 <FinanceChecklist workspace={{ ...workspace, grants: scopedGrants, payrollRuns: scopedPayrollRuns, donorReports: scopedDonorReports }} summary={summary} />
 
-                <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mt-6">
+                <div className="mt-6 flex flex-wrap gap-2 rounded-lg border border-gray-200 bg-white p-2">
+                  {financeSections.map(section => {
+                    const Icon = section.icon;
+                    const selected = financeSection === section.id;
+                    return (
+                      <button
+                        key={section.id}
+                        type="button"
+                        onClick={() => setFinanceSection(section.id)}
+                        className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold ${
+                          selected ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                        {section.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {financeSection === 'accounts' && (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
                   <form onSubmit={createAccount} className="rounded-lg border border-gray-200 p-4">
                     <h4 className="font-bold mb-3">Chart of Accounts</h4>
                     <div className="space-y-3">
@@ -3920,7 +4065,16 @@ export default function NGODashboard() {
                       <SubmitButton label="Add Account" />
                     </div>
                   </form>
+                  <ChartAccountManager
+                    accounts={scopedChartOfAccounts}
+                    onEdit={editChartAccount}
+                    onRemove={removeChartAccount}
+                  />
+                </div>
+                )}
 
+                {financeSection === 'banking' && (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
                   <form onSubmit={createBankAccount} className="rounded-lg border border-gray-200 p-4">
                     <h4 className="font-bold mb-3">Bank & Cash Account</h4>
                     <div className="space-y-3">
@@ -3939,10 +4093,30 @@ export default function NGODashboard() {
                       <SubmitButton label="Add Bank" />
                     </div>
                   </form>
+                  <FinanceActionTable
+                    title="Bank Reconciliation"
+                    columns={['Account', 'Bank', 'Currency', 'Reconciled', 'Actions']}
+                    rows={scopedBankAccounts.map(bank => [
+                      bank.name,
+                      bank.bankName,
+                      bank.currency,
+                      money(bank.reconciledBalance, bank.currency),
+                      <RowActions
+                        onEdit={() => setBankForm(bank)}
+                        onRemove={() => removeItem('bankAccounts', bank.id, `Bank account ${bank.name}`)}
+                      />
+                    ])}
+                  />
+                </div>
+                )}
 
+                {financeSection === 'expenses' && (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
                   <form onSubmit={createPayment} className="rounded-lg border border-gray-200 p-4">
                     <h4 className="font-bold mb-3">Payment Voucher</h4>
                     <div className="space-y-3">
+                      <SelectInput label="Project" value={paymentForm.projectId} options={workspace.projects.map(project => ({ label: `${project.code} - ${project.name}`, value: project.id }))} onChange={value => setPaymentForm({ ...paymentForm, projectId: value })} />
+                      <SelectInput label="Grant" value={paymentForm.grantId} options={scopedGrants.map(grant => ({ label: grant.name, value: grant.id }))} onChange={value => setPaymentForm({ ...paymentForm, grantId: value })} />
                       <Input label="Voucher No." value={paymentForm.voucherNo} onChange={value => setPaymentForm({ ...paymentForm, voucherNo: value })} required />
                       <Input label="Payee" value={paymentForm.payee} onChange={value => setPaymentForm({ ...paymentForm, payee: value })} required />
                       <Input label="Date" type="date" value={paymentForm.date} onChange={value => setPaymentForm({ ...paymentForm, date: value })} />
@@ -3951,13 +4125,40 @@ export default function NGODashboard() {
                       <SelectInput label="Bank" value={paymentForm.bankAccountId} options={scopedBankAccounts.map(bank => ({ label: bank.name, value: bank.id }))} onChange={value => setPaymentForm({ ...paymentForm, bankAccountId: value })} />
                       <SelectInput label="Approval" value={paymentForm.approvalStatus} options={['Pending', 'Approved', 'Rejected']} onChange={value => setPaymentForm({ ...paymentForm, approvalStatus: value })} />
                       <SelectInput label="Status" value={paymentForm.paymentStatus} options={['Draft', 'Ready', 'Paid']} onChange={value => setPaymentForm({ ...paymentForm, paymentStatus: value })} />
-                      <SubmitButton label="Add Payment" />
+                      <SelectInput label="Documentation" value={paymentForm.documentationStatus} options={['Pending', 'Complete', 'Exception Approved']} onChange={value => setPaymentForm({ ...paymentForm, documentationStatus: value })} />
+                      <Input label="Prepared By" value={paymentForm.preparedBy} onChange={value => setPaymentForm({ ...paymentForm, preparedBy: value })} />
+                      <Input label="Reviewed By" value={paymentForm.reviewedBy} onChange={value => setPaymentForm({ ...paymentForm, reviewedBy: value })} />
+                      <Input label="Notes" value={paymentForm.notes} onChange={value => setPaymentForm({ ...paymentForm, notes: value })} />
+                      <SubmitButton label={paymentForm.id ? 'Update Payment' : 'Add Payment'} />
                     </div>
                   </form>
+                  <FinanceActionTable
+                    title="Payment Vouchers"
+                    columns={['Voucher', 'Project', 'Payee', 'Amount', 'Status', 'Actions']}
+                    rows={scopedPayments.map(payment => [
+                      payment.voucherNo,
+                      workspace.projects.find(project => project.id === payment.projectId)?.code || 'Unassigned',
+                      payment.payee,
+                      money(payment.amount, currentOrganization.defaultCurrency),
+                      `${payment.approvalStatus} / ${payment.paymentStatus}`,
+                      <RowActions
+                        onEdit={() => setPaymentForm({ ...blankPayment, ...payment })}
+                        onApprove={() => approvePayment(payment)}
+                        onRemove={() => removeItem('payments', payment.id, `Payment voucher ${payment.voucherNo}`)}
+                        approveDisabled={payment.approvalStatus === 'Approved'}
+                      />
+                    ])}
+                  />
+                </div>
+                )}
 
+                {financeSection === 'journals' && (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
                   <form onSubmit={createJournalEntry} className="rounded-lg border border-gray-200 p-4">
                     <h4 className="font-bold mb-3">Double-Entry Journal</h4>
                     <div className="space-y-3">
+                      <SelectInput label="Project" value={journalForm.projectId} options={workspace.projects.map(project => ({ label: `${project.code} - ${project.name}`, value: project.id }))} onChange={value => setJournalForm({ ...journalForm, projectId: value })} />
+                      <SelectInput label="Grant" value={journalForm.grantId} options={scopedGrants.map(grant => ({ label: grant.name, value: grant.id }))} onChange={value => setJournalForm({ ...journalForm, grantId: value })} />
                       <Input label="Date" type="date" value={journalForm.date} onChange={value => setJournalForm({ ...journalForm, date: value })} />
                       <Input label="Reference" value={journalForm.reference} onChange={value => setJournalForm({ ...journalForm, reference: value })} />
                       <Input label="Description" value={journalForm.description} onChange={value => setJournalForm({ ...journalForm, description: value })} />
@@ -3965,71 +4166,134 @@ export default function NGODashboard() {
                       <SelectInput label="Credit Account" value={journalForm.creditAccount} options={scopedChartOfAccounts.map(a => ({ label: `${a.code} - ${a.name}`, value: a.code }))} onChange={value => setJournalForm({ ...journalForm, creditAccount: value })} />
                       <Input label="Amount" type="number" value={journalForm.amount} onChange={value => setJournalForm({ ...journalForm, amount: value })} />
                       <SelectInput label="Fund" value={journalForm.fund} options={fundTypes} onChange={value => setJournalForm({ ...journalForm, fund: value })} />
+                      <SelectInput label="Approval" value={journalForm.approvalStatus} options={['Pending', 'Approved', 'Rejected']} onChange={value => setJournalForm({ ...journalForm, approvalStatus: value })} />
+                      <Input label="Prepared By" value={journalForm.preparedBy} onChange={value => setJournalForm({ ...journalForm, preparedBy: value })} />
                       <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={journalForm.posted} onChange={e => setJournalForm({ ...journalForm, posted: e.target.checked })} /> Posted</label>
-                      <SubmitButton label="Add Journal" />
+                      <SubmitButton label={journalForm.id ? 'Update Journal' : 'Add Journal'} />
                     </div>
                   </form>
+                  <FinanceActionTable
+                    title="Journal Entries"
+                    columns={['Reference', 'Debit', 'Credit', 'Amount', 'Actions']}
+                    rows={scopedJournalEntries.map(entry => [
+                      entry.reference,
+                      entry.debitAccount,
+                      entry.creditAccount,
+                      `${money(entry.amount, currentOrganization.defaultCurrency)}${entry.posted ? ' posted' : ' draft'}`,
+                      <RowActions
+                        onEdit={() => setJournalForm({ ...blankJournalEntry, ...entry })}
+                        onApprove={() => postJournalEntry(entry)}
+                        onRemove={() => removeItem('journalEntries', entry.id, `Journal entry ${entry.reference || entry.description}`)}
+                        approveDisabled={entry.posted}
+                        approveLabel="Post"
+                      />
+                    ])}
+                  />
                 </div>
+                )}
 
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-6">
+                {financeSection === 'income' && (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
                   <form onSubmit={createGrant} className="rounded-lg border border-gray-200 p-4">
                     <h4 className="font-bold mb-3 flex items-center gap-2"><BriefcaseBusiness className="w-4 h-4 text-emerald-700" /> Grant Management</h4>
                     <div className="space-y-3">
+                      <SelectInput label="Project" value={grantForm.projectId} options={workspace.projects.map(project => ({ label: `${project.code} - ${project.name}`, value: project.id }))} onChange={value => setGrantForm({ ...grantForm, projectId: value })} />
                       <Input label="Grant Name" value={grantForm.name} onChange={value => setGrantForm({ ...grantForm, name: value })} required />
                       <Input label="Donor" value={grantForm.donor} onChange={value => setGrantForm({ ...grantForm, donor: value })} required />
                       <Input label="Budget" type="number" value={grantForm.budget} onChange={value => setGrantForm({ ...grantForm, budget: value })} />
                       <Input label="Spent" type="number" value={grantForm.spent} onChange={value => setGrantForm({ ...grantForm, spent: value })} />
                       <Input label="Deadline" type="date" value={grantForm.deadline} onChange={value => setGrantForm({ ...grantForm, deadline: value })} />
                       <SelectInput label="Compliance" value={grantForm.compliance} options={['On Track', 'Needs Review', 'At Risk']} onChange={value => setGrantForm({ ...grantForm, compliance: value })} />
+                      <SelectInput label="Approval" value={grantForm.approvalStatus} options={['Pending', 'Approved', 'Rejected']} onChange={value => setGrantForm({ ...grantForm, approvalStatus: value })} />
                       <SelectInput label="Report Status" value={grantForm.reportStatus} options={['Draft', 'Submitted', 'Approved']} onChange={value => setGrantForm({ ...grantForm, reportStatus: value })} />
-                      <SubmitButton label="Add Grant" />
+                      <SubmitButton label={grantForm.id ? 'Update Grant' : 'Add Grant'} />
                     </div>
                   </form>
-
-                  <form onSubmit={createPayroll} className="rounded-lg border border-gray-200 p-4">
-                    <h4 className="font-bold mb-3 flex items-center gap-2"><CreditCard className="w-4 h-4 text-emerald-700" /> Payroll Approval</h4>
-                    <div className="space-y-3">
-                      <Input label="Period" value={payrollForm.period} onChange={value => setPayrollForm({ ...payrollForm, period: value })} placeholder="June 2026" required />
-                      <Input label="Staff Count" type="number" value={payrollForm.staffCount} onChange={value => setPayrollForm({ ...payrollForm, staffCount: value })} />
-                      <Input label="Gross Pay" type="number" value={payrollForm.grossPay} onChange={value => setPayrollForm({ ...payrollForm, grossPay: value })} />
-                      <SelectInput label="Approvals" value={payrollForm.approvals} options={['Pending', 'Approved', 'Rejected']} onChange={value => setPayrollForm({ ...payrollForm, approvals: value })} />
-                      <SelectInput label="Status" value={payrollForm.status} options={['Draft', 'Ready', 'Paid']} onChange={value => setPayrollForm({ ...payrollForm, status: value })} />
-                      <SubmitButton label="Add Payroll" />
-                    </div>
-                  </form>
-
                   <form onSubmit={createDonorReport} className="rounded-lg border border-gray-200 p-4">
-                    <h4 className="font-bold mb-3 flex items-center gap-2"><FileText className="w-4 h-4 text-emerald-700" /> Donor Report</h4>
+                    <h4 className="font-bold mb-3 flex items-center gap-2"><FileText className="w-4 h-4 text-emerald-700" /> Project Income Report</h4>
                     <div className="space-y-3">
+                      <SelectInput label="Project" value={donorReportForm.projectId} options={workspace.projects.map(project => ({ label: `${project.code} - ${project.name}`, value: project.id }))} onChange={value => setDonorReportForm({ ...donorReportForm, projectId: value })} />
+                      <SelectInput label="Grant" value={donorReportForm.grantId} options={scopedGrants.map(grant => ({ label: grant.name, value: grant.id }))} onChange={value => setDonorReportForm({ ...donorReportForm, grantId: value })} />
                       <Input label="Report Title" value={donorReportForm.title} onChange={value => setDonorReportForm({ ...donorReportForm, title: value })} required />
                       <Input label="Donor" value={donorReportForm.donor} onChange={value => setDonorReportForm({ ...donorReportForm, donor: value })} required />
                       <Input label="Period" value={donorReportForm.period} onChange={value => setDonorReportForm({ ...donorReportForm, period: value })} placeholder="Q2 2026" />
                       <Input label="Income" type="number" value={donorReportForm.income} onChange={value => setDonorReportForm({ ...donorReportForm, income: value })} />
                       <Input label="Expenses" type="number" value={donorReportForm.expenses} onChange={value => setDonorReportForm({ ...donorReportForm, expenses: value })} />
+                      <SelectInput label="Revenue Account" value={donorReportForm.revenueAccount} options={scopedChartOfAccounts.filter(a => a.type === 'Revenue').map(a => ({ label: `${a.code} - ${a.name}`, value: a.code }))} onChange={value => setDonorReportForm({ ...donorReportForm, revenueAccount: value })} />
+                      <SelectInput label="Expense Account" value={donorReportForm.expenseAccount} options={scopedChartOfAccounts.filter(a => a.type === 'Expense').map(a => ({ label: `${a.code} - ${a.name}`, value: a.code }))} onChange={value => setDonorReportForm({ ...donorReportForm, expenseAccount: value })} />
+                      <SelectInput label="Recognition Basis" value={donorReportForm.recognitionBasis} options={['Accrual', 'Cash', 'Modified Cash']} onChange={value => setDonorReportForm({ ...donorReportForm, recognitionBasis: value })} />
                       <SelectInput label="Status" value={donorReportForm.status} options={['Draft', 'Reviewed', 'Published']} onChange={value => setDonorReportForm({ ...donorReportForm, status: value })} />
-                      <SubmitButton label="Add Report" />
+                      <SubmitButton label={donorReportForm.id ? 'Update Report' : 'Add Report'} />
                     </div>
                   </form>
                 </div>
+                )}
+
+                {financeSection === 'payroll' && (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
+                  <form onSubmit={createPayroll} className="rounded-lg border border-gray-200 p-4">
+                    <h4 className="font-bold mb-3 flex items-center gap-2"><CreditCard className="w-4 h-4 text-emerald-700" /> Payroll Approval</h4>
+                    <div className="space-y-3">
+                      <SelectInput label="Project" value={payrollForm.projectId} options={workspace.projects.map(project => ({ label: `${project.code} - ${project.name}`, value: project.id }))} onChange={value => setPayrollForm({ ...payrollForm, projectId: value })} />
+                      <Input label="Period" value={payrollForm.period} onChange={value => setPayrollForm({ ...payrollForm, period: value })} placeholder="June 2026" required />
+                      <Input label="Staff Count" type="number" value={payrollForm.staffCount} onChange={value => setPayrollForm({ ...payrollForm, staffCount: value })} />
+                      <Input label="Gross Pay" type="number" value={payrollForm.grossPay} onChange={value => setPayrollForm({ ...payrollForm, grossPay: value })} />
+                      <SelectInput label="Approvals" value={payrollForm.approvals} options={['Pending', 'Approved', 'Rejected']} onChange={value => setPayrollForm({ ...payrollForm, approvals: value })} />
+                      <SelectInput label="Status" value={payrollForm.status} options={['Draft', 'Ready', 'Paid']} onChange={value => setPayrollForm({ ...payrollForm, status: value })} />
+                      <Input label="Prepared By" value={payrollForm.preparedBy} onChange={value => setPayrollForm({ ...payrollForm, preparedBy: value })} />
+                      <Input label="Reviewed By" value={payrollForm.reviewedBy} onChange={value => setPayrollForm({ ...payrollForm, reviewedBy: value })} />
+                      <SubmitButton label={payrollForm.id ? 'Update Payroll' : 'Add Payroll'} />
+                    </div>
+                  </form>
+                </div>
+                )}
 
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-6">
-                  <MiniTable title="Grants" columns={['Grant', 'Donor', 'Utilization', 'Compliance']} rows={scopedGrants.map(grant => [
+                  <FinanceActionTable title="Grants" columns={['Grant', 'Donor', 'Utilization', 'Compliance', 'Actions']} rows={scopedGrants.map(grant => [
                     grant.name,
                     grant.donor,
                     `${Math.round((Number(grant.spent || 0) / Math.max(Number(grant.budget || 1), 1)) * 100)}%`,
-                    grant.compliance
+                    `${grant.compliance} / ${grant.approvalStatus || 'Pending'}`,
+                    <RowActions
+                      onEdit={() => {
+                        setGrantForm({ ...blankGrant, ...grant });
+                        setFinanceSection('income');
+                      }}
+                      onApprove={() => updateFinanceStatus('grants', grant.id, { approvalStatus: 'Approved', approvedBy: currentOrganization.primaryContact?.name || 'Finance Approver', approvedAt: new Date().toISOString() }, `Grant approved: ${grant.name}`)}
+                      onRemove={() => removeItem('grants', grant.id, `Grant ${grant.name}`)}
+                      approveDisabled={grant.approvalStatus === 'Approved'}
+                    />
                   ])} />
-                  <MiniTable title="Payroll Runs" columns={['Period', 'Staff', 'Gross', 'Status']} rows={scopedPayrollRuns.map(payroll => [
+                  <FinanceActionTable title="Payroll Runs" columns={['Period', 'Staff', 'Gross', 'Status', 'Actions']} rows={scopedPayrollRuns.map(payroll => [
                     payroll.period,
                     payroll.staffCount,
                     money(payroll.grossPay, currentOrganization.defaultCurrency),
-                    `${payroll.approvals} / ${payroll.status}`
+                    `${payroll.approvals} / ${payroll.status}`,
+                    <RowActions
+                      onEdit={() => {
+                        setPayrollForm({ ...blankPayroll, ...payroll });
+                        setFinanceSection('payroll');
+                      }}
+                      onApprove={() => approvePayroll(payroll)}
+                      onRemove={() => removeItem('payrollRuns', payroll.id, `Payroll ${payroll.period}`)}
+                      approveDisabled={payroll.approvals === 'Approved'}
+                    />
                   ])} />
-                  <MiniTable title="Donor Reports" columns={['Report', 'Donor', 'Net', 'Status']} rows={scopedDonorReports.map(report => [
+                  <FinanceActionTable title="Donor Reports" columns={['Report', 'Donor', 'Net', 'Status', 'Actions']} rows={scopedDonorReports.map(report => [
                     report.title,
                     report.donor,
                     money(Number(report.income || 0) - Number(report.expenses || 0), currentOrganization.defaultCurrency),
-                    report.status
+                    report.status,
+                    <RowActions
+                      onEdit={() => {
+                        setDonorReportForm({ ...blankDonorReport, ...report });
+                        setFinanceSection('income');
+                      }}
+                      onApprove={() => publishDonorReport(report)}
+                      onRemove={() => removeItem('donorReports', report.id, `Donor report ${report.title}`)}
+                      approveDisabled={report.status === 'Published'}
+                      approveLabel="Publish"
+                    />
                   ])} />
                 </div>
 
@@ -4068,6 +4332,48 @@ export default function NGODashboard() {
                     ['Double-entry journal', summary.postedDebits === summary.postedCredits ? 'Balanced' : 'Review required'],
                     ['Bank reconciliation', scopedBankAccounts.length ? 'Available' : 'Missing'],
                     ['Restricted funds', scopedChartOfAccounts.some(account => account.restricted) ? 'Tracked' : 'Missing'],
+                    ['Payment approvals', scopedPayments.length && scopedPayments.every(payment => payment.approvalStatus === 'Approved') ? 'Approved' : 'Pending approvals'],
+                    ['Donor reporting', scopedDonorReports.some(report => report.status === 'Published') ? 'Published' : 'Draft only']
+                  ]} />
+                </div>
+              </Panel>
+            )}
+
+            {activeTab === 'audit' && (
+              <Panel title="Audit & Compliance Workspace" subtitle="Chart of accounts, journal entries, trial balance, and audit controls for financial transparency.">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                  <Metric icon={FileText} label="Chart of Accounts" value={`${scopedChartOfAccounts.length} accounts`} />
+                  <Metric icon={BarChart3} label="Trial Balance" value={summary.postedDebits === summary.postedCredits ? 'Balanced' : 'Review'} />
+                  <Metric icon={CreditCard} label="Payment Vouchers" value={scopedPayments.length} />
+                  <Metric icon={Landmark} label="Journal Entries" value={scopedJournalEntries.length} />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <ChartAccountManager
+                    accounts={scopedChartOfAccounts}
+                    onEdit={editChartAccount}
+                    onRemove={removeChartAccount}
+                  />
+                  <MiniTable title="Journal Entries" columns={['Reference', 'Debit', 'Credit', 'Amount']} rows={scopedJournalEntries.map(entry => [
+                    entry.reference,
+                    entry.debitAccount,
+                    entry.creditAccount,
+                    `${money(entry.amount, currentOrganization.defaultCurrency)}${entry.posted ? ' posted' : ' draft'}`
+                  ])} />
+                </div>
+
+                <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <MiniTable title="Statement of Activities" columns={['Line', 'Amount']} rows={[
+                    ['Donor income', money(summary.donorIncome, currentOrganization.defaultCurrency)],
+                    ['Grant spending', money(summary.grantSpent, currentOrganization.defaultCurrency)],
+                    ['Payroll expense', money(summary.payrollTotal, currentOrganization.defaultCurrency)],
+                    ['Payment vouchers', money(summary.paymentTotal, currentOrganization.defaultCurrency)],
+                    ['Net surplus / deficit', money(summary.donorIncome - summary.grantSpent - summary.payrollTotal - summary.paymentTotal, currentOrganization.defaultCurrency)]
+                  ]} />
+                  <MiniTable title="Audit Controls" columns={['Control', 'Status']} rows={[
+                    ['Double-entry journal', summary.postedDebits === summary.postedCredits ? 'Balanced' : 'Review required'],
+                    ['Bank reconciliation', scopedBankAccounts.length ? 'Available' : 'Not configured'],
+                    ['Restricted funds', scopedChartOfAccounts.filter(a => a.restricted).length ? 'Tracked' : 'Not tracked'],
                     ['Payment approvals', scopedPayments.length && scopedPayments.every(payment => payment.approvalStatus === 'Approved') ? 'Approved' : 'Pending approvals'],
                     ['Donor reporting', scopedDonorReports.some(report => report.status === 'Published') ? 'Published' : 'Draft only']
                   ]} />
@@ -4838,6 +5144,70 @@ function MiniTable({ title, columns, rows }) {
   );
 }
 
+function FinanceActionTable({ title, columns, rows }) {
+  return (
+    <div className="rounded-lg border border-gray-200 overflow-hidden bg-white">
+      <div className="bg-gray-50 px-4 py-3 font-bold">{title}</div>
+      <div className="max-h-80 overflow-auto">
+        <table className="min-w-full divide-y divide-gray-200 text-sm">
+          <thead className="sticky top-0 z-10 bg-white shadow-sm">
+            <tr>
+              {columns.map(column => (
+                <th key={column} className="px-3 py-2 text-left text-xs font-semibold uppercase text-gray-500">
+                  {column}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {rows.map((row, rowIndex) => (
+              <tr key={rowIndex} className="hover:bg-gray-50">
+                {row.map((cell, cellIndex) => (
+                  <td key={cellIndex} className="px-3 py-2 text-gray-700 align-top">
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={columns.length} className="px-4 py-8 text-center text-sm text-gray-500">
+                  No records for this organization.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function RowActions({ onEdit, onApprove, onRemove, approveDisabled = false, approveLabel = 'Approve' }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {onEdit && (
+        <button type="button" onClick={onEdit} className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-100">
+          <Pencil className="w-3.5 h-3.5" />
+          Edit
+        </button>
+      )}
+      {onApprove && (
+        <button type="button" disabled={approveDisabled} onClick={onApprove} className="inline-flex items-center gap-1 rounded-md border border-emerald-200 px-2 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50">
+          <CheckCircle2 className="w-3.5 h-3.5" />
+          {approveLabel}
+        </button>
+      )}
+      {onRemove && (
+        <button type="button" onClick={onRemove} className="inline-flex items-center gap-1 rounded-md border border-red-200 px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-50">
+          <Trash2 className="w-3.5 h-3.5" />
+          Remove
+        </button>
+      )}
+    </div>
+  );
+}
+
 function ChartAccountManager({ accounts, onEdit, onRemove }) {
   return (
     <div className="rounded-lg border border-gray-200 overflow-hidden bg-white">
@@ -4964,5 +5334,7 @@ function SettingsList({ title, icon: Icon, values, value, onValueChange, onAdd, 
     </div>
   );
 }
+
+
 
 

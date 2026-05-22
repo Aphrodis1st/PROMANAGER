@@ -235,6 +235,11 @@ const professionalCollections = {
   'bank-accounts': 'ngo_bank_accounts',
   payments: 'ngo_payments',
   'journal-entries': 'ngo_journal_entries',
+  grants: 'ngo_grants',
+  payroll: 'ngo_payroll_runs',
+  'donor-reports': 'ngo_donor_reports',
+  'income-transactions': 'ngo_income_transactions',
+  'expense-transactions': 'ngo_expense_transactions',
   'beneficial-owners': 'ngo_beneficial_owners',
   contracts: 'ngo_contracts',
   storages: 'ngo_storages',
@@ -291,6 +296,27 @@ const createProfessionalRouter = (resource, collectionName) => {
     try {
       await db().collection(collectionName).doc(req.params.id).delete();
       res.json({ success: true, data: { id: req.params.id } });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  router.patch(`/${resource}/:id/approve`, async (req, res) => {
+    try {
+      const payload = {
+        approvalStatus: req.body.approvalStatus || 'Approved',
+        status: req.body.status,
+        approvedBy: req.body.approvedBy || req.body.user || 'Finance Approver',
+        approvedAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      Object.keys(payload).forEach(key => {
+        if (payload[key] === undefined) delete payload[key];
+      });
+
+      await db().collection(collectionName).doc(req.params.id).set(payload, { merge: true });
+      res.json({ success: true, data: { id: req.params.id, ...payload } });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }
