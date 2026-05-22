@@ -2387,6 +2387,20 @@ export default function NGODashboard() {
     );
   };
 
+  const approveBudget = (grant) => {
+    updateFinanceStatus(
+      'grants',
+      grant.id,
+      {
+        approvalStatus: 'Approved',
+        reportStatus: grant.reportStatus === 'Draft' ? 'Submitted' : grant.reportStatus,
+        approvedBy: currentOrganization.primaryContact?.name || currentOrganization.governance?.executiveDirector || 'Finance Approver',
+        approvedAt: new Date().toISOString()
+      },
+      `Budget approved: ${grant.name}`
+    );
+  };
+
   const approvePayroll = (payroll) => {
     updateFinanceStatus(
       'payrollRuns',
@@ -2562,12 +2576,9 @@ export default function NGODashboard() {
 
   const financeSections = [
     { id: 'income', label: 'Income & Grants', icon: DollarSign },
-    { id: 'expenses', label: 'Expenses & Payments', icon: CreditCard },
-    { id: 'banking', label: 'Banking', icon: Landmark },
-    { id: 'journals', label: 'Journals', icon: ClipboardCheck },
-    { id: 'payroll', label: 'Payroll', icon: Users },
-    { id: 'reports', label: 'Reports', icon: FileText },
-    { id: 'accounts', label: 'Accounts', icon: BarChart3 }
+    { id: 'expenses', label: 'Expenses & Banking', icon: CreditCard },
+    { id: 'payroll', label: 'Payroll & Reports', icon: Users },
+    { id: 'accounting', label: 'Accounting & Audit', icon: BarChart3 }
   ];
 
   const exportWorkspace = () => {
@@ -4020,7 +4031,8 @@ export default function NGODashboard() {
 
                 <FinanceChecklist workspace={{ ...workspace, grants: scopedGrants, payrollRuns: scopedPayrollRuns, donorReports: scopedDonorReports }} summary={summary} />
 
-                <div className="mt-6 flex flex-wrap gap-2 rounded-lg border border-gray-200 bg-white p-2">
+                <div className="mt-6 grid grid-cols-1 xl:grid-cols-[220px_1fr] gap-6">
+                  <aside className="rounded-lg border border-gray-200 bg-white p-2 h-fit xl:sticky xl:top-24">
                   {financeSections.map(section => {
                     const Icon = section.icon;
                     const selected = financeSection === section.id;
@@ -4029,7 +4041,7 @@ export default function NGODashboard() {
                         key={section.id}
                         type="button"
                         onClick={() => setFinanceSection(section.id)}
-                        className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold ${
+                        className={`w-full inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold ${
                           selected ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'
                         }`}
                       >
@@ -4038,10 +4050,11 @@ export default function NGODashboard() {
                       </button>
                     );
                   })}
-                </div>
+                  </aside>
+                  <div className="space-y-6">
 
-                {financeSection === 'accounts' && (
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
+                {financeSection === 'accounting' && (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                   <form onSubmit={createAccount} className="rounded-lg border border-gray-200 p-4">
                     <h4 className="font-bold mb-3">Chart of Accounts</h4>
                     <div className="space-y-3">
@@ -4073,8 +4086,53 @@ export default function NGODashboard() {
                 </div>
                 )}
 
-                {financeSection === 'banking' && (
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
+                {financeSection === 'expenses' && (
+                <div className="space-y-6">
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+                    <h4 className="font-bold text-emerald-900">Payment workflow is separated</h4>
+                    <p className="mt-1 text-sm text-emerald-800">Use Create Payment Voucher to prepare expenses. Use Approve Payment Vouchers to approve only after documentation and review are complete.</p>
+                  </div>
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                  <form onSubmit={createPayment} className="rounded-lg border border-gray-200 bg-white p-4">
+                    <h4 className="font-bold mb-1">Create Payment Voucher</h4>
+                    <p className="mb-4 text-sm text-gray-600">Prepare NGO project expenses with account, grant, bank, documentation, and review fields before approval.</p>
+                    <div className="space-y-3">
+                      <SelectInput label="Project" value={paymentForm.projectId} options={workspace.projects.map(project => ({ label: `${project.code} - ${project.name}`, value: project.id }))} onChange={value => setPaymentForm({ ...paymentForm, projectId: value })} />
+                      <SelectInput label="Grant" value={paymentForm.grantId} options={scopedGrants.map(grant => ({ label: grant.name, value: grant.id }))} onChange={value => setPaymentForm({ ...paymentForm, grantId: value })} />
+                      <Input label="Voucher No." value={paymentForm.voucherNo} onChange={value => setPaymentForm({ ...paymentForm, voucherNo: value })} required />
+                      <Input label="Payee" value={paymentForm.payee} onChange={value => setPaymentForm({ ...paymentForm, payee: value })} required />
+                      <Input label="Date" type="date" value={paymentForm.date} onChange={value => setPaymentForm({ ...paymentForm, date: value })} />
+                      <Input label="Amount" type="number" value={paymentForm.amount} onChange={value => setPaymentForm({ ...paymentForm, amount: value })} />
+                      <SelectInput label="Expense Account" value={paymentForm.accountCode} options={scopedChartOfAccounts.filter(a => a.type === 'Expense').map(a => ({ label: `${a.code} - ${a.name}`, value: a.code }))} onChange={value => setPaymentForm({ ...paymentForm, accountCode: value })} />
+                      <SelectInput label="Bank" value={paymentForm.bankAccountId} options={scopedBankAccounts.map(bank => ({ label: bank.name, value: bank.id }))} onChange={value => setPaymentForm({ ...paymentForm, bankAccountId: value })} />
+                      <SelectInput label="Status" value={paymentForm.paymentStatus} options={['Draft', 'Ready', 'Paid']} onChange={value => setPaymentForm({ ...paymentForm, paymentStatus: value })} />
+                      <SelectInput label="Documentation" value={paymentForm.documentationStatus} options={['Pending', 'Complete', 'Exception Approved']} onChange={value => setPaymentForm({ ...paymentForm, documentationStatus: value })} />
+                      <Input label="Prepared By" value={paymentForm.preparedBy} onChange={value => setPaymentForm({ ...paymentForm, preparedBy: value })} />
+                      <Input label="Reviewed By" value={paymentForm.reviewedBy} onChange={value => setPaymentForm({ ...paymentForm, reviewedBy: value })} />
+                      <Input label="Notes" value={paymentForm.notes} onChange={value => setPaymentForm({ ...paymentForm, notes: value })} />
+                      <SubmitButton label={paymentForm.id ? 'Update Payment' : 'Create Payment'} />
+                    </div>
+                  </form>
+                  <FinanceActionTable
+                    title="Approve Payment Vouchers"
+                    columns={['Voucher', 'Project', 'Payee', 'Amount', 'Approval', 'Actions']}
+                    rows={scopedPayments.map(payment => [
+                      payment.voucherNo,
+                      workspace.projects.find(project => project.id === payment.projectId)?.code || 'Unassigned',
+                      payment.payee,
+                      money(payment.amount, currentOrganization.defaultCurrency),
+                      `${payment.approvalStatus} / ${payment.documentationStatus || 'Pending'}`,
+                      <RowActions
+                        onEdit={() => setPaymentForm({ ...blankPayment, ...payment })}
+                        onApprove={() => approvePayment(payment)}
+                        onRemove={() => removeItem('payments', payment.id, `Payment voucher ${payment.voucherNo}`)}
+                        approveDisabled={payment.approvalStatus === 'Approved'}
+                        approveLabel="Approve Payment"
+                      />
+                    ])}
+                  />
+                  </div>
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                   <form onSubmit={createBankAccount} className="rounded-lg border border-gray-200 p-4">
                     <h4 className="font-bold mb-3">Bank & Cash Account</h4>
                     <div className="space-y-3">
@@ -4107,13 +4165,15 @@ export default function NGODashboard() {
                       />
                     ])}
                   />
+                  </div>
                 </div>
                 )}
 
-                {financeSection === 'expenses' && (
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
+                {false && financeSection === 'expenses' && (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                   <form onSubmit={createPayment} className="rounded-lg border border-gray-200 p-4">
-                    <h4 className="font-bold mb-3">Payment Voucher</h4>
+                    <h4 className="font-bold mb-1">Create Payment Voucher</h4>
+                    <p className="mb-4 text-sm text-gray-600">Prepare NGO project expenses with account, grant, bank, documentation, and review fields before approval.</p>
                     <div className="space-y-3">
                       <SelectInput label="Project" value={paymentForm.projectId} options={workspace.projects.map(project => ({ label: `${project.code} - ${project.name}`, value: project.id }))} onChange={value => setPaymentForm({ ...paymentForm, projectId: value })} />
                       <SelectInput label="Grant" value={paymentForm.grantId} options={scopedGrants.map(grant => ({ label: grant.name, value: grant.id }))} onChange={value => setPaymentForm({ ...paymentForm, grantId: value })} />
@@ -4129,31 +4189,32 @@ export default function NGODashboard() {
                       <Input label="Prepared By" value={paymentForm.preparedBy} onChange={value => setPaymentForm({ ...paymentForm, preparedBy: value })} />
                       <Input label="Reviewed By" value={paymentForm.reviewedBy} onChange={value => setPaymentForm({ ...paymentForm, reviewedBy: value })} />
                       <Input label="Notes" value={paymentForm.notes} onChange={value => setPaymentForm({ ...paymentForm, notes: value })} />
-                      <SubmitButton label={paymentForm.id ? 'Update Payment' : 'Add Payment'} />
+                      <SubmitButton label={paymentForm.id ? 'Update Payment' : 'Create Payment'} />
                     </div>
                   </form>
                   <FinanceActionTable
-                    title="Payment Vouchers"
-                    columns={['Voucher', 'Project', 'Payee', 'Amount', 'Status', 'Actions']}
+                    title="Approve Payment Vouchers"
+                    columns={['Voucher', 'Project', 'Payee', 'Amount', 'Approval', 'Actions']}
                     rows={scopedPayments.map(payment => [
                       payment.voucherNo,
                       workspace.projects.find(project => project.id === payment.projectId)?.code || 'Unassigned',
                       payment.payee,
                       money(payment.amount, currentOrganization.defaultCurrency),
-                      `${payment.approvalStatus} / ${payment.paymentStatus}`,
+                      `${payment.approvalStatus} / ${payment.documentationStatus || 'Pending'}`,
                       <RowActions
                         onEdit={() => setPaymentForm({ ...blankPayment, ...payment })}
                         onApprove={() => approvePayment(payment)}
                         onRemove={() => removeItem('payments', payment.id, `Payment voucher ${payment.voucherNo}`)}
                         approveDisabled={payment.approvalStatus === 'Approved'}
+                        approveLabel="Approve Payment"
                       />
                     ])}
                   />
                 </div>
                 )}
 
-                {financeSection === 'journals' && (
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
+                {financeSection === 'accounting' && (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                   <form onSubmit={createJournalEntry} className="rounded-lg border border-gray-200 p-4">
                     <h4 className="font-bold mb-3">Double-Entry Journal</h4>
                     <div className="space-y-3">
@@ -4193,7 +4254,12 @@ export default function NGODashboard() {
                 )}
 
                 {financeSection === 'income' && (
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
+                <div className="space-y-6">
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+                    <h4 className="font-bold text-emerald-900">Budget workflow is separated</h4>
+                    <p className="mt-1 text-sm text-emerald-800">Create or update grants and budgets first. Approve NGO budgets from the Budget Approval Queue after donor, project, and compliance review.</p>
+                  </div>
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                   <form onSubmit={createGrant} className="rounded-lg border border-gray-200 p-4">
                     <h4 className="font-bold mb-3 flex items-center gap-2"><BriefcaseBusiness className="w-4 h-4 text-emerald-700" /> Grant Management</h4>
                     <div className="space-y-3">
@@ -4227,10 +4293,11 @@ export default function NGODashboard() {
                     </div>
                   </form>
                 </div>
+                </div>
                 )}
 
                 {financeSection === 'payroll' && (
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                   <form onSubmit={createPayroll} className="rounded-lg border border-gray-200 p-4">
                     <h4 className="font-bold mb-3 flex items-center gap-2"><CreditCard className="w-4 h-4 text-emerald-700" /> Payroll Approval</h4>
                     <div className="space-y-3">
@@ -4245,25 +4312,6 @@ export default function NGODashboard() {
                       <SubmitButton label={payrollForm.id ? 'Update Payroll' : 'Add Payroll'} />
                     </div>
                   </form>
-                </div>
-                )}
-
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-6">
-                  <FinanceActionTable title="Grants" columns={['Grant', 'Donor', 'Utilization', 'Compliance', 'Actions']} rows={scopedGrants.map(grant => [
-                    grant.name,
-                    grant.donor,
-                    `${Math.round((Number(grant.spent || 0) / Math.max(Number(grant.budget || 1), 1)) * 100)}%`,
-                    `${grant.compliance} / ${grant.approvalStatus || 'Pending'}`,
-                    <RowActions
-                      onEdit={() => {
-                        setGrantForm({ ...blankGrant, ...grant });
-                        setFinanceSection('income');
-                      }}
-                      onApprove={() => updateFinanceStatus('grants', grant.id, { approvalStatus: 'Approved', approvedBy: currentOrganization.primaryContact?.name || 'Finance Approver', approvedAt: new Date().toISOString() }, `Grant approved: ${grant.name}`)}
-                      onRemove={() => removeItem('grants', grant.id, `Grant ${grant.name}`)}
-                      approveDisabled={grant.approvalStatus === 'Approved'}
-                    />
-                  ])} />
                   <FinanceActionTable title="Payroll Runs" columns={['Period', 'Staff', 'Gross', 'Status', 'Actions']} rows={scopedPayrollRuns.map(payroll => [
                     payroll.period,
                     payroll.staffCount,
@@ -4277,6 +4325,43 @@ export default function NGODashboard() {
                       onApprove={() => approvePayroll(payroll)}
                       onRemove={() => removeItem('payrollRuns', payroll.id, `Payroll ${payroll.period}`)}
                       approveDisabled={payroll.approvals === 'Approved'}
+                    />
+                  ])} />
+                </div>
+                )}
+
+                {financeSection === 'income' && (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                  <FinanceActionTable title="Grants" columns={['Grant', 'Donor', 'Utilization', 'Compliance', 'Actions']} rows={scopedGrants.map(grant => [
+                    grant.name,
+                    grant.donor,
+                    `${Math.round((Number(grant.spent || 0) / Math.max(Number(grant.budget || 1), 1)) * 100)}%`,
+                    `${grant.compliance} / ${grant.approvalStatus || 'Pending'}`,
+                    <RowActions
+                      onEdit={() => {
+                        setGrantForm({ ...blankGrant, ...grant });
+                        setFinanceSection('income');
+                      }}
+                      onApprove={() => approveBudget(grant)}
+                      onRemove={() => removeItem('grants', grant.id, `Grant ${grant.name}`)}
+                      approveDisabled={grant.approvalStatus === 'Approved'}
+                      approveLabel="Approve Budget"
+                    />
+                  ])} />
+                  <FinanceActionTable title="Budget Approval Queue" columns={['Project', 'Budget', 'Spent', 'Approval', 'Actions']} rows={scopedGrants.map(grant => [
+                    workspace.projects.find(project => project.id === grant.projectId)?.code || 'Unassigned',
+                    money(grant.budget, currentOrganization.defaultCurrency),
+                    money(grant.spent, currentOrganization.defaultCurrency),
+                    grant.approvalStatus || 'Pending',
+                    <RowActions
+                      onEdit={() => {
+                        setGrantForm({ ...blankGrant, ...grant });
+                        setFinanceSection('income');
+                      }}
+                      onApprove={() => approveBudget(grant)}
+                      onRemove={() => removeItem('grants', grant.id, `Grant ${grant.name}`)}
+                      approveDisabled={grant.approvalStatus === 'Approved'}
+                      approveLabel="Approve Budget"
                     />
                   ])} />
                   <FinanceActionTable title="Donor Reports" columns={['Report', 'Donor', 'Net', 'Status', 'Actions']} rows={scopedDonorReports.map(report => [
@@ -4296,31 +4381,10 @@ export default function NGODashboard() {
                     />
                   ])} />
                 </div>
+                )}
 
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
-                  <ChartAccountManager
-                    accounts={scopedChartOfAccounts}
-                    onEdit={editChartAccount}
-                    onRemove={removeChartAccount}
-                  />
-                  <MiniTable title="Bank Reconciliation" columns={['Account', 'Bank', 'Currency', 'Reconciled']} rows={scopedBankAccounts.map(bank => [
-                    bank.name,
-                    bank.bankName,
-                    bank.currency,
-                    money(bank.reconciledBalance, bank.currency)
-                  ])} />
-                  <MiniTable title="Payment Vouchers" columns={['Voucher', 'Payee', 'Amount', 'Status']} rows={scopedPayments.map(payment => [
-                    payment.voucherNo,
-                    payment.payee,
-                    money(payment.amount, currentOrganization.defaultCurrency),
-                    `${payment.approvalStatus} / ${payment.paymentStatus}`
-                  ])} />
-                  <MiniTable title="Journal Entries" columns={['Reference', 'Debit', 'Credit', 'Amount']} rows={scopedJournalEntries.map(entry => [
-                    entry.reference,
-                    entry.debitAccount,
-                    entry.creditAccount,
-                    `${money(entry.amount, currentOrganization.defaultCurrency)}${entry.posted ? ' posted' : ' draft'}`
-                  ])} />
+                {financeSection === 'accounting' && (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                   <MiniTable title="Statement of Activities" columns={['Line', 'Amount']} rows={[
                     ['Donor income', money(summary.donorIncome, currentOrganization.defaultCurrency)],
                     ['Grant spending', money(summary.grantSpent, currentOrganization.defaultCurrency)],
@@ -4335,6 +4399,9 @@ export default function NGODashboard() {
                     ['Payment approvals', scopedPayments.length && scopedPayments.every(payment => payment.approvalStatus === 'Approved') ? 'Approved' : 'Pending approvals'],
                     ['Donor reporting', scopedDonorReports.some(report => report.status === 'Published') ? 'Published' : 'Draft only']
                   ]} />
+                </div>
+                )}
+                  </div>
                 </div>
               </Panel>
             )}
