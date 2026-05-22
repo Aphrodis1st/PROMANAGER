@@ -120,6 +120,7 @@ import ngoRoleRoutes from './routes/ngo/role.routes.js';
 import ngoFinanceRoutes from './routes/ngo/finance.routes.js';
 import ngoAuditRoutes from './routes/ngo/audit.routes.js';
 import ngoBeneficialOwnerRoutes from './routes/ngo/beneficialOwner.routes.js';
+import ngoUserRoutes from './routes/ngo/user.routes.js';
 
 // HR Routes
 import hrOrganizationRoutes from './routes/hr/organization.routes.js';
@@ -273,6 +274,7 @@ app.use('/api/v1/ngo/roles', requireFirebase, ngoRoleRoutes);
 app.use('/api/v1/ngo/finances', requireFirebase, ngoFinanceRoutes);
 app.use('/api/v1/ngo/audits', requireFirebase, ngoAuditRoutes);
 app.use('/api/v1/ngo/beneficial-owners', requireFirebase, ngoBeneficialOwnerRoutes);
+app.use('/api/v1/ngo/users', requireFirebase, ngoUserRoutes);
 
 // Currency routes
 app.use('/api/v1/currency', currencyRoutes);

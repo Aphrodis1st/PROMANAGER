@@ -246,7 +246,8 @@ const professionalCollections = {
   tenders: 'ngo_tenders',
   projects: 'ngo_projects',
   impacts: 'ngo_impacts',
-  evaluations: 'ngo_evaluations'
+  evaluations: 'ngo_evaluations',
+  users: 'ngo_users'
 };
 
 const createProfessionalRouter = (resource, collectionName) => {

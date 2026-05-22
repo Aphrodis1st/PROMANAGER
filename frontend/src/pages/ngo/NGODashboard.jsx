@@ -323,6 +323,10 @@ const defaultWorkspace = {
     { id: 'st-2', name: 'Amina Hassan', role: 'Finance Manager', departmentId: 'dep-finance', branchId: 'br-hq', reportsTo: 'st-1', email: 'amina@hope.org', status: 'Active' },
     { id: 'st-3', name: 'Joseph Ndirangu', role: 'Field Coordinator', departmentId: 'dep-field', branchId: 'br-east', reportsTo: 'st-1', email: 'joseph@hope.org', status: 'Active' }
   ],
+  users: [
+    { id: 'user-1', organizationId: 'org-main', staffId: 'st-1', fullName: 'Martha Tesfaye', email: 'martha@hope.org', phone: '+251 900 100 200', jobTitle: 'Country Director', departmentId: 'dep-programs', branchId: 'br-hq', roleId: 'role-admin', roleName: 'NGO Administrator', permissions: ['organization', 'finance', 'reports', 'users'], accessScope: 'Organization', accountStatus: 'Active', mfaRequired: true, invitedBy: 'System', approvedBy: 'Board Chair', notes: 'Primary administrative user for the NGO workspace.' },
+    { id: 'user-2', organizationId: 'org-main', staffId: 'st-2', fullName: 'Amina Hassan', email: 'amina@hope.org', phone: '', jobTitle: 'Finance Manager', departmentId: 'dep-finance', branchId: 'br-hq', roleId: 'role-finance', roleName: 'Finance Officer', permissions: ['finance', 'grants', 'reports'], accessScope: 'Finance', accountStatus: 'Invited', mfaRequired: true, invitedBy: 'Martha Tesfaye', approvedBy: '', notes: 'Finance workflow user pending activation.' }
+  ],
   roles: [
     { id: 'role-admin', name: 'NGO Administrator', permissions: ['organization', 'finance', 'reports', 'users'] },
     { id: 'role-finance', name: 'Finance Officer', permissions: ['finance', 'grants', 'reports'] },
@@ -873,7 +877,8 @@ function readWorkspace() {
         journalEntries: stampOrganization(defaultWorkspace.journalEntries, defaultWorkspace.activeOrganizationId),
         grants: stampOrganization(defaultWorkspace.grants, defaultWorkspace.activeOrganizationId),
         payrollRuns: stampOrganization(defaultWorkspace.payrollRuns, defaultWorkspace.activeOrganizationId),
-        donorReports: stampOrganization(defaultWorkspace.donorReports, defaultWorkspace.activeOrganizationId)
+        donorReports: stampOrganization(defaultWorkspace.donorReports, defaultWorkspace.activeOrganizationId),
+        users: stampOrganization(defaultWorkspace.users, defaultWorkspace.activeOrganizationId)
       };
     }
     const parsed = JSON.parse(stored);
@@ -919,6 +924,7 @@ function readWorkspace() {
         ...member,
         photos: member.photos || (member.photo ? [member.photo] : [])
       })),
+      users: stampOrganization(parsed.users || defaultWorkspace.users, activeOrganizationId),
       roles: parsed.roles || defaultWorkspace.roles,
       grants: stampOrganization(parsed.grants || defaultWorkspace.grants, activeOrganizationId),
       payrollRuns: stampOrganization(parsed.payrollRuns || defaultWorkspace.payrollRuns, activeOrganizationId),
@@ -1062,6 +1068,9 @@ export default function NGODashboard() {
   const [workspace, setWorkspace] = useState(readWorkspace);
   const [activeTab, setActiveTab] = useState('organization');
   const [financeSection, setFinanceSection] = useState('income');
+  const [projectSection, setProjectSection] = useState('projects');
+  const [contractSection, setContractSection] = useState('contracts');
+  const [impactSection, setImpactSection] = useState('indicators');
   const [branchForm, setBranchForm] = useState(blankBranch);
   const [departmentForm, setDepartmentForm] = useState(blankDepartment);
   const [staffForm, setStaffForm] = useState(blankStaff);
@@ -1367,6 +1376,11 @@ export default function NGODashboard() {
   const departmentById = useMemo(
     () => Object.fromEntries(workspace.departments.map(department => [department.id, department])),
     [workspace.departments]
+  );
+
+  const projectById = useMemo(
+    () => Object.fromEntries(workspace.projects.map(project => [project.id, project])),
+    [workspace.projects]
   );
 
   const fieldSiteById = useMemo(
@@ -2456,8 +2470,16 @@ export default function NGODashboard() {
     event.preventDefault();
     if (!storageForm.name.trim() || !storageForm.custodian.trim()) return;
     updateWorkspace(
-      current => ({ ...current, storages: [...current.storages, { ...storageForm, id: createId('storage') }] }),
-      `Storage repository created: ${storageForm.name}`
+      current => {
+        const id = storageForm.id || createId('storage');
+        const record = { ...storageForm, id };
+        const exists = current.storages.some(storage => storage.id === id);
+        return {
+          ...current,
+          storages: exists ? current.storages.map(storage => storage.id === id ? record : storage) : [...current.storages, record]
+        };
+      },
+      `Storage repository ${storageForm.id ? 'updated' : 'created'}: ${storageForm.name}`
     );
     setStorageForm(blankStorage);
   };
@@ -2466,18 +2488,58 @@ export default function NGODashboard() {
     event.preventDefault();
     if (!contractForm.contractNo.trim() || !contractForm.title.trim()) return;
     updateWorkspace(
-      current => ({ ...current, contracts: [...current.contracts, { ...contractForm, id: createId('contract'), value: Number(contractForm.value || 0) }] }),
-      `Contract created: ${contractForm.contractNo}`
+      current => {
+        const id = contractForm.id || createId('contract');
+        const record = { ...contractForm, id, value: Number(contractForm.value || 0) };
+        const exists = current.contracts.some(contract => contract.id === id);
+        return {
+          ...current,
+          contracts: exists ? current.contracts.map(contract => contract.id === id ? record : contract) : [...current.contracts, record]
+        };
+      },
+      `Contract ${contractForm.id ? 'updated' : 'created'}: ${contractForm.contractNo}`
     );
     setContractForm(blankContract);
+  };
+
+  const approveContract = (contract) => {
+    updateWorkspace(
+      current => ({
+        ...current,
+        contracts: current.contracts.map(item =>
+          item.id === contract.id ? { ...item, status: 'Active', approvedBy: currentOrganization.primaryContact?.name || 'Contract Approver', approvedAt: new Date().toISOString() } : item
+        )
+      }),
+      `Contract approved: ${contract.contractNo}`
+    );
+  };
+
+  const archiveStorage = (storage) => {
+    updateWorkspace(
+      current => ({
+        ...current,
+        storages: current.storages.map(item =>
+          item.id === storage.id ? { ...item, status: 'Archived', archivedBy: currentOrganization.primaryContact?.name || 'Records Officer', archivedAt: new Date().toISOString() } : item
+        )
+      }),
+      `Storage archived: ${storage.name}`
+    );
   };
 
   const createTender = (event) => {
     event.preventDefault();
     if (!tenderForm.tenderNo.trim() || !tenderForm.title.trim()) return;
     updateWorkspace(
-      current => ({ ...current, tenders: [...current.tenders, { ...tenderForm, id: createId('tender'), estimatedValue: Number(tenderForm.estimatedValue || 0) }] }),
-      `Tender created: ${tenderForm.tenderNo}`
+      current => {
+        const id = tenderForm.id || createId('tender');
+        const record = { ...tenderForm, id, estimatedValue: Number(tenderForm.estimatedValue || 0) };
+        const exists = current.tenders.some(tender => tender.id === id);
+        return {
+          ...current,
+          tenders: exists ? current.tenders.map(tender => tender.id === id ? record : tender) : [...current.tenders, record]
+        };
+      },
+      `Tender ${tenderForm.id ? 'updated' : 'created'}: ${tenderForm.tenderNo}`
     );
     setTenderForm(blankTender);
   };
@@ -2486,43 +2548,83 @@ export default function NGODashboard() {
     event.preventDefault();
     if (!projectForm.code.trim() || !projectForm.name.trim()) return;
     updateWorkspace(
-      current => ({
-        ...current,
-        projects: [
-          ...current.projects,
-          {
-            ...projectForm,
-            id: createId('project'),
-            budget: Number(projectForm.budget || 0),
-            spent: Number(projectForm.spent || 0),
-            beneficiariesTarget: Number(projectForm.beneficiariesTarget || 0),
-            beneficiariesReached: Number(projectForm.beneficiariesReached || 0)
-          }
-        ]
-      }),
-      `Project created: ${projectForm.code}`
+      current => {
+        const id = projectForm.id || createId('project');
+        const record = {
+          ...projectForm,
+          id,
+          budget: Number(projectForm.budget || 0),
+          spent: Number(projectForm.spent || 0),
+          beneficiariesTarget: Number(projectForm.beneficiariesTarget || 0),
+          beneficiariesReached: Number(projectForm.beneficiariesReached || 0)
+        };
+        const exists = current.projects.some(project => project.id === id);
+        return {
+          ...current,
+          projects: exists ? current.projects.map(project => project.id === id ? record : project) : [...current.projects, record]
+        };
+      },
+      `Project ${projectForm.id ? 'updated' : 'created'}: ${projectForm.code}`
     );
     setProjectForm(blankProject);
+  };
+
+  const approveProject = (project) => {
+    updateWorkspace(
+      current => ({
+        ...current,
+        projects: current.projects.map(item =>
+          item.id === project.id ? { ...item, status: 'Active', approvedBy: currentOrganization.primaryContact?.name || 'Program Approver', approvedAt: new Date().toISOString() } : item
+        )
+      }),
+      `Project approved: ${project.code}`
+    );
+  };
+
+  const approveTender = (tender) => {
+    updateWorkspace(
+      current => ({
+        ...current,
+        tenders: current.tenders.map(item =>
+          item.id === tender.id ? { ...item, status: 'Evaluation', approvedBy: currentOrganization.primaryContact?.name || 'Procurement Approver', approvedAt: new Date().toISOString() } : item
+        )
+      }),
+      `Tender approved for evaluation: ${tender.tenderNo}`
+    );
+  };
+
+  const awardTender = (tender) => {
+    updateWorkspace(
+      current => ({
+        ...current,
+        tenders: current.tenders.map(item =>
+          item.id === tender.id ? { ...item, status: 'Awarded', awardedBy: currentOrganization.primaryContact?.name || 'Procurement Approver', awardedAt: new Date().toISOString() } : item
+        )
+      }),
+      `Tender awarded: ${tender.tenderNo}`
+    );
   };
 
   const createImpact = (event) => {
     event.preventDefault();
     if (!impactForm.projectId || !impactForm.indicator.trim()) return;
     updateWorkspace(
-      current => ({
-        ...current,
-        impacts: [
-          ...current.impacts,
-          {
-            ...impactForm,
-            id: createId('impact'),
-            baseline: Number(impactForm.baseline || 0),
-            target: Number(impactForm.target || 0),
-            actual: Number(impactForm.actual || 0)
-          }
-        ]
-      }),
-      `Impact indicator recorded: ${impactForm.indicator}`
+      current => {
+        const id = impactForm.id || createId('impact');
+        const record = {
+          ...impactForm,
+          id,
+          baseline: Number(impactForm.baseline || 0),
+          target: Number(impactForm.target || 0),
+          actual: Number(impactForm.actual || 0)
+        };
+        const exists = current.impacts.some(impact => impact.id === id);
+        return {
+          ...current,
+          impacts: exists ? current.impacts.map(impact => impact.id === id ? record : impact) : [...current.impacts, record]
+        };
+      },
+      `Impact indicator ${impactForm.id ? 'updated' : 'recorded'}: ${impactForm.indicator}`
     );
     setImpactForm(blankImpact);
   };
@@ -2531,10 +2633,42 @@ export default function NGODashboard() {
     event.preventDefault();
     if (!evaluationForm.projectId || !evaluationForm.title.trim()) return;
     updateWorkspace(
-      current => ({ ...current, evaluations: [...current.evaluations, { ...evaluationForm, id: createId('evaluation'), score: Number(evaluationForm.score || 0) }] }),
-      `Evaluation created: ${evaluationForm.title}`
+      current => {
+        const id = evaluationForm.id || createId('evaluation');
+        const record = { ...evaluationForm, id, score: Number(evaluationForm.score || 0) };
+        const exists = current.evaluations.some(evaluation => evaluation.id === id);
+        return {
+          ...current,
+          evaluations: exists ? current.evaluations.map(evaluation => evaluation.id === id ? record : evaluation) : [...current.evaluations, record]
+        };
+      },
+      `Evaluation ${evaluationForm.id ? 'updated' : 'created'}: ${evaluationForm.title}`
     );
     setEvaluationForm(blankEvaluation);
+  };
+
+  const verifyImpact = (impact) => {
+    updateWorkspace(
+      current => ({
+        ...current,
+        impacts: current.impacts.map(item =>
+          item.id === impact.id ? { ...item, verificationStatus: 'Verified', verifiedBy: currentOrganization.primaryContact?.name || 'MEAL Approver', verifiedAt: new Date().toISOString() } : item
+        )
+      }),
+      `Impact verified: ${impact.indicator}`
+    );
+  };
+
+  const approveEvaluation = (evaluation) => {
+    updateWorkspace(
+      current => ({
+        ...current,
+        evaluations: current.evaluations.map(item =>
+          item.id === evaluation.id ? { ...item, status: 'Management Response', approvedBy: currentOrganization.primaryContact?.name || 'MEAL Approver', approvedAt: new Date().toISOString() } : item
+        )
+      }),
+      `Evaluation reviewed: ${evaluation.title}`
+    );
   };
 
   const createFieldSite = (event) => {
@@ -2581,6 +2715,27 @@ export default function NGODashboard() {
     { id: 'accounting', label: 'Accounting & Audit', icon: BarChart3 }
   ];
 
+  const projectSections = [
+    { id: 'projects', label: 'Create / Update Projects', icon: BriefcaseBusiness },
+    { id: 'projectApprovals', label: 'Approve Projects', icon: CheckCircle2 },
+    { id: 'tenders', label: 'Create / Update Tenders', icon: PackageCheck },
+    { id: 'tenderApprovals', label: 'Approve / Award Tenders', icon: ClipboardCheck }
+  ];
+
+  const contractSections = [
+    { id: 'contracts', label: 'Create / Update Contracts', icon: FileText },
+    { id: 'contractApprovals', label: 'Approve Contracts', icon: CheckCircle2 },
+    { id: 'storages', label: 'Create / Update Storage', icon: PackageCheck },
+    { id: 'storageControls', label: 'Storage Controls', icon: ShieldCheck }
+  ];
+
+  const impactSections = [
+    { id: 'indicators', label: 'Create / Update Indicators', icon: BarChart3 },
+    { id: 'indicatorVerification', label: 'Verify Indicators', icon: CheckCircle2 },
+    { id: 'evaluations', label: 'Create / Update Evaluations', icon: ClipboardCheck },
+    { id: 'evaluationReviews', label: 'Review Evaluations', icon: ShieldCheck }
+  ];
+
   const exportWorkspace = () => {
     const blob = new Blob([JSON.stringify(workspace, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -2605,6 +2760,7 @@ export default function NGODashboard() {
     { id: 'impact', label: 'Impact Evaluation', icon: BarChart3 },
     { id: 'field', label: 'Field GIS', icon: MapPinned },
     { id: 'services', label: 'Service Control', icon: PackageCheck },
+    { id: 'users', label: 'Users & Access', icon: Users },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
@@ -4481,57 +4637,156 @@ export default function NGODashboard() {
                   <Metric icon={PackageCheck} label="Tender Value" value={money(summary.tenderValue, currentOrganization.defaultCurrency)} />
                   <Metric icon={Users} label="Reached" value={workspace.projects.reduce((sum, project) => sum + Number(project.beneficiariesReached || 0), 0).toLocaleString()} />
                 </div>
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                  <form onSubmit={createProject} className="rounded-lg border border-gray-200 p-4">
-                    <h4 className="font-bold mb-3">Project Model</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <Input label="Project Code" value={projectForm.code} onChange={value => setProjectForm({ ...projectForm, code: value })} required />
-                      <Input label="Project Name" value={projectForm.name} onChange={value => setProjectForm({ ...projectForm, name: value })} required />
-                      <Input label="Program Area" value={projectForm.programArea} onChange={value => setProjectForm({ ...projectForm, programArea: value })} />
-                      <Input label="Donor" value={projectForm.donor} onChange={value => setProjectForm({ ...projectForm, donor: value })} />
-                      <Input label="Manager" value={projectForm.manager} onChange={value => setProjectForm({ ...projectForm, manager: value })} />
-                      <Input label="Start Date" type="date" value={projectForm.startDate} onChange={value => setProjectForm({ ...projectForm, startDate: value })} />
-                      <Input label="End Date" type="date" value={projectForm.endDate} onChange={value => setProjectForm({ ...projectForm, endDate: value })} />
-                      <Input label="Budget" type="number" value={projectForm.budget} onChange={value => setProjectForm({ ...projectForm, budget: value })} />
-                      <Input label="Spent" type="number" value={projectForm.spent} onChange={value => setProjectForm({ ...projectForm, spent: value })} />
-                      <Input label="Target Beneficiaries" type="number" value={projectForm.beneficiariesTarget} onChange={value => setProjectForm({ ...projectForm, beneficiariesTarget: value })} />
-                      <Input label="Reached Beneficiaries" type="number" value={projectForm.beneficiariesReached} onChange={value => setProjectForm({ ...projectForm, beneficiariesReached: value })} />
-                      <SelectInput label="Status" value={projectForm.status} options={['Planning', 'Active', 'On Hold', 'Closed']} onChange={value => setProjectForm({ ...projectForm, status: value })} />
-                      <Input label="Expected Outcome" value={projectForm.outcome} onChange={value => setProjectForm({ ...projectForm, outcome: value })} />
-                      <SubmitButton label="Add Project" />
-                    </div>
-                  </form>
-                  <form onSubmit={createTender} className="rounded-lg border border-gray-200 p-4">
-                    <h4 className="font-bold mb-3">Tender Model</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <Input label="Tender No." value={tenderForm.tenderNo} onChange={value => setTenderForm({ ...tenderForm, tenderNo: value })} required />
-                      <Input label="Tender Title" value={tenderForm.title} onChange={value => setTenderForm({ ...tenderForm, title: value })} required />
-                      <SelectInput label="Project" value={tenderForm.projectId} options={workspace.projects.map(project => ({ label: `${project.code} - ${project.name}`, value: project.id }))} onChange={value => setTenderForm({ ...tenderForm, projectId: value })} />
-                      <SelectInput label="Procurement Method" value={tenderForm.procurementMethod} options={['Open Tender', 'Restricted Tender', 'Request for Quotations', 'Direct Procurement', 'Framework Agreement']} onChange={value => setTenderForm({ ...tenderForm, procurementMethod: value })} />
-                      <Input label="Publish Date" type="date" value={tenderForm.publishDate} onChange={value => setTenderForm({ ...tenderForm, publishDate: value })} />
-                      <Input label="Closing Date" type="date" value={tenderForm.closingDate} onChange={value => setTenderForm({ ...tenderForm, closingDate: value })} />
-                      <Input label="Estimated Value" type="number" value={tenderForm.estimatedValue} onChange={value => setTenderForm({ ...tenderForm, estimatedValue: value })} />
-                      <SelectInput label="Currency" value={tenderForm.currency} options={workspace.currencies} onChange={value => setTenderForm({ ...tenderForm, currency: value })} />
-                      <SelectInput label="Evaluation Method" value={tenderForm.evaluationMethod} options={['Lowest Responsive Bid', 'Quality and Cost Based', 'Technical Compliance', 'Best Value']} onChange={value => setTenderForm({ ...tenderForm, evaluationMethod: value })} />
-                      <Input label="Committee" value={tenderForm.committee} onChange={value => setTenderForm({ ...tenderForm, committee: value })} />
-                      <SelectInput label="Status" value={tenderForm.status} options={['Draft', 'Open', 'Evaluation', 'Awarded', 'Cancelled']} onChange={value => setTenderForm({ ...tenderForm, status: value })} />
-                      <SubmitButton label="Add Tender" />
-                    </div>
-                  </form>
-                </div>
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
-                  <MiniTable title="Project Portfolio" columns={['Code', 'Project', 'Budget', 'Progress']} rows={workspace.projects.map(project => [
-                    project.code,
-                    project.name,
-                    money(project.budget, currentOrganization.defaultCurrency),
-                    `${Number(project.beneficiariesReached || 0).toLocaleString()} / ${Number(project.beneficiariesTarget || 0).toLocaleString()}`
-                  ])} />
-                  <MiniTable title="Tender Register" columns={['Tender', 'Method', 'Value', 'Status']} rows={workspace.tenders.map(tender => [
-                    tender.tenderNo,
-                    tender.procurementMethod,
-                    money(tender.estimatedValue, tender.currency),
-                    tender.status
-                  ])} />
+
+                <div className="grid grid-cols-1 xl:grid-cols-[220px_1fr] gap-6">
+                  <aside className="rounded-lg border border-gray-200 bg-white p-2 h-fit xl:sticky xl:top-24">
+                    {projectSections.map(section => {
+                      const Icon = section.icon;
+                      const selected = projectSection === section.id;
+                      return (
+                        <button
+                          key={section.id}
+                          type="button"
+                          onClick={() => setProjectSection(section.id)}
+                          className={`w-full inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold ${
+                            selected ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          {section.label}
+                        </button>
+                      );
+                    })}
+                  </aside>
+
+                  <div className="space-y-6">
+                    {projectSection === 'projects' && (
+                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                        <form onSubmit={createProject} className="rounded-lg border border-gray-200 p-4">
+                          <h4 className="font-bold mb-1">Create / Update Project</h4>
+                          <p className="mb-4 text-sm text-gray-600">Define the program model, budget, outcomes, manager, timeline, and beneficiary targets before approval.</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <Input label="Project Code" value={projectForm.code} onChange={value => setProjectForm({ ...projectForm, code: value })} required />
+                            <Input label="Project Name" value={projectForm.name} onChange={value => setProjectForm({ ...projectForm, name: value })} required />
+                            <Input label="Program Area" value={projectForm.programArea} onChange={value => setProjectForm({ ...projectForm, programArea: value })} />
+                            <Input label="Donor" value={projectForm.donor} onChange={value => setProjectForm({ ...projectForm, donor: value })} />
+                            <Input label="Manager" value={projectForm.manager} onChange={value => setProjectForm({ ...projectForm, manager: value })} />
+                            <Input label="Start Date" type="date" value={projectForm.startDate} onChange={value => setProjectForm({ ...projectForm, startDate: value })} />
+                            <Input label="End Date" type="date" value={projectForm.endDate} onChange={value => setProjectForm({ ...projectForm, endDate: value })} />
+                            <Input label="Budget" type="number" value={projectForm.budget} onChange={value => setProjectForm({ ...projectForm, budget: value })} />
+                            <Input label="Spent" type="number" value={projectForm.spent} onChange={value => setProjectForm({ ...projectForm, spent: value })} />
+                            <Input label="Target Beneficiaries" type="number" value={projectForm.beneficiariesTarget} onChange={value => setProjectForm({ ...projectForm, beneficiariesTarget: value })} />
+                            <Input label="Reached Beneficiaries" type="number" value={projectForm.beneficiariesReached} onChange={value => setProjectForm({ ...projectForm, beneficiariesReached: value })} />
+                            <SelectInput label="Status" value={projectForm.status} options={['Planning', 'Active', 'On Hold', 'Closed']} onChange={value => setProjectForm({ ...projectForm, status: value })} />
+                            <Input label="Expected Outcome" value={projectForm.outcome} onChange={value => setProjectForm({ ...projectForm, outcome: value })} />
+                            <SubmitButton label={projectForm.id ? 'Update Project' : 'Create Project'} />
+                          </div>
+                        </form>
+                        <FinanceActionTable title="Project Portfolio" columns={['Code', 'Project', 'Budget', 'Progress', 'Actions']} rows={workspace.projects.map(project => [
+                          project.code,
+                          project.name,
+                          money(project.budget, currentOrganization.defaultCurrency),
+                          `${Number(project.beneficiariesReached || 0).toLocaleString()} / ${Number(project.beneficiariesTarget || 0).toLocaleString()}`,
+                          <RowActions
+                            onEdit={() => {
+                              setProjectForm({ ...blankProject, ...project });
+                              setProjectSection('projects');
+                            }}
+                            onRemove={() => removeItem('projects', project.id, `Project ${project.code}`)}
+                          />
+                        ])} />
+                      </div>
+                    )}
+
+                    {projectSection === 'projectApprovals' && (
+                      <div className="space-y-6">
+                        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+                          <h4 className="font-bold text-emerald-900">Project approval workflow is separated</h4>
+                          <p className="mt-1 text-sm text-emerald-800">Create or update projects first, then approve projects here after budget, donor, outcome, and manager review.</p>
+                        </div>
+                        <FinanceActionTable title="Approve Projects" columns={['Code', 'Project', 'Budget', 'Status', 'Actions']} rows={workspace.projects.map(project => [
+                          project.code,
+                          project.name,
+                          money(project.budget, currentOrganization.defaultCurrency),
+                          project.status,
+                          <RowActions
+                            onEdit={() => {
+                              setProjectForm({ ...blankProject, ...project });
+                              setProjectSection('projects');
+                            }}
+                            onApprove={() => approveProject(project)}
+                            onRemove={() => removeItem('projects', project.id, `Project ${project.code}`)}
+                            approveDisabled={project.status === 'Active'}
+                            approveLabel="Approve Project"
+                          />
+                        ])} />
+                      </div>
+                    )}
+
+                    {projectSection === 'tenders' && (
+                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                        <form onSubmit={createTender} className="rounded-lg border border-gray-200 p-4">
+                          <h4 className="font-bold mb-1">Create / Update Tender</h4>
+                          <p className="mb-4 text-sm text-gray-600">Prepare procurement with method, value, dates, evaluation basis, committee, and project linkage.</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <Input label="Tender No." value={tenderForm.tenderNo} onChange={value => setTenderForm({ ...tenderForm, tenderNo: value })} required />
+                            <Input label="Tender Title" value={tenderForm.title} onChange={value => setTenderForm({ ...tenderForm, title: value })} required />
+                            <SelectInput label="Project" value={tenderForm.projectId} options={workspace.projects.map(project => ({ label: `${project.code} - ${project.name}`, value: project.id }))} onChange={value => setTenderForm({ ...tenderForm, projectId: value })} />
+                            <SelectInput label="Procurement Method" value={tenderForm.procurementMethod} options={['Open Tender', 'Restricted Tender', 'Request for Quotations', 'Direct Procurement', 'Framework Agreement']} onChange={value => setTenderForm({ ...tenderForm, procurementMethod: value })} />
+                            <Input label="Publish Date" type="date" value={tenderForm.publishDate} onChange={value => setTenderForm({ ...tenderForm, publishDate: value })} />
+                            <Input label="Closing Date" type="date" value={tenderForm.closingDate} onChange={value => setTenderForm({ ...tenderForm, closingDate: value })} />
+                            <Input label="Estimated Value" type="number" value={tenderForm.estimatedValue} onChange={value => setTenderForm({ ...tenderForm, estimatedValue: value })} />
+                            <SelectInput label="Currency" value={tenderForm.currency} options={workspace.currencies} onChange={value => setTenderForm({ ...tenderForm, currency: value })} />
+                            <SelectInput label="Evaluation Method" value={tenderForm.evaluationMethod} options={['Lowest Responsive Bid', 'Quality and Cost Based', 'Technical Compliance', 'Best Value']} onChange={value => setTenderForm({ ...tenderForm, evaluationMethod: value })} />
+                            <Input label="Committee" value={tenderForm.committee} onChange={value => setTenderForm({ ...tenderForm, committee: value })} />
+                            <SelectInput label="Status" value={tenderForm.status} options={['Draft', 'Open', 'Evaluation', 'Awarded', 'Cancelled']} onChange={value => setTenderForm({ ...tenderForm, status: value })} />
+                            <SubmitButton label={tenderForm.id ? 'Update Tender' : 'Create Tender'} />
+                          </div>
+                        </form>
+                        <FinanceActionTable title="Tender Register" columns={['Tender', 'Method', 'Value', 'Status', 'Actions']} rows={workspace.tenders.map(tender => [
+                          tender.tenderNo,
+                          tender.procurementMethod,
+                          money(tender.estimatedValue, tender.currency),
+                          tender.status,
+                          <RowActions
+                            onEdit={() => {
+                              setTenderForm({ ...blankTender, ...tender });
+                              setProjectSection('tenders');
+                            }}
+                            onRemove={() => removeItem('tenders', tender.id, `Tender ${tender.tenderNo}`)}
+                          />
+                        ])} />
+                      </div>
+                    )}
+
+                    {projectSection === 'tenderApprovals' && (
+                      <div className="space-y-6">
+                        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+                          <h4 className="font-bold text-emerald-900">Tender approval and award are separated</h4>
+                          <p className="mt-1 text-sm text-emerald-800">Approve tenders for evaluation first, then award only after procurement committee review.</p>
+                        </div>
+                        <FinanceActionTable title="Approve / Award Tenders" columns={['Tender', 'Project', 'Value', 'Status', 'Actions']} rows={workspace.tenders.map(tender => [
+                          tender.tenderNo,
+                          workspace.projects.find(project => project.id === tender.projectId)?.code || 'Unassigned',
+                          money(tender.estimatedValue, tender.currency),
+                          tender.status,
+                          <RowActions
+                            onEdit={() => {
+                              setTenderForm({ ...blankTender, ...tender });
+                              setProjectSection('tenders');
+                            }}
+                            onApprove={() => approveTender(tender)}
+                            onSecondaryApprove={() => awardTender(tender)}
+                            onRemove={() => removeItem('tenders', tender.id, `Tender ${tender.tenderNo}`)}
+                            approveDisabled={tender.status === 'Evaluation' || tender.status === 'Awarded'}
+                            secondaryApproveDisabled={tender.status === 'Awarded'}
+                            approveLabel="Approve"
+                            secondaryApproveLabel="Award"
+                          />
+                        ])} />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </Panel>
             )}
@@ -4544,53 +4799,122 @@ export default function NGODashboard() {
                   <Metric icon={PackageCheck} label="Repositories" value={workspace.storages.length} />
                   <Metric icon={ShieldCheck} label="Restricted Stores" value={workspace.storages.filter(storage => storage.accessLevel === 'Restricted').length} />
                 </div>
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                  <form onSubmit={createContract} className="rounded-lg border border-gray-200 p-4">
-                    <h4 className="font-bold mb-3">Contract Form</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <Input label="Contract No." value={contractForm.contractNo} onChange={value => setContractForm({ ...contractForm, contractNo: value })} required />
-                      <Input label="Title" value={contractForm.title} onChange={value => setContractForm({ ...contractForm, title: value })} required />
-                      <Input label="Counterparty" value={contractForm.counterparty} onChange={value => setContractForm({ ...contractForm, counterparty: value })} />
-                      <SelectInput label="Contract Type" value={contractForm.contractType} options={['Service Agreement', 'Donor Agreement', 'Employment Contract', 'Lease', 'Grant Agreement', 'MOU', 'Supplier Contract']} onChange={value => setContractForm({ ...contractForm, contractType: value })} />
-                      <SelectInput label="Project" value={contractForm.projectId} options={workspace.projects.map(project => ({ label: `${project.code} - ${project.name}`, value: project.id }))} onChange={value => setContractForm({ ...contractForm, projectId: value })} />
-                      <Input label="Start Date" type="date" value={contractForm.startDate} onChange={value => setContractForm({ ...contractForm, startDate: value })} />
-                      <Input label="End Date" type="date" value={contractForm.endDate} onChange={value => setContractForm({ ...contractForm, endDate: value })} />
-                      <Input label="Value" type="number" value={contractForm.value} onChange={value => setContractForm({ ...contractForm, value: value })} />
-                      <SelectInput label="Currency" value={contractForm.currency} options={workspace.currencies} onChange={value => setContractForm({ ...contractForm, currency: value })} />
-                      <SelectInput label="Storage" value={contractForm.storageId} options={workspace.storages.map(storage => ({ label: storage.name, value: storage.id }))} onChange={value => setContractForm({ ...contractForm, storageId: value })} />
-                      <SelectInput label="Risk" value={contractForm.riskRating} options={['Low', 'Medium', 'High']} onChange={value => setContractForm({ ...contractForm, riskRating: value })} />
-                      <SelectInput label="Status" value={contractForm.status} options={['Draft', 'Active', 'Expired', 'Terminated', 'Renewal Due']} onChange={value => setContractForm({ ...contractForm, status: value })} />
-                      <Input label="Owner" value={contractForm.owner} onChange={value => setContractForm({ ...contractForm, owner: value })} />
-                      <SubmitButton label="Add Contract" />
+                <div className="grid grid-cols-1 xl:grid-cols-[260px_1fr] gap-6">
+                  <aside className="rounded-lg border border-gray-200 bg-white p-3">
+                    <div className="space-y-2">
+                      {contractSections.map(section => {
+                        const Icon = section.icon;
+                        const active = contractSection === section.id;
+                        return (
+                          <button key={section.id} type="button" onClick={() => setContractSection(section.id)} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold ${active ? 'bg-emerald-50 text-emerald-800' : 'text-gray-700 hover:bg-gray-50'}`}>
+                            <Icon className="w-4 h-4" />
+                            {section.label}
+                          </button>
+                        );
+                      })}
                     </div>
-                  </form>
-                  <form onSubmit={createStorage} className="rounded-lg border border-gray-200 p-4">
-                    <h4 className="font-bold mb-3">Storage Repository</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <Input label="Repository Name" value={storageForm.name} onChange={value => setStorageForm({ ...storageForm, name: value })} required />
-                      <Input label="Location" value={storageForm.location} onChange={value => setStorageForm({ ...storageForm, location: value })} />
-                      <SelectInput label="Storage Type" value={storageForm.storageType} options={['Digital Repository', 'Physical Archive', 'Physical + Digital', 'Cloud DMS']} onChange={value => setStorageForm({ ...storageForm, storageType: value })} />
-                      <Input label="Custodian" value={storageForm.custodian} onChange={value => setStorageForm({ ...storageForm, custodian: value })} required />
-                      <Input label="Retention Policy" value={storageForm.retentionPolicy} onChange={value => setStorageForm({ ...storageForm, retentionPolicy: value })} />
-                      <SelectInput label="Access Level" value={storageForm.accessLevel} options={['Public', 'Internal', 'Restricted', 'Confidential']} onChange={value => setStorageForm({ ...storageForm, accessLevel: value })} />
-                      <SelectInput label="Status" value={storageForm.status} options={['Active', 'Closed', 'Archived']} onChange={value => setStorageForm({ ...storageForm, status: value })} />
-                      <SubmitButton label="Add Storage" />
-                    </div>
-                  </form>
-                </div>
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
-                  <MiniTable title="Contract Register" columns={['No.', 'Title', 'Value', 'Status']} rows={workspace.contracts.map(contract => [
-                    contract.contractNo,
-                    contract.title,
-                    money(contract.value, contract.currency),
-                    `${contract.status} / ${contract.riskRating}`
-                  ])} />
-                  <MiniTable title="Storage Register" columns={['Repository', 'Custodian', 'Retention', 'Access']} rows={workspace.storages.map(storage => [
-                    storage.name,
-                    storage.custodian,
-                    storage.retentionPolicy,
-                    storage.accessLevel
-                  ])} />
+                  </aside>
+
+                  <div className="space-y-6">
+                    {contractSection === 'contracts' && (
+                      <>
+                        <form onSubmit={createContract} className="rounded-lg border border-gray-200 p-4">
+                          <h4 className="font-bold mb-3">Create / Update Contract</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <Input label="Contract No." value={contractForm.contractNo} onChange={value => setContractForm({ ...contractForm, contractNo: value })} required />
+                            <Input label="Title" value={contractForm.title} onChange={value => setContractForm({ ...contractForm, title: value })} required />
+                            <Input label="Counterparty" value={contractForm.counterparty} onChange={value => setContractForm({ ...contractForm, counterparty: value })} />
+                            <SelectInput label="Contract Type" value={contractForm.contractType} options={['Service Agreement', 'Donor Agreement', 'Employment Contract', 'Lease', 'Grant Agreement', 'MOU', 'Supplier Contract']} onChange={value => setContractForm({ ...contractForm, contractType: value })} />
+                            <SelectInput label="Project" value={contractForm.projectId} options={workspace.projects.map(project => ({ label: `${project.code} - ${project.name}`, value: project.id }))} onChange={value => setContractForm({ ...contractForm, projectId: value })} />
+                            <Input label="Start Date" type="date" value={contractForm.startDate} onChange={value => setContractForm({ ...contractForm, startDate: value })} />
+                            <Input label="End Date" type="date" value={contractForm.endDate} onChange={value => setContractForm({ ...contractForm, endDate: value })} />
+                            <Input label="Value" type="number" value={contractForm.value} onChange={value => setContractForm({ ...contractForm, value })} />
+                            <SelectInput label="Currency" value={contractForm.currency} options={workspace.currencies} onChange={value => setContractForm({ ...contractForm, currency: value })} />
+                            <SelectInput label="Storage" value={contractForm.storageId} options={workspace.storages.map(storage => ({ label: storage.name, value: storage.id }))} onChange={value => setContractForm({ ...contractForm, storageId: value })} />
+                            <SelectInput label="Risk" value={contractForm.riskRating} options={['Low', 'Medium', 'High']} onChange={value => setContractForm({ ...contractForm, riskRating: value })} />
+                            <SelectInput label="Status" value={contractForm.status} options={['Draft', 'Active', 'Expired', 'Terminated', 'Renewal Due']} onChange={value => setContractForm({ ...contractForm, status: value })} />
+                            <Input label="Owner" value={contractForm.owner} onChange={value => setContractForm({ ...contractForm, owner: value })} />
+                            <SubmitButton label={contractForm.id ? 'Update Contract' : 'Create Contract'} />
+                          </div>
+                        </form>
+                        <FinanceActionTable title="Contract Register" columns={['No.', 'Title', 'Value', 'Status', 'Actions']} rows={workspace.contracts.map(contract => [
+                          contract.contractNo,
+                          contract.title,
+                          money(contract.value, contract.currency),
+                          `${contract.status} / ${contract.riskRating}`,
+                          <RowActions
+                            onEdit={() => { setContractForm(contract); setContractSection('contracts'); }}
+                            onApprove={() => approveContract(contract)}
+                            approveDisabled={contract.status === 'Active'}
+                            onRemove={() => removeItem('contracts', contract.id, `Contract ${contract.contractNo}`)}
+                          />
+                        ])} />
+                      </>
+                    )}
+
+                    {contractSection === 'contractApprovals' && (
+                      <FinanceActionTable title="Contract Approval Queue" columns={['No.', 'Counterparty', 'Project', 'Risk', 'Actions']} rows={workspace.contracts.map(contract => [
+                        contract.contractNo,
+                        contract.counterparty,
+                        projectById[contract.projectId]?.name || 'Unassigned',
+                        `${contract.status} / ${contract.riskRating}`,
+                        <RowActions
+                          onEdit={() => { setContractForm(contract); setContractSection('contracts'); }}
+                          onApprove={() => approveContract(contract)}
+                          approveDisabled={contract.status === 'Active'}
+                          approveLabel="Approve Contract"
+                          onRemove={() => removeItem('contracts', contract.id, `Contract ${contract.contractNo}`)}
+                        />
+                      ])} />
+                    )}
+
+                    {contractSection === 'storages' && (
+                      <>
+                        <form onSubmit={createStorage} className="rounded-lg border border-gray-200 p-4">
+                          <h4 className="font-bold mb-3">Create / Update Storage Repository</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <Input label="Repository Name" value={storageForm.name} onChange={value => setStorageForm({ ...storageForm, name: value })} required />
+                            <Input label="Location" value={storageForm.location} onChange={value => setStorageForm({ ...storageForm, location: value })} />
+                            <SelectInput label="Storage Type" value={storageForm.storageType} options={['Digital Repository', 'Physical Archive', 'Physical + Digital', 'Cloud DMS']} onChange={value => setStorageForm({ ...storageForm, storageType: value })} />
+                            <Input label="Custodian" value={storageForm.custodian} onChange={value => setStorageForm({ ...storageForm, custodian: value })} required />
+                            <Input label="Retention Policy" value={storageForm.retentionPolicy} onChange={value => setStorageForm({ ...storageForm, retentionPolicy: value })} />
+                            <SelectInput label="Access Level" value={storageForm.accessLevel} options={['Public', 'Internal', 'Restricted', 'Confidential']} onChange={value => setStorageForm({ ...storageForm, accessLevel: value })} />
+                            <SelectInput label="Status" value={storageForm.status} options={['Active', 'Closed', 'Archived']} onChange={value => setStorageForm({ ...storageForm, status: value })} />
+                            <SubmitButton label={storageForm.id ? 'Update Storage' : 'Create Storage'} />
+                          </div>
+                        </form>
+                        <FinanceActionTable title="Storage Register" columns={['Repository', 'Custodian', 'Retention', 'Access', 'Actions']} rows={workspace.storages.map(storage => [
+                          storage.name,
+                          storage.custodian,
+                          storage.retentionPolicy,
+                          `${storage.accessLevel} / ${storage.status}`,
+                          <RowActions
+                            onEdit={() => { setStorageForm(storage); setContractSection('storages'); }}
+                            onApprove={() => archiveStorage(storage)}
+                            approveDisabled={storage.status === 'Archived'}
+                            approveLabel="Archive"
+                            onRemove={() => removeItem('storages', storage.id, `Storage ${storage.name}`)}
+                          />
+                        ])} />
+                      </>
+                    )}
+
+                    {contractSection === 'storageControls' && (
+                      <FinanceActionTable title="Storage Controls" columns={['Repository', 'Location', 'Access', 'Status', 'Actions']} rows={workspace.storages.map(storage => [
+                        storage.name,
+                        storage.location,
+                        storage.accessLevel,
+                        storage.status,
+                        <RowActions
+                          onEdit={() => { setStorageForm(storage); setContractSection('storages'); }}
+                          onApprove={() => archiveStorage(storage)}
+                          approveDisabled={storage.status === 'Archived'}
+                          approveLabel="Archive Storage"
+                          onRemove={() => removeItem('storages', storage.id, `Storage ${storage.name}`)}
+                        />
+                      ])} />
+                    )}
+                  </div>
                 </div>
               </Panel>
             )}
@@ -4603,52 +4927,120 @@ export default function NGODashboard() {
                   <Metric icon={CheckCircle2} label="Actual" value={summary.impactActual.toLocaleString()} />
                   <Metric icon={ClipboardCheck} label="Evaluations" value={workspace.evaluations.length} />
                 </div>
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                  <form onSubmit={createImpact} className="rounded-lg border border-gray-200 p-4">
-                    <h4 className="font-bold mb-3">Impact Indicator</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <SelectInput label="Project" value={impactForm.projectId} options={workspace.projects.map(project => ({ label: `${project.code} - ${project.name}`, value: project.id }))} onChange={value => setImpactForm({ ...impactForm, projectId: value })} required />
-                      <Input label="Indicator" value={impactForm.indicator} onChange={value => setImpactForm({ ...impactForm, indicator: value })} required />
-                      <Input label="Baseline" type="number" value={impactForm.baseline} onChange={value => setImpactForm({ ...impactForm, baseline: value })} />
-                      <Input label="Target" type="number" value={impactForm.target} onChange={value => setImpactForm({ ...impactForm, target: value })} />
-                      <Input label="Actual" type="number" value={impactForm.actual} onChange={value => setImpactForm({ ...impactForm, actual: value })} />
-                      <Input label="Unit" value={impactForm.unit} onChange={value => setImpactForm({ ...impactForm, unit: value })} />
-                      <Input label="Reporting Period" value={impactForm.reportingPeriod} onChange={value => setImpactForm({ ...impactForm, reportingPeriod: value })} />
-                      <Input label="Data Source" value={impactForm.dataSource} onChange={value => setImpactForm({ ...impactForm, dataSource: value })} />
-                      <SelectInput label="Verification" value={impactForm.verificationStatus} options={['Pending', 'Verified', 'Rejected', 'Needs Evidence']} onChange={value => setImpactForm({ ...impactForm, verificationStatus: value })} />
-                      <Input label="Narrative" value={impactForm.narrative} onChange={value => setImpactForm({ ...impactForm, narrative: value })} />
-                      <SubmitButton label="Add Indicator" />
+                <div className="grid grid-cols-1 xl:grid-cols-[260px_1fr] gap-6">
+                  <aside className="rounded-lg border border-gray-200 bg-white p-3">
+                    <div className="space-y-2">
+                      {impactSections.map(section => {
+                        const Icon = section.icon;
+                        const active = impactSection === section.id;
+                        return (
+                          <button key={section.id} type="button" onClick={() => setImpactSection(section.id)} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold ${active ? 'bg-emerald-50 text-emerald-800' : 'text-gray-700 hover:bg-gray-50'}`}>
+                            <Icon className="w-4 h-4" />
+                            {section.label}
+                          </button>
+                        );
+                      })}
                     </div>
-                  </form>
-                  <form onSubmit={createEvaluation} className="rounded-lg border border-gray-200 p-4">
-                    <h4 className="font-bold mb-3">Evaluation Form</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <SelectInput label="Project" value={evaluationForm.projectId} options={workspace.projects.map(project => ({ label: `${project.code} - ${project.name}`, value: project.id }))} onChange={value => setEvaluationForm({ ...evaluationForm, projectId: value })} required />
-                      <Input label="Title" value={evaluationForm.title} onChange={value => setEvaluationForm({ ...evaluationForm, title: value })} required />
-                      <SelectInput label="Type" value={evaluationForm.evaluationType} options={['Baseline', 'Midline', 'Endline', 'Final', 'Learning Review', 'Audit Review']} onChange={value => setEvaluationForm({ ...evaluationForm, evaluationType: value })} />
-                      <Input label="Evaluator" value={evaluationForm.evaluator} onChange={value => setEvaluationForm({ ...evaluationForm, evaluator: value })} />
-                      <Input label="Planned Date" type="date" value={evaluationForm.plannedDate} onChange={value => setEvaluationForm({ ...evaluationForm, plannedDate: value })} />
-                      <Input label="Completed Date" type="date" value={evaluationForm.completedDate} onChange={value => setEvaluationForm({ ...evaluationForm, completedDate: value })} />
-                      <Input label="Score" type="number" value={evaluationForm.score} onChange={value => setEvaluationForm({ ...evaluationForm, score: value })} />
-                      <SelectInput label="Status" value={evaluationForm.status} options={['Planned', 'In Progress', 'Completed', 'Management Response']} onChange={value => setEvaluationForm({ ...evaluationForm, status: value })} />
-                      <Input label="Recommendation" value={evaluationForm.recommendation} onChange={value => setEvaluationForm({ ...evaluationForm, recommendation: value })} />
-                      <SubmitButton label="Add Evaluation" />
-                    </div>
-                  </form>
-                </div>
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
-                  <MiniTable title="Impact Results" columns={['Indicator', 'Target', 'Actual', 'Verification']} rows={workspace.impacts.map(impact => [
-                    impact.indicator,
-                    `${Number(impact.target || 0).toLocaleString()} ${impact.unit || ''}`,
-                    `${Number(impact.actual || 0).toLocaleString()} ${impact.unit || ''}`,
-                    impact.verificationStatus
-                  ])} />
-                  <MiniTable title="Evaluation Register" columns={['Evaluation', 'Type', 'Score', 'Status']} rows={workspace.evaluations.map(evaluation => [
-                    evaluation.title,
-                    evaluation.evaluationType,
-                    `${evaluation.score || 0}%`,
-                    evaluation.status
-                  ])} />
+                  </aside>
+
+                  <div className="space-y-6">
+                    {impactSection === 'indicators' && (
+                      <>
+                        <form onSubmit={createImpact} className="rounded-lg border border-gray-200 p-4">
+                          <h4 className="font-bold mb-3">Create / Update Impact Indicator</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <SelectInput label="Project" value={impactForm.projectId} options={workspace.projects.map(project => ({ label: `${project.code} - ${project.name}`, value: project.id }))} onChange={value => setImpactForm({ ...impactForm, projectId: value })} required />
+                            <Input label="Indicator" value={impactForm.indicator} onChange={value => setImpactForm({ ...impactForm, indicator: value })} required />
+                            <Input label="Baseline" type="number" value={impactForm.baseline} onChange={value => setImpactForm({ ...impactForm, baseline: value })} />
+                            <Input label="Target" type="number" value={impactForm.target} onChange={value => setImpactForm({ ...impactForm, target: value })} />
+                            <Input label="Actual" type="number" value={impactForm.actual} onChange={value => setImpactForm({ ...impactForm, actual: value })} />
+                            <Input label="Unit" value={impactForm.unit} onChange={value => setImpactForm({ ...impactForm, unit: value })} />
+                            <Input label="Reporting Period" value={impactForm.reportingPeriod} onChange={value => setImpactForm({ ...impactForm, reportingPeriod: value })} />
+                            <Input label="Data Source" value={impactForm.dataSource} onChange={value => setImpactForm({ ...impactForm, dataSource: value })} />
+                            <SelectInput label="Verification" value={impactForm.verificationStatus} options={['Pending', 'Verified', 'Rejected', 'Needs Evidence']} onChange={value => setImpactForm({ ...impactForm, verificationStatus: value })} />
+                            <Input label="Narrative" value={impactForm.narrative} onChange={value => setImpactForm({ ...impactForm, narrative: value })} />
+                            <SubmitButton label={impactForm.id ? 'Update Indicator' : 'Create Indicator'} />
+                          </div>
+                        </form>
+                        <FinanceActionTable title="Impact Results" columns={['Indicator', 'Target', 'Actual', 'Actions']} rows={workspace.impacts.map(impact => [
+                          impact.indicator,
+                          `${Number(impact.target || 0).toLocaleString()} ${impact.unit || ''}`,
+                          `${Number(impact.actual || 0).toLocaleString()} ${impact.unit || ''}`,
+                          <RowActions
+                            onEdit={() => { setImpactForm(impact); setImpactSection('indicators'); }}
+                            onApprove={() => verifyImpact(impact)}
+                            approveDisabled={impact.verificationStatus === 'Verified'}
+                            approveLabel="Verify"
+                            onRemove={() => removeItem('impacts', impact.id, `Impact indicator ${impact.indicator}`)}
+                          />
+                        ])} />
+                      </>
+                    )}
+
+                    {impactSection === 'indicatorVerification' && (
+                      <FinanceActionTable title="Indicator Verification Queue" columns={['Project', 'Indicator', 'Source', 'Verification', 'Actions']} rows={workspace.impacts.map(impact => [
+                        projectById[impact.projectId]?.name || 'Unassigned',
+                        impact.indicator,
+                        impact.dataSource,
+                        impact.verificationStatus,
+                        <RowActions
+                          onEdit={() => { setImpactForm(impact); setImpactSection('indicators'); }}
+                          onApprove={() => verifyImpact(impact)}
+                          approveDisabled={impact.verificationStatus === 'Verified'}
+                          approveLabel="Verify Indicator"
+                          onRemove={() => removeItem('impacts', impact.id, `Impact indicator ${impact.indicator}`)}
+                        />
+                      ])} />
+                    )}
+
+                    {impactSection === 'evaluations' && (
+                      <>
+                        <form onSubmit={createEvaluation} className="rounded-lg border border-gray-200 p-4">
+                          <h4 className="font-bold mb-3">Create / Update Evaluation</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <SelectInput label="Project" value={evaluationForm.projectId} options={workspace.projects.map(project => ({ label: `${project.code} - ${project.name}`, value: project.id }))} onChange={value => setEvaluationForm({ ...evaluationForm, projectId: value })} required />
+                            <Input label="Title" value={evaluationForm.title} onChange={value => setEvaluationForm({ ...evaluationForm, title: value })} required />
+                            <SelectInput label="Type" value={evaluationForm.evaluationType} options={['Baseline', 'Midline', 'Endline', 'Final', 'Learning Review', 'Audit Review']} onChange={value => setEvaluationForm({ ...evaluationForm, evaluationType: value })} />
+                            <Input label="Evaluator" value={evaluationForm.evaluator} onChange={value => setEvaluationForm({ ...evaluationForm, evaluator: value })} />
+                            <Input label="Planned Date" type="date" value={evaluationForm.plannedDate} onChange={value => setEvaluationForm({ ...evaluationForm, plannedDate: value })} />
+                            <Input label="Completed Date" type="date" value={evaluationForm.completedDate} onChange={value => setEvaluationForm({ ...evaluationForm, completedDate: value })} />
+                            <Input label="Score" type="number" value={evaluationForm.score} onChange={value => setEvaluationForm({ ...evaluationForm, score: value })} />
+                            <SelectInput label="Status" value={evaluationForm.status} options={['Planned', 'In Progress', 'Completed', 'Management Response']} onChange={value => setEvaluationForm({ ...evaluationForm, status: value })} />
+                            <Input label="Recommendation" value={evaluationForm.recommendation} onChange={value => setEvaluationForm({ ...evaluationForm, recommendation: value })} />
+                            <SubmitButton label={evaluationForm.id ? 'Update Evaluation' : 'Create Evaluation'} />
+                          </div>
+                        </form>
+                        <FinanceActionTable title="Evaluation Register" columns={['Evaluation', 'Type', 'Score', 'Actions']} rows={workspace.evaluations.map(evaluation => [
+                          evaluation.title,
+                          evaluation.evaluationType,
+                          `${evaluation.score || 0}% / ${evaluation.status}`,
+                          <RowActions
+                            onEdit={() => { setEvaluationForm(evaluation); setImpactSection('evaluations'); }}
+                            onApprove={() => approveEvaluation(evaluation)}
+                            approveDisabled={evaluation.status === 'Management Response'}
+                            approveLabel="Review"
+                            onRemove={() => removeItem('evaluations', evaluation.id, `Evaluation ${evaluation.title}`)}
+                          />
+                        ])} />
+                      </>
+                    )}
+
+                    {impactSection === 'evaluationReviews' && (
+                      <FinanceActionTable title="Evaluation Review Queue" columns={['Project', 'Evaluation', 'Evaluator', 'Status', 'Actions']} rows={workspace.evaluations.map(evaluation => [
+                        projectById[evaluation.projectId]?.name || 'Unassigned',
+                        evaluation.title,
+                        evaluation.evaluator,
+                        `${evaluation.status} / ${evaluation.score || 0}%`,
+                        <RowActions
+                          onEdit={() => { setEvaluationForm(evaluation); setImpactSection('evaluations'); }}
+                          onApprove={() => approveEvaluation(evaluation)}
+                          approveDisabled={evaluation.status === 'Management Response'}
+                          approveLabel="Approve Review"
+                          onRemove={() => removeItem('evaluations', evaluation.id, `Evaluation ${evaluation.title}`)}
+                        />
+                      ])} />
+                    )}
+                  </div>
                 </div>
               </Panel>
             )}
@@ -4718,9 +5110,15 @@ export default function NGODashboard() {
               </Panel>
             )}
 
+            {activeTab === 'users' && (
+              <Panel title="Users & Access Settings" subtitle="Create users, connect staff to backend accounts, manage roles, MFA, activation, suspension, and permissions.">
+                <NGOSettingsController workspace={workspace} updateWorkspace={updateWorkspace} currentOrganization={currentOrganization} />
+              </Panel>
+            )}
+
             {activeTab === 'settings' && (
               <Panel title="Professional Settings" subtitle="Configure all NGO features including languages, currencies, audit controls, and system preferences.">
-                <NGOSettingsController workspace={workspace} updateWorkspace={updateWorkspace} />
+                <NGOSettingsController workspace={workspace} updateWorkspace={updateWorkspace} currentOrganization={currentOrganization} />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 mt-6">
                   <SettingsList
@@ -5250,7 +5648,16 @@ function FinanceActionTable({ title, columns, rows }) {
   );
 }
 
-function RowActions({ onEdit, onApprove, onRemove, approveDisabled = false, approveLabel = 'Approve' }) {
+function RowActions({
+  onEdit,
+  onApprove,
+  onSecondaryApprove,
+  onRemove,
+  approveDisabled = false,
+  secondaryApproveDisabled = false,
+  approveLabel = 'Approve',
+  secondaryApproveLabel = 'Award'
+}) {
   return (
     <div className="flex flex-wrap gap-2">
       {onEdit && (
@@ -5263,6 +5670,12 @@ function RowActions({ onEdit, onApprove, onRemove, approveDisabled = false, appr
         <button type="button" disabled={approveDisabled} onClick={onApprove} className="inline-flex items-center gap-1 rounded-md border border-emerald-200 px-2 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50">
           <CheckCircle2 className="w-3.5 h-3.5" />
           {approveLabel}
+        </button>
+      )}
+      {onSecondaryApprove && (
+        <button type="button" disabled={secondaryApproveDisabled} onClick={onSecondaryApprove} className="inline-flex items-center gap-1 rounded-md border border-blue-200 px-2 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50">
+          <CheckCircle2 className="w-3.5 h-3.5" />
+          {secondaryApproveLabel}
         </button>
       )}
       {onRemove && (
