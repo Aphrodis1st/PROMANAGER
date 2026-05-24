@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
+import { setServiceAuth, clearServiceAuth, getServiceToken } from '../utils/authCookies.js';
 
 const HRAuthContext = createContext(null);
 
@@ -11,14 +12,13 @@ export const HRAuthProvider = ({ children }) => {
     const stored = localStorage.getItem('hrAdmin');
     return stored ? JSON.parse(stored) : null;
   });
-  const [token, setToken] = useState(() => localStorage.getItem('hrToken') || null);
+  const [token, setToken] = useState(() => getServiceToken('hr') || null);
 
   const login = (data) => {
     setToken(data.token);
     setAdmin(data.admin);
     setOrganization(data.organization);
-    localStorage.setItem('hrToken', data.token);
-    localStorage.setItem('hrAdmin', JSON.stringify(data.admin));
+    setServiceAuth('hr', { token: data.token, user: data.admin });
     localStorage.setItem('hrOrganization', JSON.stringify(data.organization));
   };
 
@@ -26,8 +26,7 @@ export const HRAuthProvider = ({ children }) => {
     setToken(null);
     setAdmin(null);
     setOrganization(null);
-    localStorage.removeItem('hrToken');
-    localStorage.removeItem('hrAdmin');
+    clearServiceAuth('hr');
     localStorage.removeItem('hrOrganization');
   };
 

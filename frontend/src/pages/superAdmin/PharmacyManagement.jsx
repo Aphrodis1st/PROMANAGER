@@ -1,10 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import SuperAdminLayout from '../../components/superAdmin/SuperAdminLayout';
-import { superAdminService } from '../../services/hospitalService';
+import {
+  useGetSuperAdminPharmaciesQuery,
+  useCreateSuperAdminPharmacyMutation,
+  useUpdateSuperAdminPharmacyStatusMutation,
+  useUpdateSuperAdminPharmacyFeaturesMutation,
+  useSoftDeleteSuperAdminPharmacyMutation,
+  useDeleteSuperAdminPharmacyMutation,
+  getSuperAdminErrorMessage,
+} from '../../store/actions/superAdmin.js';
 
 const PharmacyManagement = () => {
-  const [pharmacies, setPharmacies] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: pharmacies = [], isLoading: loading } = useGetSuperAdminPharmaciesQuery();
+  const [createPharmacy] = useCreateSuperAdminPharmacyMutation();
+  const [updatePharmacyStatus] = useUpdateSuperAdminPharmacyStatusMutation();
+  const [updatePharmacyFeatures] = useUpdateSuperAdminPharmacyFeaturesMutation();
+  const [softDeletePharmacy] = useSoftDeleteSuperAdminPharmacyMutation();
+  const [deletePharmacy] = useDeleteSuperAdminPharmacyMutation();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedPharmacy, setSelectedPharmacy] = useState(null);
   const [showFeaturesModal, setShowFeaturesModal] = useState(false);
@@ -68,77 +80,46 @@ const PharmacyManagement = () => {
     { value: 'enterprise', label: 'Enterprise', color: 'bg-purple-100 text-purple-800' }
   ];
 
-  useEffect(() => {
-    fetchPharmacies();
-  }, []);
-
-  const fetchPharmacies = async () => {
-    try {
-      const response = await superAdminService.getAllPharmacies();
-      if (response.success) {
-        setPharmacies(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching pharmacies:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleCreatePharmacy = async (e) => {
     e.preventDefault();
     try {
-      const response = await superAdminService.createPharmacy(newPharmacy);
-      if (response.success) {
-        setPharmacies([...pharmacies, response.data]);
-        setShowCreateModal(false);
-        setNewPharmacy({
-          name: '',
-          location: '',
-          contactInfo: { phone: '', email: '' },
-          subscriptionPlan: 'basic',
-          featuresEnabled: []
-        });
-      }
+      await createPharmacy(newPharmacy).unwrap();
+      setShowCreateModal(false);
+      setNewPharmacy({
+        name: '',
+        location: '',
+        contactInfo: { phone: '', email: '' },
+        subscriptionPlan: 'basic',
+        featuresEnabled: []
+      });
     } catch (error) {
-      console.error('Error creating pharmacy:', error);
+      console.error('Error creating pharmacy:', getSuperAdminErrorMessage(error, 'Unknown error'));
     }
   };
 
   const handleStatusChange = async (pharmacyId, newStatus) => {
     try {
-      const response = await superAdminService.updatePharmacyStatus(pharmacyId, newStatus);
-      if (response.success) {
-        setPharmacies(pharmacies.map(p => 
-          p.id === pharmacyId ? { ...p, status: newStatus } : p
-        ));
-      }
+      await updatePharmacyStatus({ id: pharmacyId, status: newStatus }).unwrap();
     } catch (error) {
-      console.error('Error updating pharmacy status:', error);
+      console.error('Error updating pharmacy status:', getSuperAdminErrorMessage(error, 'Unknown error'));
     }
   };
 
   const handleUpdateFeatures = async (pharmacyId, features) => {
     try {
-      const response = await superAdminService.updatePharmacyFeatures(pharmacyId, features);
-      if (response.success) {
-        setPharmacies(pharmacies.map(p => 
-          p.id === pharmacyId ? { ...p, featuresEnabled: features } : p
-        ));
-        setShowFeaturesModal(false);
-      }
+      await updatePharmacyFeatures({ id: pharmacyId, features }).unwrap();
+      setShowFeaturesModal(false);
     } catch (error) {
-      console.error('Error updating pharmacy features:', error);
+      console.error('Error updating pharmacy features:', getSuperAdminErrorMessage(error, 'Unknown error'));
     }
   };
 
   const handleSoftDelete = async (pharmacyId) => {
     if (window.confirm('Are you sure you want to soft delete this pharmacy? It can be recovered later.')) {
       try {
-        await superAdminService.softDeletePharmacy(pharmacyId);
-        fetchPharmacies();
+        await softDeletePharmacy(pharmacyId).unwrap();
       } catch (error) {
-        console.error('Error soft deleting pharmacy:', error);
+        console.error('Error soft deleting pharmacy:', getSuperAdminErrorMessage(error, 'Unknown error'));
       }
     }
   };
@@ -146,10 +127,9 @@ const PharmacyManagement = () => {
   const handleHardDelete = async (pharmacyId) => {
     if (window.confirm('Are you sure you want to permanently delete this pharmacy? This action cannot be undone.')) {
       try {
-        await superAdminService.hardDeletePharmacy(pharmacyId);
-        setPharmacies(pharmacies.filter(p => p.id !== pharmacyId));
+        await deletePharmacy(pharmacyId).unwrap();
       } catch (error) {
-        console.error('Error hard deleting pharmacy:', error);
+        console.error('Error hard deleting pharmacy:', getSuperAdminErrorMessage(error, 'Unknown error'));
       }
     }
   };

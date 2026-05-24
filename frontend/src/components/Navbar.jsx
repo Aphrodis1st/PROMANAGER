@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Building2, Menu, X, ChevronDown } from 'lucide-react';
+import { Menu, X, ChevronDown } from 'lucide-react';
+import proLogo from '../../pro_logo.png';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,12 +14,11 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg blur opacity-50 group-hover:opacity-75 transition-opacity"></div>
-              <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-lg">
-                <Building2 className="w-5 h-5 text-white" />
-              </div>
-            </div>
+            <img
+              src={proLogo}
+              alt="PROMANAGER"
+              className="w-9 h-9 object-contain rounded-lg group-hover:scale-105 transition-transform"
+            />
             <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               PROMANAGER
             </span>
@@ -71,13 +71,13 @@ export default function Navbar() {
           {/* Action Buttons */}
           <div className="hidden md:flex items-center space-x-4">
             <button
-              onClick={() => navigate('/super-admin/login')}
+              onClick={() => navigate('/login')}
               className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
             >
-              Admin
+              Sign in
             </button>
             <button
-              onClick={() => navigate('/stock/register')}
+              onClick={() => navigate('/get-started')}
               className="px-6 py-2 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-300"
             >
               Get Started
@@ -143,13 +143,13 @@ export default function Navbar() {
             
             <div className="pt-4 space-y-2">
               <button
-                onClick={() => navigate('/super-admin/login')}
+                onClick={() => navigate('/login')}
                 className="w-full px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                Admin Login
+                Sign in
               </button>
               <button
-                onClick={() => navigate('/stock/register')}
+                onClick={() => navigate('/get-started')}
                 className="w-full px-6 py-2 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:shadow-lg transition-all duration-300"
               >
                 Get Started

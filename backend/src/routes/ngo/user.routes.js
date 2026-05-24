@@ -7,10 +7,13 @@ import {
   deleteUser,
   activateUser,
   suspendUser,
-  updateUserPermissions
+  updateUserPermissions,
 } from '../../controllers/ngo/user.controller.js';
+import { ngoAuth, bindNgoTenant, attachNgoUserContext, requireNgoAdmin } from '../../middleware/ngoAuth.middleware.js';
 
 const router = express.Router();
+
+router.use(ngoAuth, attachNgoUserContext, requireNgoAdmin, bindNgoTenant);
 
 router.post('/', createUser);
 router.get('/', getAllUsers);

@@ -1,10 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import SuperAdminLayout from '../../components/superAdmin/SuperAdminLayout';
-import { superAdminService } from '../../services/hospitalService';
+import {
+  useGetSuperAdminHospitalsQuery,
+  useCreateSuperAdminHospitalMutation,
+  useUpdateSuperAdminHospitalStatusMutation,
+  useUpdateSuperAdminHospitalFeaturesMutation,
+  useSoftDeleteSuperAdminHospitalMutation,
+  useDeleteSuperAdminHospitalMutation,
+  getSuperAdminErrorMessage,
+} from '../../store/actions/superAdmin.js';
 
 const HospitalManagement = () => {
-  const [hospitals, setHospitals] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: hospitals = [], isLoading: loading } = useGetSuperAdminHospitalsQuery();
+  const [createHospital] = useCreateSuperAdminHospitalMutation();
+  const [updateHospitalStatus] = useUpdateSuperAdminHospitalStatusMutation();
+  const [updateHospitalFeatures] = useUpdateSuperAdminHospitalFeaturesMutation();
+  const [softDeleteHospital] = useSoftDeleteSuperAdminHospitalMutation();
+  const [deleteHospital] = useDeleteSuperAdminHospitalMutation();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedHospital, setSelectedHospital] = useState(null);
   const [showFeaturesModal, setShowFeaturesModal] = useState(false);
@@ -72,77 +84,46 @@ const HospitalManagement = () => {
     { value: 'enterprise', label: 'Enterprise', color: 'bg-purple-100 text-purple-800' }
   ];
 
-  useEffect(() => {
-    fetchHospitals();
-  }, []);
-
-  const fetchHospitals = async () => {
-    try {
-      const response = await superAdminService.getAllHospitals();
-      if (response.success) {
-        setHospitals(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching hospitals:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleCreateHospital = async (e) => {
     e.preventDefault();
     try {
-      const response = await superAdminService.createHospital(newHospital);
-      if (response.success) {
-        setHospitals([...hospitals, response.data]);
-        setShowCreateModal(false);
-        setNewHospital({
-          name: '',
-          location: '',
-          contactInfo: { phone: '', email: '' },
-          subscriptionPlan: 'basic',
-          featuresEnabled: []
-        });
-      }
+      await createHospital(newHospital).unwrap();
+      setShowCreateModal(false);
+      setNewHospital({
+        name: '',
+        location: '',
+        contactInfo: { phone: '', email: '' },
+        subscriptionPlan: 'basic',
+        featuresEnabled: []
+      });
     } catch (error) {
-      console.error('Error creating hospital:', error);
+      console.error('Error creating hospital:', getSuperAdminErrorMessage(error, 'Unknown error'));
     }
   };
 
   const handleStatusChange = async (hospitalId, newStatus) => {
     try {
-      const response = await superAdminService.updateHospitalStatus(hospitalId, newStatus);
-      if (response.success) {
-        setHospitals(hospitals.map(h => 
-          h.id === hospitalId ? { ...h, status: newStatus } : h
-        ));
-      }
+      await updateHospitalStatus({ id: hospitalId, status: newStatus }).unwrap();
     } catch (error) {
-      console.error('Error updating hospital status:', error);
+      console.error('Error updating hospital status:', getSuperAdminErrorMessage(error, 'Unknown error'));
     }
   };
 
   const handleUpdateFeatures = async (hospitalId, features) => {
     try {
-      const response = await superAdminService.updateHospitalFeatures(hospitalId, features);
-      if (response.success) {
-        setHospitals(hospitals.map(h => 
-          h.id === hospitalId ? { ...h, featuresEnabled: features } : h
-        ));
-        setShowFeaturesModal(false);
-      }
+      await updateHospitalFeatures({ id: hospitalId, features }).unwrap();
+      setShowFeaturesModal(false);
     } catch (error) {
-      console.error('Error updating hospital features:', error);
+      console.error('Error updating hospital features:', getSuperAdminErrorMessage(error, 'Unknown error'));
     }
   };
 
   const handleSoftDelete = async (hospitalId) => {
     if (window.confirm('Are you sure you want to soft delete this hospital? It can be recovered later.')) {
       try {
-        await superAdminService.softDeleteHospital(hospitalId);
-        fetchHospitals();
+        await softDeleteHospital(hospitalId).unwrap();
       } catch (error) {
-        console.error('Error soft deleting hospital:', error);
+        console.error('Error soft deleting hospital:', getSuperAdminErrorMessage(error, 'Unknown error'));
       }
     }
   };
@@ -150,10 +131,9 @@ const HospitalManagement = () => {
   const handleHardDelete = async (hospitalId) => {
     if (window.confirm('Are you sure you want to permanently delete this hospital? This action cannot be undone.')) {
       try {
-        await superAdminService.hardDeleteHospital(hospitalId);
-        setHospitals(hospitals.filter(h => h.id !== hospitalId));
+        await deleteHospital(hospitalId).unwrap();
       } catch (error) {
-        console.error('Error hard deleting hospital:', error);
+        console.error('Error hard deleting hospital:', getSuperAdminErrorMessage(error, 'Unknown error'));
       }
     }
   };

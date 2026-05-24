@@ -1,9 +1,14 @@
 import { db } from '../../../utils/firebase.js';
 
+function stripUndefined(obj) {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, value]) => value !== undefined)
+  );
+}
+
 export class Branch {
-  static async create(data) {
-    const docRef = await db().collection('ngo_branches').add({
-      ...data,
+  static buildDocument(data, { includeTimestamps = true } = {}) {
+    const doc = stripUndefined({
       organizationId: data.organizationId,
       name: data.name,
       code: data.code,
@@ -15,14 +20,28 @@ export class Branch {
       postalCode: data.postalCode,
       phone: data.phone,
       email: data.email,
+      manager: data.manager,
       managerId: data.managerId,
       coordinates: data.coordinates,
       operatingHours: data.operatingHours,
-      status: data.status || 'active',
-      createdAt: new Date(),
-      updatedAt: new Date()
+      established: data.established,
+      status: data.status || 'active'
     });
-    return { id: docRef.id, ...data };
+
+    if (includeTimestamps) {
+      doc.createdAt = new Date();
+      doc.updatedAt = new Date();
+    } else {
+      doc.updatedAt = new Date();
+    }
+
+    return doc;
+  }
+
+  static async create(data) {
+    const payload = this.buildDocument(data);
+    const docRef = await db().collection('ngo_branches').add(payload);
+    return { id: docRef.id, ...payload };
   }
 
   static async getAll(organizationId, filters = {}) {
@@ -41,10 +60,8 @@ export class Branch {
   }
 
   static async update(id, data) {
-    await db().collection('ngo_branches').doc(id).update({ 
-      ...data, 
-      updatedAt: new Date() 
-    });
+    const payload = this.buildDocument(data, { includeTimestamps: false });
+    await db().collection('ngo_branches').doc(id).update(payload);
     return this.getById(id);
   }
 

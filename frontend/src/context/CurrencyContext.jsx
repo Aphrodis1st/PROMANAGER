@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../constants/api.js';
 
 const CurrencyContext = createContext();
 
@@ -16,7 +17,7 @@ export const CurrencyProvider = ({ children }) => {
   const [defaultCurrency, setDefaultCurrency] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+  const API_URL = API_BASE_URL;
 
   const fetchCurrencies = async () => {
     try {

@@ -4,7 +4,7 @@ import SuperAdminNavbar from './SuperAdminNavbar';
 
 const SuperAdminLayout = ({ children }) => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <SuperAdminSidebar />
       <div className="ml-64">
         <SuperAdminNavbar />

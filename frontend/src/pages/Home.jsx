@@ -440,7 +440,7 @@ export default function Home() {
 
       {/* Quick Links */}
       <div className="mb-6">
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 sm:mb-3, color: '#1a1a1a', fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, sm: 'mb-3', color: '#1a1a1a', fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>
           Quick Links
         </Typography>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">

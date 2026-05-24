@@ -1,10 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import SuperAdminLayout from '../../components/superAdmin/SuperAdminLayout';
-import { superAdminService } from '../../services/hospitalService';
+import {
+  useGetSuperAdminHROrganizationsQuery,
+  useCreateSuperAdminHROrganizationMutation,
+  useUpdateSuperAdminHROrganizationStatusMutation,
+  useUpdateSuperAdminHROrganizationFeaturesMutation,
+  useDeleteSuperAdminHROrganizationMutation,
+  getSuperAdminErrorMessage,
+} from '../../store/actions/superAdmin.js';
 
 const HRManagement = () => {
-  const [organizations, setOrganizations] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: organizations = [], isLoading: loading } = useGetSuperAdminHROrganizationsQuery();
+  const [createHROrganization] = useCreateSuperAdminHROrganizationMutation();
+  const [updateHROrganizationStatus] = useUpdateSuperAdminHROrganizationStatusMutation();
+  const [updateHROrganizationFeatures] = useUpdateSuperAdminHROrganizationFeaturesMutation();
+  const [deleteHROrganization] = useDeleteSuperAdminHROrganizationMutation();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedOrg, setSelectedOrg] = useState(null);
   const [showFeaturesModal, setShowFeaturesModal] = useState(false);
@@ -61,77 +71,46 @@ const HRManagement = () => {
     { value: 'enterprise', label: 'Enterprise', color: 'bg-purple-100 text-purple-800' }
   ];
 
-  useEffect(() => {
-    fetchOrganizations();
-  }, []);
-
-  const fetchOrganizations = async () => {
-    try {
-      const response = await superAdminService.getAllHROrganizations();
-      if (response.success) {
-        setOrganizations(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching HR organizations:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleCreateOrg = async (e) => {
     e.preventDefault();
     try {
-      const response = await superAdminService.createHROrganization(newOrg);
-      if (response.success) {
-        setOrganizations([...organizations, response.data]);
-        setShowCreateModal(false);
-        setNewOrg({
-          name: '',
-          location: '',
-          contactInfo: { phone: '', email: '' },
-          subscriptionPlan: 'basic',
-          featuresEnabled: []
-        });
-      }
+      await createHROrganization(newOrg).unwrap();
+      setShowCreateModal(false);
+      setNewOrg({
+        name: '',
+        location: '',
+        contactInfo: { phone: '', email: '' },
+        subscriptionPlan: 'basic',
+        featuresEnabled: []
+      });
     } catch (error) {
-      console.error('Error creating HR organization:', error);
+      console.error('Error creating HR organization:', getSuperAdminErrorMessage(error, 'Unknown error'));
     }
   };
 
   const handleStatusChange = async (orgId, newStatus) => {
     try {
-      const response = await superAdminService.updateHROrganizationStatus(orgId, newStatus);
-      if (response.success) {
-        setOrganizations(organizations.map(o => 
-          o.id === orgId ? { ...o, status: newStatus } : o
-        ));
-      }
+      await updateHROrganizationStatus({ id: orgId, status: newStatus }).unwrap();
     } catch (error) {
-      console.error('Error updating organization status:', error);
+      console.error('Error updating organization status:', getSuperAdminErrorMessage(error, 'Unknown error'));
     }
   };
 
   const handleUpdateFeatures = async (orgId, features) => {
     try {
-      const response = await superAdminService.updateHROrganizationFeatures(orgId, features);
-      if (response.success) {
-        setOrganizations(organizations.map(o => 
-          o.id === orgId ? { ...o, featuresEnabled: features } : o
-        ));
-        setShowFeaturesModal(false);
-      }
+      await updateHROrganizationFeatures({ id: orgId, features }).unwrap();
+      setShowFeaturesModal(false);
     } catch (error) {
-      console.error('Error updating organization features:', error);
+      console.error('Error updating organization features:', getSuperAdminErrorMessage(error, 'Unknown error'));
     }
   };
 
   const handleDelete = async (orgId) => {
     if (window.confirm('Are you sure you want to delete this HR organization?')) {
       try {
-        await superAdminService.deleteHROrganization(orgId);
-        setOrganizations(organizations.filter(o => o.id !== orgId));
+        await deleteHROrganization(orgId).unwrap();
       } catch (error) {
-        console.error('Error deleting organization:', error);
+        console.error('Error deleting organization:', getSuperAdminErrorMessage(error, 'Unknown error'));
       }
     }
   };

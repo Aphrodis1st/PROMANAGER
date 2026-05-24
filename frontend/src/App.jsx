@@ -1,5 +1,6 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 
 import AppLayout from "./AppLayout.jsx";
 import StockLayout from './pages/stock/StockLayout.jsx';
@@ -185,18 +186,17 @@ import OwnerPortal from './propertyPages/owner/OwnerPortal.jsx';
 import TenantPortal from './propertyPages/tenant-portal/TenantPortal.jsx';
 
 // Service Selection and Dashboards
-import ServiceSelection from './pages/ServiceSelection.jsx';
+import GetStartedPage from './pages/GetStartedPage.jsx';
+import ServiceRegisterPage from './pages/ServiceRegisterPage.jsx';
+import ProcessPaymentPage from './pages/ProcessPaymentPage.jsx';
 import ModernLandingPage from './pages/ModernLandingPage.jsx';
 import StockDashboard from './pages/StockDashboard.jsx';
 import PharmacyServicesDashboard from './pages/PharmacyServicesDashboard.jsx';
 
 // Auth Pages
-import StockLogin from './pages/auth/StockLogin.jsx';
 import HospitalLogin from './pages/auth/HospitalLogin.jsx';
-import PharmacyLogin from './pages/auth/PharmacyLogin.jsx';
-import HRLogin from './pages/auth/HRLogin.jsx';
 import StockRegister from './pages/auth/StockRegister.jsx';
-import SuperAdminLogin from './pages/auth/SuperAdminLogin.jsx';
+import CentralLogin from './pages/CentralLogin.jsx';
 import Unauthorized from './pages/Unauthorized.jsx';
 import AuthDebug from './pages/AuthDebug.jsx';
 
@@ -212,40 +212,73 @@ import PharmacyManagement from './pages/superAdmin/PharmacyManagement.jsx';
 import HRManagement from './pages/superAdmin/HRManagement.jsx';
 import PayrollManagement from './pages/superAdmin/PayrollManagement.jsx';
 import NGOManagement from './pages/superAdmin/NGOManagement.jsx';
+import PropertyManagement from './pages/superAdmin/PropertyManagement.jsx';
+import RoleManagement from './pages/superAdmin/RoleManagement.jsx';
+import PlatformUserManagement from './pages/superAdmin/PlatformUserManagement.jsx';
 import NGODashboard from './pages/ngo/NGODashboard.jsx';
+import NGOAnalyticsDashboard from './pages/ngo/Dashboard.jsx';
+
+// NGO Pages
+import NGOLayout from './components/ngo/NGOLayout.jsx';
+import NgoHomeRedirect from './components/ngo/NgoHomeRedirect.jsx';
+import AccessPending from './pages/ngo/AccessPending.jsx';
+import Organizations from './pages/ngo/Organizations.jsx';
+import Branches from './pages/ngo/Branches.jsx';
+import NGODepartments from './pages/ngo/Departments.jsx';
+import NGORoles from './pages/ngo/Roles.jsx';
+import NGOStaff from './pages/ngo/Staff.jsx';
+import NGOProjects from './pages/ngo/Projects.jsx';
+import BeneficialOwners from './pages/ngo/BeneficialOwners.jsx';
+import NGOFinance from './pages/ngo/Finance.jsx';
+import NGOContracts from './pages/ngo/Contracts.jsx';
+import Impact from './pages/ngo/Impact.jsx';
+import FieldGIS from './pages/ngo/FieldGIS.jsx';
+import ServiceControl from './pages/ngo/ServiceControl.jsx';
+import Audit from './pages/ngo/Audit.jsx';
+import NGOSettings from './pages/ngo/Settings.jsx';
 
 function AppContent() {
   return (
     <Routes>
       {/* Modern Landing Page - Main Entry Point */}
       <Route path='/' element={<ModernLandingPage />} />
-      <Route path='/services' element={<ServiceSelection />} />
+      <Route path='/services' element={<GetStartedPage />} />
+      <Route path='/get-started' element={<GetStartedPage />} />
+      <Route path='/get-started/register' element={<ServiceRegisterPage />} />
+      <Route path='/get-started/register/:serviceId' element={<ServiceRegisterPage />} />
+      <Route path='/process-payment' element={<ProcessPaymentPage />} />
 
-      {/* Authentication Routes */}
-      <Route path='/stock/login' element={<StockLogin />} />
+      {/* Authentication Routes — centralized login with role-based redirect */}
+      <Route path='/login' element={<CentralLogin />} />
+      <Route path='/stock/login' element={<Navigate to='/login' replace />} />
       <Route path='/hospital/login' element={<HospitalLogin />} />
-      <Route path='/pharmacy/login' element={<PharmacyLogin />} />
-      <Route path='/hr/login' element={<HRLogin />} />
-      <Route path='/super-admin/login' element={<SuperAdminLogin />} />
+      <Route path='/pharmacy/login' element={<Navigate to='/login' replace />} />
+      <Route path='/hr/login' element={<Navigate to='/login' replace />} />
+      <Route path='/super-admin/login' element={<Navigate to='/login' replace />} />
       <Route path='/stock/register' element={<StockRegister />} />
       <Route path='/unauthorized' element={<Unauthorized />} />
       <Route path='/debug' element={<AuthDebug />} />
 
       {/* Super Admin Routes */}
-      <Route path='/super-admin/dashboard' element={<SuperAdminDashboard />} />
-      <Route path='/super-admin/hospitals' element={<HospitalManagement />} />
-      <Route path='/super-admin/hospital-admins' element={<HospitalAdminManagement />} />
-      <Route path='/super-admin/stocks' element={<StockManagement />} />
-      <Route path='/super-admin/ngos' element={<NGOManagement />} />
-      <Route path='/super-admin/pharmacies' element={<PharmacyManagement />} />
-      <Route path='/super-admin/hr' element={<HRManagement />} />
-      <Route path='/super-admin/payroll' element={<PayrollManagement />} />
-      <Route path='/super-admin/currency' element={<CurrencyManagement />} />
-      <Route path='/super-admin/activity' element={<SystemActivity />} />
-      <Route path='/super-admin/settings' element={<SuperAdminSettings />} />
+      <Route element={<ProtectedRoute service="superAdmin"><Outlet /></ProtectedRoute>}>
+        <Route path='/super-admin/dashboard' element={<SuperAdminDashboard />} />
+        <Route path='/super-admin/hospitals' element={<HospitalManagement />} />
+        <Route path='/super-admin/hospital-admins' element={<HospitalAdminManagement />} />
+        <Route path='/super-admin/roles' element={<RoleManagement />} />
+        <Route path='/super-admin/users' element={<PlatformUserManagement />} />
+        <Route path='/super-admin/stocks' element={<StockManagement />} />
+        <Route path='/super-admin/ngos' element={<NGOManagement />} />
+        <Route path='/super-admin/pharmacies' element={<PharmacyManagement />} />
+        <Route path='/super-admin/hr' element={<HRManagement />} />
+        <Route path='/super-admin/properties' element={<PropertyManagement />} />
+        <Route path='/super-admin/payroll' element={<PayrollManagement />} />
+        <Route path='/super-admin/currency' element={<CurrencyManagement />} />
+        <Route path='/super-admin/activity' element={<SystemActivity />} />
+        <Route path='/super-admin/settings' element={<SuperAdminSettings />} />
+      </Route>
 
       {/* Stock Routes */}
-      <Route path='/stock/*' element={<StockLayout />}>
+      <Route path='/stock/*' element={<ProtectedRoute service="stock"><StockLayout /></ProtectedRoute>}>
         <Route index element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","FINANCE_MANAGER","SALE_MANAGER","MARKETTING_MANAGER","ACCOUNTANT","STOCK_KEEPER","PROCUREMENT","SALES"]}><StockDashboardOverview /></StockProtectedRoute>} />
         <Route path='inventory' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","STOCK_KEEPER","ACCOUNTANT"]} departments={["Warehouse","Finance"]}><InventoryPage /></StockProtectedRoute>} />
         <Route path='purchases' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","PROCUREMENT","ACCOUNTANT"]} departments={["Purchasing","Finance"]}><PurchasesPage /></StockProtectedRoute>} />
@@ -282,10 +315,10 @@ function AppContent() {
       </Route>
 
       {/* Hospital Routes — RBAC Protected with comprehensive role and department access control */}
-      <Route path='/hospital/*' element={<HospitalRoutes />} />
+      <Route path='/hospital/*' element={<ProtectedRoute service="hospital"><HospitalRoutes /></ProtectedRoute>} />
 
       {/* Pharmacy Routes */}
-      <Route path='/pharmacy/*' element={<PharmacyLayout />}>
+      <Route path='/pharmacy/*' element={<ProtectedRoute service="pharmacy"><PharmacyLayout /></ProtectedRoute>}>
         <Route path='doctors' element={<PharmaciesPage />} />
         <Route path='prescriptions' element={<PrescriptionList />} />
         <Route path='prescriptions/create' element={<PrescriptionList />} />
@@ -313,7 +346,7 @@ function AppContent() {
       </Route>
 
       {/* HR Routes */}
-      <Route path='/hr/*' element={<HRLayout />}>
+      <Route path='/hr/*' element={<ProtectedRoute service="hr"><HRLayout /></ProtectedRoute>}>
         <Route path='dashboard' element={<HRProtectedRoute><HRDashboard /></HRProtectedRoute>} />
         <Route path='employees' element={<HRProtectedRoute><Employees /></HRProtectedRoute>} />
         <Route path='departments' element={<HRProtectedRoute><Departments /></HRProtectedRoute>} />
@@ -332,7 +365,7 @@ function AppContent() {
       </Route>
 
       {/* Property Management Routes */}
-      <Route path='/property/*' element={<PropertyLayout />}>
+      <Route path='/property/*' element={<ProtectedRoute service="property"><PropertyLayout /></ProtectedRoute>}>
         <Route index element={<PropertyDashboard />} />
         <Route path='properties' element={<PropertiesList />} />
         <Route path='properties/create' element={<PropertyForm />} />
@@ -367,7 +400,32 @@ function AppContent() {
       </Route>
 
       {/* NGO Management Routes */}
-      <Route path='/ngo' element={<NGODashboard />} />
+      <Route path='/ngo' element={<ProtectedRoute service="ngo"><NGOLayout /></ProtectedRoute>}>
+        <Route index element={<NgoHomeRedirect />} />
+        <Route path='dashboard' element={<NGOAnalyticsDashboard />} />
+        <Route path='access-pending' element={<AccessPending />} />
+        <Route path='organizations' element={<Organizations />} />
+        <Route path='branches' element={<Branches />} />
+        <Route path='departments' element={<NGODepartments />} />
+        <Route path='roles' element={<NGORoles />} />
+        <Route path='staff' element={<NGOStaff />} />
+        <Route path='org-chart' element={<Navigate to='staff' replace />} />
+        <Route path='users' element={<Navigate to='staff' replace />} />
+        <Route path='projects' element={<NGOProjects />} />
+        <Route path='contracts' element={<NGOContracts />} />
+        <Route path='gis' element={<FieldGIS />} />
+        <Route path='finance' element={<NGOFinance />} />
+        <Route path='impact' element={<Impact />} />
+        <Route path='audit' element={<Audit />} />
+        <Route path='beneficial-owners' element={<BeneficialOwners />} />
+        <Route path='service-control' element={<ServiceControl />} />
+        <Route path='settings' element={<NGOSettings />} />
+        <Route path='donors' element={<Navigate to='projects' replace />} />
+        <Route path='reports' element={<Navigate to='impact' replace />} />
+      </Route>
+      
+      {/* Legacy NGO Dashboard Route (for backwards compatibility) */}
+      <Route path='/ngo/old-dashboard' element={<ProtectedRoute service="ngo"><NGODashboard /></ProtectedRoute>} />
     </Routes>
   );
 }

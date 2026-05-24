@@ -1,6 +1,14 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import SuperAdminLayout from '../../components/superAdmin/SuperAdminLayout';
-import { superAdminService } from '../../services/hospitalService';
+import {
+  useGetSuperAdminNGOsQuery,
+  useCreateSuperAdminNGOMutation,
+  useUpdateSuperAdminNGOStatusMutation,
+  useUpdateSuperAdminNGOFeaturesMutation,
+  useSoftDeleteSuperAdminNGOMutation,
+  useDeleteSuperAdminNGOMutation,
+  getSuperAdminErrorMessage,
+} from '../../store/actions/superAdmin.js';
 
 const availableFeatures = [
   { id: 'organization_branch_management', name: 'Organization & Branch Management', category: 'Organization' },
@@ -54,8 +62,12 @@ const blankNGO = {
 };
 
 export default function NGOManagement() {
-  const [ngos, setNgos] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: ngos = [], isLoading: loading } = useGetSuperAdminNGOsQuery();
+  const [createNGO] = useCreateSuperAdminNGOMutation();
+  const [updateNGOStatus] = useUpdateSuperAdminNGOStatusMutation();
+  const [updateNGOFeatures] = useUpdateSuperAdminNGOFeaturesMutation();
+  const [softDeleteNGO] = useSoftDeleteSuperAdminNGOMutation();
+  const [deleteNGO] = useDeleteSuperAdminNGOMutation();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedNGO, setSelectedNGO] = useState(null);
   const [showFeaturesModal, setShowFeaturesModal] = useState(false);
@@ -67,71 +79,51 @@ export default function NGOManagement() {
     []
   );
 
-  useEffect(() => {
-    fetchNGOs();
-  }, []);
-
-  const fetchNGOs = async () => {
-    try {
-      const response = await superAdminService.getAllNGOs();
-      if (response.success) {
-        setNgos(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching NGOs:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleCreateNGO = async (e) => {
     e.preventDefault();
     try {
-      const response = await superAdminService.createNGO(newNGO);
-      if (response.success) {
-        setNgos([...ngos, response.data]);
-        setShowCreateModal(false);
-        setNewNGO(blankNGO);
-      }
+      await createNGO(newNGO).unwrap();
+      setShowCreateModal(false);
+      setNewNGO(blankNGO);
     } catch (error) {
-      console.error('Error creating NGO:', error);
+      console.error('Error creating NGO:', getSuperAdminErrorMessage(error, 'Unknown error'));
     }
   };
 
   const handleStatusChange = async (ngoId, status) => {
     try {
-      const response = await superAdminService.updateNGOStatus(ngoId, status);
-      if (response.success) {
-        setNgos(ngos.map(ngo => ngo.id === ngoId ? { ...ngo, status } : ngo));
-      }
+      await updateNGOStatus({ id: ngoId, status }).unwrap();
     } catch (error) {
-      console.error('Error updating NGO status:', error);
+      console.error('Error updating NGO status:', getSuperAdminErrorMessage(error, 'Unknown error'));
     }
   };
 
   const handleUpdateFeatures = async (ngoId, features) => {
     try {
-      const response = await superAdminService.updateNGOFeatures(ngoId, features);
-      if (response.success) {
-        setNgos(ngos.map(ngo => ngo.id === ngoId ? { ...ngo, featuresEnabled: features } : ngo));
-        setShowFeaturesModal(false);
-      }
+      await updateNGOFeatures({ id: ngoId, features }).unwrap();
+      setShowFeaturesModal(false);
     } catch (error) {
-      console.error('Error updating NGO features:', error);
+      console.error('Error updating NGO features:', getSuperAdminErrorMessage(error, 'Unknown error'));
     }
   };
 
   const handleSoftDelete = async (ngoId) => {
     if (window.confirm('Are you sure you want to soft delete this NGO? It can be recovered later.')) {
-      await superAdminService.softDeleteNGO(ngoId);
-      fetchNGOs();
+      try {
+        await softDeleteNGO(ngoId).unwrap();
+      } catch (error) {
+        console.error('Error soft deleting NGO:', getSuperAdminErrorMessage(error, 'Unknown error'));
+      }
     }
   };
 
   const handleHardDelete = async (ngoId) => {
     if (window.confirm('Are you sure you want to permanently delete this NGO? This action cannot be undone.')) {
-      await superAdminService.hardDeleteNGO(ngoId);
-      setNgos(ngos.filter(ngo => ngo.id !== ngoId));
+      try {
+        await deleteNGO(ngoId).unwrap();
+      } catch (error) {
+        console.error('Error hard deleting NGO:', getSuperAdminErrorMessage(error, 'Unknown error'));
+      }
     }
   };
 

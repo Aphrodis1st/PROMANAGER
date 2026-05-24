@@ -7,6 +7,7 @@ export class HospitalAdmin {
     this.email = data.email;
     this.password = data.password;
     this.hospitalId = data.hospitalId;
+    this.entityType = data.entityType || 'hospital';
     this.role = 'admin';
     this.status = data.status || 'active'; // active, inactive
     this.lastLogin = data.lastLogin || null;

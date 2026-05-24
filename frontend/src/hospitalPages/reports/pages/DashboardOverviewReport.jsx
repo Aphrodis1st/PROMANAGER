@@ -2,35 +2,21 @@ import React, { useState } from 'react';
 import { Card } from '../../../components/hospital/card';
 import { Button } from '../../../components/hospital/Button';
 import { LoadingSpinner } from '../../../components/hospital/LoadingSpinner';
+import { useLazyGetDashboardReportQuery } from '../../../store/actions/hospitalReports.js';
+
+const getErrorMessage = (error, fallback) =>
+  error?.data?.message || error?.message || fallback;
 
 const DashboardOverviewReport = () => {
-  const [reportData, setReportData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [period, setPeriod] = useState('30');
+  const [trigger, { data: reportData, isFetching: loading, error, isError }] =
+    useLazyGetDashboardReportQuery();
 
-  const generateReport = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const token = localStorage.getItem('hospitalToken');
-      const response = await fetch(`/api/v1/hospital/reports/dashboard?period=${period}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+  const generateReport = () => trigger({ period });
 
-      if (!response.ok) throw new Error('Failed to generate dashboard report');
-      const data = await response.json();
-      setReportData(data.report);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const errorMessage = isError
+    ? getErrorMessage(error, 'Failed to generate dashboard report')
+    : null;
 
   return (
     <div className="p-6 space-y-6">
@@ -54,7 +40,11 @@ const DashboardOverviewReport = () => {
       </div>
 
       {loading && <div className="flex justify-center"><LoadingSpinner /></div>}
-      {error && <Card className="p-4 border-red-200 bg-red-50"><p className="text-red-600">Error: {error}</p></Card>}
+      {errorMessage && (
+        <Card className="p-4 border-red-200 bg-red-50">
+          <p className="text-red-600">Error: {errorMessage}</p>
+        </Card>
+      )}
 
       {reportData && (
         <div className="space-y-6">

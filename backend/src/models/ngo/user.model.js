@@ -2,9 +2,21 @@ import { db } from '../../../utils/firebase.js';
 
 const COLLECTION = 'ngo_users';
 
+function stripUndefined(obj) {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, value]) => value !== undefined)
+  );
+}
+
 export class NGOUser {
   static sanitize(data = {}) {
-    return {
+    const permissions = Array.isArray(data.permissions)
+      ? data.permissions
+      : typeof data.permissions === 'string' && data.permissions.trim()
+        ? data.permissions.split(',').map((item) => item.trim()).filter(Boolean)
+        : [];
+
+    return stripUndefined({
       organizationId: data.organizationId,
       staffId: data.staffId || '',
       fullName: data.fullName || data.name || '',
@@ -15,15 +27,21 @@ export class NGOUser {
       branchId: data.branchId || '',
       roleId: data.roleId || '',
       roleName: data.roleName || '',
-      permissions: Array.isArray(data.permissions) ? data.permissions : [],
+      permissions,
       accessScope: data.accessScope || 'Organization',
       accountStatus: data.accountStatus || data.status || 'Invited',
       mfaRequired: Boolean(data.mfaRequired),
-      lastLoginAt: data.lastLoginAt || null,
+      lastLoginAt: data.lastLoginAt ?? null,
       invitedBy: data.invitedBy || '',
       approvedBy: data.approvedBy || '',
       notes: data.notes || ''
-    };
+    });
+  }
+
+  static toSafe(user) {
+    if (!user) return user;
+    const { passwordHash: _, ...safe } = user;
+    return safe;
   }
 
   static async create(data) {

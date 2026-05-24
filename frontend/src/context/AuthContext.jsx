@@ -1,4 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import {
+  setServiceAuth,
+  clearServiceAuth,
+  getServiceToken,
+} from "../utils/authCookies.js";
 
 const AuthContext = createContext(null);
 
@@ -13,12 +18,12 @@ export function AuthProvider({ children, tabId = "default" }) {
   });
   const [token, setTokenState] = useState(() => {
     // Try to restore token from localStorage or tabTokens
-    return localStorage.getItem('token') || tabTokens[tabId]?.token || null;
+    return getServiceToken('stock') || tabTokens[tabId]?.token || null;
   });
   const [refreshToken, setRefreshToken] = useState(tabTokens[tabId]?.refreshToken || null);
   const [loading, setLoading] = useState(() => {
     // If we have both token and user from localStorage, we're not loading
-    const storedToken = localStorage.getItem('token');
+    const storedToken = getServiceToken('stock');
     const storedUser = localStorage.getItem('user');
     return !(storedToken && storedUser);
   });
@@ -29,9 +34,9 @@ export function AuthProvider({ children, tabId = "default" }) {
     setTokenState(t);
     setRefreshToken(r);
     if (t) {
-      localStorage.setItem('token', t);
+      setServiceAuth('stock', { token: t, user });
     } else {
-      localStorage.removeItem('token');
+      clearServiceAuth('stock');
     }
   };
 
@@ -75,7 +80,8 @@ export function AuthProvider({ children, tabId = "default" }) {
 
   // ---- HOSPITAL LOGIN (external) ----
   const hospitalLogin = (token, userData) => {
-    setToken(token);
+    setServiceAuth('hospital', { token, user: userData });
+    setTokenState(token);
     setUserData(userData);
     return userData;
   };

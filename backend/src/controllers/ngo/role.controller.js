@@ -11,10 +11,11 @@ export const createRole = async (req, res) => {
 
 export const getAllRoles = async (req, res) => {
   try {
-    const { organizationId, departmentId, status, isSystemRole } = req.query;
+    const { organizationId, departmentId, status, scope, isSystemRole } = req.query;
     const filters = { 
       departmentId, 
-      status, 
+      status,
+      scope,
       isSystemRole: isSystemRole === 'true' ? true : isSystemRole === 'false' ? false : undefined 
     };
     const roles = await Role.getAll(organizationId, filters);

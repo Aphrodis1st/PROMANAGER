@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useHospitalAuth } from '../../context/HospitalAuthContext';
 import { Hospital, Mail, Lock, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
+import { API_BASE_URL } from '../../constants/api.js';
 
 export default function HospitalLogin() {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ export default function HospitalLogin() {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/hospital/auth/login`, {
+      const res = await fetch(`${API_BASE_URL}/hospital/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -107,7 +108,7 @@ export default function HospitalLogin() {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/hospital/auth/complete-password`, {
+      const res = await fetch(`${API_BASE_URL}/hospital/auth/complete-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ partialToken, newPassword }),
@@ -285,7 +286,7 @@ export default function HospitalLogin() {
 
         <div className="text-center mt-6 pt-6 border-t border-gray-200">
           <Link 
-            to="/" 
+            to="/get-started" 
             className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-emerald-600 transition-colors font-medium"
           >
             <ArrowLeft className="w-4 h-4" />

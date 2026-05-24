@@ -1,38 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card } from '../../../components/hospital/card';
 import { Button } from '../../../components/hospital/Button';
 import { LoadingSpinner } from '../../../components/hospital/LoadingSpinner';
+import { useLazyGetProfessionalReportQuery } from '../../../store/actions/hospitalReports.js';
+
+const getErrorMessage = (error, fallback) =>
+  error?.data?.message || error?.message || fallback;
 
 const HospitalProfessionalReport = () => {
-  const [reportData, setReportData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [trigger, { data: reportData, isFetching: loading, error, isError }] =
+    useLazyGetProfessionalReportQuery();
 
-  const generateReport = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const token = localStorage.getItem('hospitalToken');
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/hospital/reports/generate`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+  const generateReport = () => trigger();
 
-      if (!response.ok) {
-        throw new Error('Failed to generate report');
-      }
-
-      const data = await response.json();
-      setReportData(data.report);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const errorMessage = isError
+    ? getErrorMessage(error, 'Failed to generate report')
+    : null;
 
   const downloadReport = () => {
     if (!reportData) return;
@@ -68,9 +51,9 @@ const HospitalProfessionalReport = () => {
         </div>
       )}
 
-      {error && (
+      {errorMessage && (
         <Card className="p-4 border-red-200 bg-red-50">
-          <p className="text-red-600">Error: {error}</p>
+          <p className="text-red-600">Error: {errorMessage}</p>
         </Card>
       )}
 

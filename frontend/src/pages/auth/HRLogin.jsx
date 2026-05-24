@@ -118,7 +118,7 @@ const HRLogin = () => {
 
             <div className="text-center mt-6 pt-6 border-t border-gray-200">
               <Link 
-                to="/" 
+                to="/get-started"
                 className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-purple-600 transition-colors font-medium"
               >
                 <ArrowLeft className="w-4 h-4" />

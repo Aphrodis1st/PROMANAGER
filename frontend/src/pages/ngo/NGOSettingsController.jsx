@@ -1,7 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Settings, Lock, Unlock, Trash2, Edit3, Save, CheckCircle2, AlertTriangle, Users, ShieldCheck, RefreshCw } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+import {
+  useGetNgoUsersQuery,
+  useCreateNgoUserMutation,
+  useUpdateNgoUserMutation,
+  useDeleteNgoUserMutation,
+  useActivateNgoUserMutation,
+  useSuspendNgoUserMutation,
+  getNgoErrorMessage,
+} from '../../store/actions/ngo.js';
+import { BASE_API_URL } from '../../utils/config/keys.js';
 
 const permissionOptions = ['organization', 'projects', 'donors', 'beneficiaries', 'volunteers', 'church', 'finance', 'grants', 'gis', 'reports', 'users'];
 
@@ -31,6 +40,23 @@ export default function NGOSettingsController({ workspace, updateWorkspace, curr
   const [settingsSection, setSettingsSection] = useState('users');
   const [userForm, setUserForm] = useState({ ...blankUser, organizationId: currentOrganization?.id || '' });
   const [apiStatus, setApiStatus] = useState('Backend sync not started');
+
+  const {
+    data: backendUsers,
+    isFetching,
+    isError,
+    error: usersError,
+    refetch: syncUsersFromBackend,
+  } = useGetNgoUsersQuery(
+    { organizationId: currentOrganization?.id },
+    { skip: !currentOrganization?.id }
+  );
+
+  const [createUser] = useCreateNgoUserMutation();
+  const [updateUser] = useUpdateNgoUserMutation();
+  const [deleteUser] = useDeleteNgoUserMutation();
+  const [activateUser] = useActivateNgoUserMutation();
+  const [suspendUser] = useSuspendNgoUserMutation();
 
   const scopedUsers = useMemo(
     () => (workspace.users || []).filter(user => !user.organizationId || user.organizationId === currentOrganization?.id),
@@ -103,45 +129,40 @@ export default function NGOSettingsController({ workspace, updateWorkspace, curr
     setUserForm(form => ({ ...form, organizationId: currentOrganization?.id || '' }));
   }, [currentOrganization?.id]);
 
-  const syncUsersFromBackend = async () => {
+  useEffect(() => {
     if (!currentOrganization?.id) return;
-    try {
+    if (isFetching) {
       setApiStatus('Syncing users from backend...');
-      const response = await fetch(`${API_BASE}/ngo/users?organizationId=${encodeURIComponent(currentOrganization.id)}`);
-      const payload = await response.json();
-      if (!response.ok || !payload.success) throw new Error(payload.error || 'Unable to load NGO users');
-      updateWorkspace(
-        current => ({
-          ...current,
-          users: [
-            ...(current.users || []).filter(user => user.organizationId && user.organizationId !== currentOrganization.id),
-            ...payload.data
-          ]
-        }),
-        'NGO users synced from backend'
-      );
-      setApiStatus(`Backend synced: ${payload.data.length} users`);
-    } catch (error) {
-      setApiStatus(`Backend offline: ${error.message}`);
     }
-  };
+  }, [currentOrganization?.id, isFetching]);
 
   useEffect(() => {
-    syncUsersFromBackend();
-  }, [currentOrganization?.id]);
+    if (!currentOrganization?.id || backendUsers === undefined) return;
+    updateWorkspace(
+      current => ({
+        ...current,
+        users: [
+          ...(current.users || []).filter(user => user.organizationId && user.organizationId !== currentOrganization.id),
+          ...backendUsers
+        ]
+      }),
+      'NGO users synced from backend'
+    );
+    setApiStatus(`Backend synced: ${backendUsers.length} users`);
+  }, [backendUsers, currentOrganization?.id, updateWorkspace]);
+
+  useEffect(() => {
+    if (isError) {
+      setApiStatus(`Backend offline: ${getNgoErrorMessage(usersError, 'Unable to load NGO users')}`);
+    }
+  }, [isError, usersError]);
 
   const persistUser = async (record) => {
     const isBackendId = record.id && !record.id.startsWith('user-');
-    const method = isBackendId ? 'PUT' : 'POST';
-    const url = isBackendId ? `${API_BASE}/ngo/users/${record.id}` : `${API_BASE}/ngo/users`;
-    const response = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(record)
-    });
-    const payload = await response.json();
-    if (!response.ok || !payload.success) throw new Error(payload.error || 'Unable to save user');
-    return payload.data;
+    if (isBackendId) {
+      return updateUser({ id: record.id, ...record }).unwrap();
+    }
+    return createUser(record).unwrap();
   };
 
   const saveUser = async (event) => {
@@ -187,18 +208,21 @@ export default function NGOSettingsController({ workspace, updateWorkspace, curr
   const updateUserStatus = async (user, accountStatus) => {
     let updated = { ...user, accountStatus };
     try {
-      const endpoint = accountStatus === 'Active' ? 'activate' : 'suspend';
-      const response = await fetch(`${API_BASE}/ngo/users/${user.id}/${endpoint}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ approvedBy: currentOrganization?.primaryContact?.name || 'System Admin', suspendedBy: currentOrganization?.primaryContact?.name || 'System Admin' })
-      });
-      const payload = await response.json();
-      if (!response.ok || !payload.success) throw new Error(payload.error || 'Unable to update user status');
-      updated = payload.data;
+      if (accountStatus === 'Active') {
+        updated = await activateUser({
+          id: user.id,
+          approvedBy: currentOrganization?.primaryContact?.name || 'System Admin',
+        }).unwrap();
+      } else {
+        updated = await suspendUser({
+          id: user.id,
+          approvedBy: currentOrganization?.primaryContact?.name || 'System Admin',
+          suspendedBy: currentOrganization?.primaryContact?.name || 'System Admin',
+        }).unwrap();
+      }
       setApiStatus(`Backend status updated: ${updated.email}`);
     } catch (error) {
-      setApiStatus(`Status updated locally only: ${error.message}`);
+      setApiStatus(`Status updated locally only: ${getNgoErrorMessage(error, 'Unable to update user status')}`);
     }
 
     updateWorkspace(
@@ -211,13 +235,11 @@ export default function NGOSettingsController({ workspace, updateWorkspace, curr
     if (!window.confirm(`Remove user ${user.email}?`)) return;
     try {
       if (user.id && !user.id.startsWith('user-')) {
-        const response = await fetch(`${API_BASE}/ngo/users/${user.id}`, { method: 'DELETE' });
-        const payload = await response.json();
-        if (!response.ok || !payload.success) throw new Error(payload.error || 'Unable to remove user');
+        await deleteUser(user.id).unwrap();
       }
       setApiStatus(`Backend removed user: ${user.email}`);
     } catch (error) {
-      setApiStatus(`Removed locally only: ${error.message}`);
+      setApiStatus(`Removed locally only: ${getNgoErrorMessage(error, 'Unable to remove user')}`);
     }
     updateWorkspace(
       current => ({ ...current, users: (current.users || []).filter(item => item.id !== user.id) }),
@@ -366,8 +388,8 @@ export default function NGOSettingsController({ workspace, updateWorkspace, curr
                     <h4 className="font-bold">Create / Update User</h4>
                     <p className="text-sm text-gray-600">{apiStatus}</p>
                   </div>
-                  <button type="button" onClick={syncUsersFromBackend} className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
-                    <RefreshCw className="w-4 h-4" />
+                  <button type="button" onClick={syncUsersFromBackend} disabled={isFetching} className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50">
+                    <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
                     Sync Backend
                   </button>
                 </div>
@@ -474,7 +496,7 @@ export default function NGOSettingsController({ workspace, updateWorkspace, curr
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <SecurityCard title="Access Governance" items={[`${scopedUsers.length} users`, `${scopedRoles.length} roles`, `${features.filter(f => isRestricted(f.id)).length} restricted features`]} />
               <SecurityCard title="Authentication Controls" items={[`${mfaUsers} MFA required`, `${activeUsers} active accounts`, `${invitedUsers} invitations pending`]} />
-              <SecurityCard title="Backend Connection" items={[apiStatus, `${API_BASE}/ngo/users`, currentOrganization?.name || 'No organization selected']} />
+              <SecurityCard title="Backend Connection" items={[apiStatus, `${BASE_API_URL}/ngo/users`, currentOrganization?.name || 'No organization selected']} />
             </div>
           )}
         </div>

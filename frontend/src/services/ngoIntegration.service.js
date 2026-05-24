@@ -1,7 +1,7 @@
 // NGO Integration Service - Connects all services dynamically
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+import { API_BASE_URL as API_BASE } from '../constants/api.js';
 
 class NGOIntegrationService {
   constructor() {

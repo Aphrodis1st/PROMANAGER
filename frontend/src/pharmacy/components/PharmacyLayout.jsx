@@ -2,10 +2,15 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Box, Drawer, List, Typography, Toolbar } from '@mui/material';
 import PharmacySidebar from './PharmacySidebar';
+import { getServiceOrganization } from '../../utils/authCookies.js';
+import { getWorkspaceOrganization, getServiceLabel } from '../../config/serviceContext.js';
 
 const drawerWidth = 280;
 
 export default function PharmacyLayout() {
+  const organization = getWorkspaceOrganization('pharmacy') || getServiceOrganization('pharmacy');
+  const serviceLabel = getServiceLabel('pharmacy');
+
   return (
     <Box sx={{ display: 'flex' }}>
       <Drawer
@@ -22,9 +27,14 @@ export default function PharmacyLayout() {
         }}
       >
         <Toolbar>
-          <Typography variant="h6" noWrap component="div" sx={{ color: 'white' }}>
-            Pharmacy Services
-          </Typography>
+          <Box>
+            <Typography variant="h6" noWrap component="div" sx={{ color: 'white' }}>
+              {organization?.name || 'Pharmacy Services'}
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.85)' }}>
+              {serviceLabel}
+            </Typography>
+          </Box>
         </Toolbar>
         <Box sx={{ overflow: 'auto' }}>
           <List>

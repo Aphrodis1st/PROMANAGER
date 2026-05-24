@@ -1,32 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import SuperAdminLayout from '../../components/superAdmin/SuperAdminLayout';
-import { superAdminService } from '../../services/hospitalService';
+import {
+  useGetSuperAdminPayrollQuery,
+  useGetSuperAdminHROrganizationsQuery,
+} from '../../store/actions/superAdmin.js';
 
 const PayrollManagement = () => {
-  const [payrollData, setPayrollData] = useState([]);
-  const [organizations, setOrganizations] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: payrollData = [], isLoading: payrollLoading } = useGetSuperAdminPayrollQuery();
+  const { data: organizations = [], isLoading: orgsLoading } = useGetSuperAdminHROrganizationsQuery();
   const [selectedOrg, setSelectedOrg] = useState('all');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      const [payrollRes, orgsRes] = await Promise.all([
-        superAdminService.getAllPayrollData(),
-        superAdminService.getAllHROrganizations()
-      ]);
-      
-      if (payrollRes.success) setPayrollData(payrollRes.data);
-      if (orgsRes.success) setOrganizations(orgsRes.data);
-    } catch (error) {
-      console.error('Error fetching payroll data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = payrollLoading || orgsLoading;
 
   const filteredPayroll = selectedOrg === 'all' 
     ? payrollData 

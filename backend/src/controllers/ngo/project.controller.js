@@ -11,8 +11,8 @@ export const createProject = async (req, res) => {
 
 export const getAllProjects = async (req, res) => {
   try {
-    const { organizationId } = req.query;
-    const projects = await Project.getAll(organizationId);
+    const { organizationId, status } = req.query;
+    const projects = await Project.getAll(organizationId, { status });
     res.json({ success: true, data: projects });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

@@ -1,43 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import SuperAdminLayout from '../../components/superAdmin/SuperAdminLayout';
-import { superAdminService } from '../../services/hospitalService';
-import axios from 'axios';
+import { useGetSuperAdminSystemActivityQuery } from '../../store/actions/superAdmin.js';
+import { useGetHrPayrollQuery } from '../../store/actions/hr.js';
 
 const SystemActivity = () => {
-  const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: activities = [], isLoading, refetch } = useGetSuperAdminSystemActivityQuery();
   const [filter, setFilter] = useState('all');
-  const [payrolls, setPayrolls] = useState([]);
   const [showPayroll, setShowPayroll] = useState(false);
 
-  useEffect(() => {
-    fetchActivities();
-    fetchPayrolls();
-  }, []);
+  const payrollParams = useMemo(() => ({
+    month: new Date().getMonth() + 1,
+    year: new Date().getFullYear(),
+  }), []);
 
-  const fetchActivities = async () => {
-    try {
-      const response = await superAdminService.getSystemActivity();
-      if (response.success) {
-        setActivities(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching activities:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: payrolls = [] } = useGetHrPayrollQuery(payrollParams, { skip: !showPayroll });
 
-  const fetchPayrolls = async () => {
-    try {
-      const month = new Date().getMonth() + 1;
-      const year = new Date().getFullYear();
-      const response = await axios.get(`/api/v1/hr/payroll/organization?month=${month}&year=${year}`);
-      setPayrolls(response.data || []);
-    } catch (error) {
-      console.error('Error fetching payrolls:', error);
-    }
-  };
+  const loading = isLoading;
 
   const getActivityIcon = (type) => {
     const icons = {
@@ -160,7 +138,7 @@ const SystemActivity = () => {
               {showPayroll ? 'Hide Payroll' : 'Show Payroll'}
             </button>
             <button
-              onClick={fetchActivities}
+              onClick={refetch}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
               Refresh

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Shield, Mail, Lock, ArrowLeft, AlertCircle, Eye, EyeOff, AlertTriangle, Lock as LockIcon } from 'lucide-react';
+import { Shield, Mail, Lock, ArrowLeft, AlertCircle, Eye, EyeOff, Lock as LockIcon } from 'lucide-react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../constants/api.js';
+import { setServiceAuth } from '../../utils/authCookies.js';
 
 const SuperAdminLogin = () => {
   const [credentials, setCredentials] = useState({ email: '', password: '' });
@@ -16,27 +18,36 @@ const SuperAdminLogin = () => {
     setError('');
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, credentials);
-      
-      console.log('Login response:', response.data);
-      
-      if (response.data && response.data.user && response.data.token) {
-        const user = response.data.user;
-        console.log('User role:', user.role);
-        
-        if (user.role === 'super_admin') {
-          localStorage.setItem('token', response.data.token);
-          localStorage.setItem('user', JSON.stringify(user));
-          navigate('/super-admin/dashboard');
-        } else {
-          setError(`Access denied. Your role is '${user.role}' but Super Admin role required.`);
-        }
-      } else {
-        setError('Invalid response from server.');
+      const response = await axios.post(`${API_BASE_URL}/auth/login`, credentials);
+
+      const { token, user } = response.data || {};
+      const roleName = user?.role?.role_name || user?.role || user?.legacyRole || '';
+      const isSuperAdmin =
+        String(roleName).toLowerCase() === 'super_admin' ||
+        String(roleName).toUpperCase() === 'SUPER_ADMIN';
+
+      if (token && user && isSuperAdmin) {
+        const sessionUser = { ...user, legacyRole: 'super_admin' };
+        setServiceAuth('superAdmin', { token, user: sessionUser });
+        navigate('/super-admin/dashboard');
+        return;
       }
+
+      if (token && user) {
+        setError(`Access denied. Your role is '${roleName}' but Super Admin role required.`);
+        return;
+      }
+
+      setError('Invalid response from server.');
     } catch (error) {
       console.error('Login error:', error);
-      setError(error.response?.data?.message || 'Login failed. Please check your credentials.');
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        (error.message?.includes('Network Error')
+          ? 'Cannot reach the API server. Check that the backend is running.'
+          : 'Login failed. Please check your credentials.');
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -87,7 +98,7 @@ const SuperAdminLogin = () => {
                   value={credentials.email}
                   onChange={(e) => setCredentials({...credentials, email: e.target.value})}
                   className="w-full bg-white/10 border border-white/20 rounded-xl pl-11 pr-4 py-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-all text-sm"
-                  placeholder="superadmin@promanager.com"
+                  placeholder="superadmin@madsmart.com"
                 />
               </div>
             </div>
@@ -162,7 +173,7 @@ const SuperAdminLogin = () => {
         {/* Back Link */}
         <div className="text-center mt-6">
           <Link 
-            to="/" 
+            to="/get-started" 
             className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors font-medium"
           >
             <ArrowLeft className="w-4 h-4" />

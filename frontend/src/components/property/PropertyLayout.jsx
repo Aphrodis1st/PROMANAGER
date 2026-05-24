@@ -1,8 +1,12 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
+import { getServiceOrganization } from '../../utils/authCookies.js';
+import { getWorkspaceOrganization, getServiceLabel } from '../../config/serviceContext.js';
 
 export default function PropertyLayout() {
   const location = useLocation();
+  const organization = getWorkspaceOrganization('property') || getServiceOrganization('property');
+  const serviceLabel = getServiceLabel('property');
 
   const isActive = (path) => location.pathname.startsWith(path);
 
@@ -13,7 +17,10 @@ export default function PropertyLayout() {
           <div className="flex justify-between h-16">
             <div className="flex space-x-8">
               <Link to="/property" className="flex items-center px-3 py-2 text-gray-700 hover:text-blue-600">
-                <span className="font-bold text-xl">Property Management</span>
+                <div>
+                  <span className="font-bold text-xl block">{organization?.name || 'Property Management'}</span>
+                  <span className="text-xs text-gray-500">{serviceLabel}</span>
+                </div>
               </Link>
             </div>
           </div>

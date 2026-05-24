@@ -22,6 +22,20 @@
   0% { opacity: 0; transform: translateY(-4px); }
   100% { opacity: 1; transform: translateY(0); }
 }
+
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Custom animation classes for modals */
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
 /* Sidebar base styling - Pharmacy Theme */
 .sidebar {
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.2);

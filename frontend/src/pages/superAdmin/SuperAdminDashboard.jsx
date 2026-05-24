@@ -1,37 +1,121 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import SuperAdminLayout from '../../components/superAdmin/SuperAdminLayout';
-import { superAdminService } from '../../services/hospitalService';
+import {
+  useGetSuperAdminDashboardStatsQuery,
+  useGetSuperAdminSystemActivityQuery,
+} from '../../store/actions/superAdmin.js';
+import {
+  Building2,
+  Package,
+  Pill,
+  HeartHandshake,
+  Briefcase,
+  Home,
+  Users,
+  ArrowRight,
+  Activity,
+  TrendingUp,
+  Shield,
+} from 'lucide-react';
+
+const services = [
+  {
+    key: 'hospitals',
+    title: 'Hospital',
+    description: 'Clinical & patient management',
+    path: '/super-admin/hospitals',
+    icon: Building2,
+    bgLight: 'bg-blue-50',
+    textColor: 'text-blue-600',
+    stats: (s) => ({ total: s?.totalHospitals || 0, active: s?.activeHospitals || 0 }),
+  },
+  {
+    key: 'stocks',
+    title: 'Stock',
+    description: 'Inventory & supply chain',
+    path: '/super-admin/stocks',
+    icon: Package,
+    bgLight: 'bg-orange-50',
+    textColor: 'text-orange-600',
+    stats: (s) => ({ total: s?.totalStocks || 0, active: s?.activeStocks || 0 }),
+  },
+  {
+    key: 'pharmacies',
+    title: 'Pharmacy',
+    description: 'Dispensing & prescriptions',
+    path: '/super-admin/pharmacies',
+    icon: Pill,
+    bgLight: 'bg-teal-50',
+    textColor: 'text-teal-600',
+    stats: (s) => ({ total: s?.totalPharmacies || 0, active: s?.activePharmacies || 0 }),
+  },
+  {
+    key: 'ngos',
+    title: 'NGO',
+    description: 'Programs, donors & impact',
+    path: '/super-admin/ngos',
+    icon: HeartHandshake,
+    bgLight: 'bg-emerald-50',
+    textColor: 'text-emerald-600',
+    stats: (s) => ({ total: s?.totalNGOs || 0, active: s?.activeNGOs || 0 }),
+  },
+  {
+    key: 'hr',
+    title: 'HR',
+    description: 'Workforce & payroll',
+    path: '/super-admin/hr',
+    icon: Briefcase,
+    bgLight: 'bg-indigo-50',
+    textColor: 'text-indigo-600',
+    stats: (s) => ({ total: s?.totalHROrganizations || 0, active: s?.activeHROrganizations || 0 }),
+  },
+  {
+    key: 'properties',
+    title: 'Property',
+    description: 'Leases, tenants & billing',
+    path: '/super-admin/properties',
+    icon: Home,
+    bgLight: 'bg-amber-50',
+    textColor: 'text-amber-600',
+    stats: (s) => ({ total: s?.totalPropertyOrganizations || 0, active: s?.activePropertyOrganizations || 0 }),
+  },
+];
+
+const activityIcon = (type) => {
+  const map = {
+    hospital_created: { label: 'H', color: 'bg-blue-100 text-blue-600' },
+    stock_created: { label: 'S', color: 'bg-orange-100 text-orange-600' },
+    pharmacy_created: { label: 'P', color: 'bg-teal-100 text-teal-600' },
+    ngo_created: { label: 'N', color: 'bg-emerald-100 text-emerald-600' },
+    admin_login: { label: 'A', color: 'bg-violet-100 text-violet-600' },
+  };
+  return map[type] || { label: '•', color: 'bg-gray-100 text-gray-600' };
+};
+
+const activityMessage = (activity) => {
+  if (activity.type === 'hospital_created') return `New hospital "${activity.data?.name}" created`;
+  if (activity.type === 'stock_created') return `New stock "${activity.data?.name}" created`;
+  if (activity.type === 'pharmacy_created') return `New pharmacy "${activity.data?.name}" created`;
+  if (activity.type === 'ngo_created') return `New NGO "${activity.data?.name}" created`;
+  return 'Admin activity recorded';
+};
 
 const SuperAdminDashboard = () => {
-  const [stats, setStats] = useState(null);
-  const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { data: stats, isLoading: statsLoading } = useGetSuperAdminDashboardStatsQuery();
+  const { data: activities = [], isLoading: activityLoading } = useGetSuperAdminSystemActivityQuery();
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  const loading = statsLoading || activityLoading;
 
-  const fetchDashboardData = async () => {
-    try {
-      const [statsRes, activitiesRes] = await Promise.all([
-        superAdminService.getDashboardStats(),
-        superAdminService.getSystemActivity()
-      ]);
-      
-      if (statsRes.success) setStats(statsRes.data);
-      if (activitiesRes.success) setActivities(activitiesRes.data);
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const totalEntities = services.reduce((sum, svc) => sum + svc.stats(stats).total, 0);
+  const totalActive = services.reduce((sum, svc) => sum + svc.stats(stats).active, 0);
 
   if (loading) {
     return (
       <SuperAdminLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-600" />
         </div>
       </SuperAdminLayout>
     );
@@ -39,202 +123,169 @@ const SuperAdminDashboard = () => {
 
   return (
     <SuperAdminLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
-          <h1 className="text-3xl font-bold mb-2">Welcome to Super Admin Dashboard</h1>
-          <p className="text-blue-100">Manage hospitals, stocks, pharmacies, and monitor system-wide activities</p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Total Hospitals</p>
-                <p className="text-3xl font-bold text-gray-800">{stats?.totalHospitals || 0}</p>
+      <div className="space-y-8">
+        {/* Hero */}
+        <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
+                <Shield className="h-3.5 w-3.5" />
+                Service Management Console
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl font-bold text-blue-600">H</span>
-              </div>
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">
+                Platform Overview
+              </h1>
+              <p className="mt-2 max-w-xl text-gray-600">
+                Manage hospitals, stock, pharmacies, NGOs, HR, property, and administrators from one unified control center.
+              </p>
             </div>
-            <div className="mt-4 flex items-center text-sm">
-              <span className="text-green-600 font-medium">{stats?.activeHospitals || 0} Active</span>
-              <span className="text-gray-400 mx-2">•</span>
-              <span className="text-red-600 font-medium">{stats?.suspendedHospitals || 0} Suspended</span>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Total Stocks</p>
-                <p className="text-3xl font-bold text-gray-800">{stats?.totalStocks || 0}</p>
-              </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl font-bold text-orange-600">S</span>
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <span className="text-green-600 font-medium">{stats?.activeStocks || 0} Active</span>
-              <span className="text-gray-400 mx-2">•</span>
-              <span className="text-red-600 font-medium">{stats?.suspendedStocks || 0} Suspended</span>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Total Pharmacies</p>
-                <p className="text-3xl font-bold text-gray-800">{stats?.totalPharmacies || 0}</p>
-              </div>
-              <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl font-bold text-teal-600">P</span>
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <span className="text-green-600 font-medium">{stats?.activePharmacies || 0} Active</span>
-              <span className="text-gray-400 mx-2">•</span>
-              <span className="text-red-600 font-medium">{stats?.suspendedPharmacies || 0} Suspended</span>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">HR Organizations</p>
-                <p className="text-3xl font-bold text-gray-800">{stats?.totalHROrganizations || 0}</p>
-              </div>
-              <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-                <span className="text-xl font-bold text-indigo-600">HR</span>
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <span className="text-green-600 font-medium">{stats?.activeHROrganizations || 0} Active</span>
-              <span className="text-gray-400 mx-2">•</span>
-              <span className="text-red-600 font-medium">{stats?.suspendedHROrganizations || 0} Suspended</span>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">All Admins</p>
-                <p className="text-3xl font-bold text-gray-800">{stats?.totalAdmins || 0}</p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl font-bold text-green-600">A</span>
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <span className="text-green-600 font-medium">{stats?.activeAdmins || 0} Active</span>
-              <span className="text-gray-400 mx-2">•</span>
-              <span className="text-gray-600 font-medium">{stats?.inactiveAdmins || 0} Inactive</span>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">System Entities</p>
-                <p className="text-3xl font-bold text-gray-800">
-                  {(stats?.totalHospitals || 0) + (stats?.totalStocks || 0) + (stats?.totalPharmacies || 0) + (stats?.totalHROrganizations || 0)}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl font-bold text-purple-600">E</span>
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <span className="text-blue-600 font-medium">{stats?.totalHospitals || 0}H</span>
-              <span className="text-gray-400 mx-2">•</span>
-              <span className="text-orange-600 font-medium">{stats?.totalStocks || 0}S</span>
-              <span className="text-gray-400 mx-2">•</span>
-              <span className="text-teal-600 font-medium">{stats?.totalPharmacies || 0}P</span>
-              <span className="text-gray-400 mx-2">•</span>
-              <span className="text-indigo-600 font-medium">{stats?.totalHROrganizations || 0}HR</span>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+              {[
+                { label: 'Services', value: services.length, icon: TrendingUp },
+                { label: 'Entities', value: totalEntities, icon: Activity },
+                { label: 'Active', value: totalActive, icon: Shield },
+                { label: 'Admins', value: stats?.totalAdmins || 0, icon: Users },
+              ].map(({ label, value, icon: Icon }) => (
+                <div key={label} className="rounded-xl border border-gray-100 bg-slate-50 px-4 py-3">
+                  <Icon className="mb-1 h-4 w-4 text-indigo-600" />
+                  <p className="text-2xl font-bold text-gray-900">{value}</p>
+                  <p className="text-xs text-gray-500">{label}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Recent Activities */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <span className="mr-2 text-blue-600">📈</span>
-              Recent System Activities
-            </h3>
-            <div className="space-y-4 max-h-80 overflow-y-auto">
-              {activities.length > 0 ? (
-                activities.slice(0, 10).map((activity, index) => (
-                  <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-sm font-bold text-blue-600">
-                        {activity.type === 'hospital_created' ? 'H' : 
-                         activity.type === 'stock_created' ? 'S' :
-                         activity.type === 'pharmacy_created' ? 'P' : 'A'}
-                      </span>
+        {/* Service Cards */}
+        <div>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-gray-900">Platform Services</h2>
+            <button
+              onClick={() => navigate('/super-admin/hospital-admins')}
+              className="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-800"
+            >
+              Manage Admins <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            {services.map((service) => {
+              const Icon = service.icon;
+              const { total, active } = service.stats(stats);
+              const suspended = total - active;
+              return (
+                <button
+                  key={service.key}
+                  onClick={() => navigate(service.path)}
+                  className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className={`rounded-xl ${service.bgLight} p-3`}>
+                      <Icon className={`h-6 w-6 ${service.textColor}`} />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800">
-                        {activity.type === 'hospital_created' 
-                          ? `New hospital "${activity.data?.name}" created`
-                          : activity.type === 'stock_created'
-                          ? `New stock "${activity.data?.name}" created`
-                          : activity.type === 'pharmacy_created'
-                          ? `New pharmacy "${activity.data?.name}" created`
-                          : 'Admin login activity'
-                        }
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {new Date(activity.timestamp).toLocaleString()}
-                      </p>
-                    </div>
+                    <ArrowRight className="h-5 w-5 text-gray-300 transition group-hover:translate-x-1 group-hover:text-indigo-500" />
                   </div>
-                ))
+                  <h3 className="mt-4 text-lg font-bold text-gray-900">{service.title}</h3>
+                  <p className="mt-1 text-sm text-gray-500">{service.description}</p>
+                  <div className="mt-4 flex items-center gap-4 border-t border-gray-100 pt-4">
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900">{total}</p>
+                      <p className="text-xs text-gray-500">Total</p>
+                    </div>
+                    <div>
+                      <p className={`text-lg font-semibold ${service.textColor}`}>{active}</p>
+                      <p className="text-xs text-gray-500">Active</p>
+                    </div>
+                    {suspended > 0 && (
+                      <div>
+                        <p className="text-lg font-semibold text-red-500">{suspended}</p>
+                        <p className="text-xs text-gray-500">Suspended</p>
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Bottom row */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+          {/* Activity */}
+          <div className="lg:col-span-3 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+            <div className="mb-4 flex items-center gap-2">
+              <Activity className="h-5 w-5 text-indigo-600" />
+              <h3 className="text-lg font-bold text-gray-900">Recent Activity</h3>
+            </div>
+            <div className="max-h-80 space-y-3 overflow-y-auto">
+              {activities.length > 0 ? (
+                activities.slice(0, 10).map((activity, index) => {
+                  const icon = activityIcon(activity.type);
+                  return (
+                    <div key={index} className="flex items-start gap-3 rounded-xl bg-gray-50 p-3">
+                      <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${icon.color}`}>
+                        {icon.label}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-800">{activityMessage(activity)}</p>
+                        <p className="mt-0.5 text-xs text-gray-500">
+                          {activity.timestamp ? new Date(activity.timestamp).toLocaleString() : 'Recently'}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
               ) : (
-                <p className="text-gray-500 text-center py-8">No recent activities</p>
+                <p className="py-8 text-center text-gray-500">No recent activities</p>
               )}
             </div>
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <span className="mr-2 text-yellow-600">⚡</span>
-              Quick Actions
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
-              <button className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-left">
-                <div className="text-2xl mb-2 font-bold text-blue-600">H</div>
-                <div className="text-sm font-medium text-gray-800">Add Hospital</div>
-                <div className="text-xs text-gray-500">Create new hospital</div>
-              </button>
-              
-              <button className="p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors text-left">
-                <div className="text-2xl mb-2 font-bold text-orange-600">S</div>
-                <div className="text-sm font-medium text-gray-800">Add Stock</div>
-                <div className="text-xs text-gray-500">Create new stock</div>
-              </button>
-              
-              <button className="p-4 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors text-left">
-                <div className="text-2xl mb-2 font-bold text-teal-600">P</div>
-                <div className="text-sm font-medium text-gray-800">Add Pharmacy</div>
-                <div className="text-xs text-gray-500">Create new pharmacy</div>
-              </button>
-              
-              <button className="p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors text-left">
-                <div className="text-xl mb-2 font-bold text-indigo-600">HR</div>
-                <div className="text-sm font-medium text-gray-800">Add HR Org</div>
-                <div className="text-xs text-gray-500">Create HR organization</div>
-              </button>
-              
-              <button className="p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors text-left">
-                <div className="text-2xl mb-2 font-bold text-green-600">A</div>
-                <div className="text-sm font-medium text-gray-800">Add Admin</div>
-                <div className="text-xs text-gray-500">Create admin</div>
-              </button>
+          <div className="lg:col-span-2 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+            <h3 className="mb-4 text-lg font-bold text-gray-900">Quick Actions</h3>
+            <div className="space-y-2">
+              {[
+                { label: 'Add Hospital', path: '/super-admin/hospitals', color: 'hover:bg-blue-50 hover:border-blue-200' },
+                { label: 'Add Stock Entity', path: '/super-admin/stocks', color: 'hover:bg-orange-50 hover:border-orange-200' },
+                { label: 'Add Pharmacy', path: '/super-admin/pharmacies', color: 'hover:bg-teal-50 hover:border-teal-200' },
+                { label: 'Add NGO', path: '/super-admin/ngos', color: 'hover:bg-emerald-50 hover:border-emerald-200' },
+                { label: 'Add HR Organization', path: '/super-admin/hr', color: 'hover:bg-indigo-50 hover:border-indigo-200' },
+                { label: 'Add Property Org', path: '/super-admin/properties', color: 'hover:bg-amber-50 hover:border-amber-200' },
+                { label: 'Create Admin', path: '/super-admin/hospital-admins', color: 'hover:bg-violet-50 hover:border-violet-200' },
+              ].map((action) => (
+                <button
+                  key={action.label}
+                  onClick={() => navigate(action.path)}
+                  className={`flex w-full items-center justify-between rounded-xl border border-gray-100 px-4 py-3 text-sm font-medium text-gray-700 transition ${action.color}`}
+                >
+                  {action.label}
+                  <ArrowRight className="h-4 w-4 text-gray-400" />
+                </button>
+              ))}
             </div>
+          </div>
+        </div>
+
+        {/* Admin summary bar */}
+        <div className="rounded-2xl border border-gray-100 bg-violet-50 p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              <div className="rounded-xl bg-violet-600 p-3">
+                <Users className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900">Administrator Accounts</p>
+                <p className="text-sm text-gray-600">
+                  {stats?.activeAdmins || 0} active · {stats?.inactiveAdmins || 0} inactive · {stats?.totalAdmins || 0} total
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/super-admin/hospital-admins')}
+              className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-violet-700"
+            >
+              Manage Admins <ArrowRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>

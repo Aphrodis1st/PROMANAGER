@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStockAuth } from "../../context/StockAuthContext";
+import { getWorkspaceOrganization } from "../../config/serviceContext.js";
 import { useStock } from "../../context/stockContext";
 import { usePurchase } from "../../context/PurchaseContext";
 import { useSales } from "../../context/SalesContext";
@@ -161,8 +162,14 @@ const StockDashboardOverview = () => {
       <Paper elevation={0} sx={{ background: "linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)", p: 4, borderRadius: 3, color: "white", mb: 3, boxShadow: '0 4px 20px rgba(13, 148, 136, 0.3)' }}>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: 'wrap', gap: 2 }}>
           <Box>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, letterSpacing: '-0.5px' }}>Stock Management Dashboard</Typography>
-            <Typography variant="body1" sx={{ opacity: 0.95, mb: 1 }}>Comprehensive inventory and stock control system</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, letterSpacing: '-0.5px' }}>
+              {getWorkspaceOrganization('stock', user)?.name || 'Stock Management Dashboard'}
+            </Typography>
+            <Typography variant="body1" sx={{ opacity: 0.95, mb: 1 }}>
+              {getWorkspaceOrganization('stock', user)?.name
+                ? 'Inventory and stock control for your organization'
+                : 'Comprehensive inventory and stock control system'}
+            </Typography>
             {user?.email && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 2, flexWrap: 'wrap' }}>
                 <Chip label={user.email} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 500 }} />

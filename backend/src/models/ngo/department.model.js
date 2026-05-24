@@ -1,24 +1,47 @@
 import { db } from '../../../utils/firebase.js';
 
+function stripUndefined(obj) {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, value]) => value !== undefined)
+  );
+}
+
 export class Department {
-  static async create(data) {
-    const docRef = await db().collection('ngo_departments').add({
-      ...data,
+  static buildDocument(data, { includeTimestamps = true } = {}) {
+    const functions = Array.isArray(data.functions)
+      ? data.functions
+      : typeof data.functions === 'string' && data.functions.trim()
+        ? data.functions.split(',').map((item) => item.trim()).filter(Boolean)
+        : [];
+
+    const doc = stripUndefined({
       organizationId: data.organizationId,
       branchId: data.branchId,
       name: data.name,
       code: data.code,
       description: data.description,
       headId: data.headId,
-      parentDepartmentId: data.parentDepartmentId,
-      budget: data.budget || 0,
-      employeeCount: data.employeeCount || 0,
-      functions: data.functions || [],
-      status: data.status || 'active',
-      createdAt: new Date(),
-      updatedAt: new Date()
+      parentDepartmentId: data.parentDepartmentId || null,
+      budget: Number(data.budget) || 0,
+      employeeCount: Number(data.employeeCount) || 0,
+      functions,
+      status: data.status || 'active'
     });
-    return { id: docRef.id, ...data };
+
+    if (includeTimestamps) {
+      doc.createdAt = new Date();
+      doc.updatedAt = new Date();
+    } else {
+      doc.updatedAt = new Date();
+    }
+
+    return doc;
+  }
+
+  static async create(data) {
+    const payload = this.buildDocument(data);
+    const docRef = await db().collection('ngo_departments').add(payload);
+    return { id: docRef.id, ...payload };
   }
 
   static async getAll(organizationId, filters = {}) {
@@ -36,10 +59,8 @@ export class Department {
   }
 
   static async update(id, data) {
-    await db().collection('ngo_departments').doc(id).update({ 
-      ...data, 
-      updatedAt: new Date() 
-    });
+    const payload = this.buildDocument(data, { includeTimestamps: false });
+    await db().collection('ngo_departments').doc(id).update(payload);
     return this.getById(id);
   }
 
@@ -58,7 +79,7 @@ export class Department {
     const departments = await this.getAll(organizationId);
     const buildTree = (parentId = null) => {
       return departments
-        .filter(dept => dept.parentDepartmentId === parentId)
+        .filter(dept => (dept.parentDepartmentId || null) === parentId)
         .map(dept => ({
           ...dept,
           children: buildTree(dept.id)

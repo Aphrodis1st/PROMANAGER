@@ -1,4 +1,6 @@
 import { NGOUser } from '../../models/ngo/user.model.js';
+import { denyForeignNgoResource } from '../../middleware/ngoAuth.middleware.js';
+import { provisionNgoStaffCredentials } from '../../services/ngoStaffProvisioning.service.js';
 
 const requireEmail = (body) => {
   if (!body?.email) {
@@ -11,8 +13,14 @@ const requireEmail = (body) => {
 export const createUser = async (req, res) => {
   try {
     requireEmail(req.body);
-    const user = await NGOUser.create(req.body);
-    res.status(201).json({ success: true, data: user });
+    const user = await NGOUser.create({ ...req.body, organizationId: req.organizationId });
+    const { user: provisionedUser, emailSent, emailError } = await provisionNgoStaffCredentials(user.id);
+    res.status(201).json({
+      success: true,
+      data: { ...provisionedUser, emailSent, emailError: emailError || null },
+      emailSent,
+      emailError: emailError || null,
+    });
   } catch (error) {
     res.status(error.statusCode || 500).json({ success: false, error: error.message });
   }
@@ -20,9 +28,10 @@ export const createUser = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const { organizationId, roleId, departmentId, branchId, accountStatus } = req.query;
+    const organizationId = req.organizationId || req.query.organizationId;
+    const { roleId, departmentId, branchId, accountStatus } = req.query;
     const users = await NGOUser.getAll(organizationId, { roleId, departmentId, branchId, accountStatus });
-    res.json({ success: true, data: users });
+    res.json({ success: true, data: users.map(NGOUser.toSafe) });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -31,8 +40,8 @@ export const getAllUsers = async (req, res) => {
 export const getUser = async (req, res) => {
   try {
     const user = await NGOUser.getById(req.params.id);
-    if (!user) return res.status(404).json({ success: false, error: 'NGO user not found' });
-    res.json({ success: true, data: user });
+    if (denyForeignNgoResource(req, res, user)) return;
+    res.json({ success: true, data: NGOUser.toSafe(user) });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -41,8 +50,10 @@ export const getUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     requireEmail(req.body);
-    const user = await NGOUser.update(req.params.id, req.body);
-    res.json({ success: true, data: user });
+    const existing = await NGOUser.getById(req.params.id);
+    if (denyForeignNgoResource(req, res, existing)) return;
+    const user = await NGOUser.update(req.params.id, { ...req.body, organizationId: req.organizationId });
+    res.json({ success: true, data: NGOUser.toSafe(user) });
   } catch (error) {
     res.status(error.statusCode || 500).json({ success: false, error: error.message });
   }
@@ -50,6 +61,8 @@ export const updateUser = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
   try {
+    const existing = await NGOUser.getById(req.params.id);
+    if (denyForeignNgoResource(req, res, existing)) return;
     await NGOUser.delete(req.params.id);
     res.json({ success: true, message: 'NGO user removed' });
   } catch (error) {
@@ -59,17 +72,35 @@ export const deleteUser = async (req, res) => {
 
 export const activateUser = async (req, res) => {
   try {
-    const user = await NGOUser.activate(req.params.id, req.body?.approvedBy || '');
-    res.json({ success: true, data: user });
+    const existing = await NGOUser.getById(req.params.id);
+    if (denyForeignNgoResource(req, res, existing)) return;
+    await NGOUser.activate(req.params.id, req.body?.approvedBy || '');
+
+    if (!existing.passwordHash) {
+      const { user, emailSent, emailError } = await provisionNgoStaffCredentials(req.params.id, {
+        activate: false,
+      });
+      return res.json({
+        success: true,
+        data: { ...user, emailSent, emailError: emailError || null },
+        emailSent,
+        emailError: emailError || null,
+      });
+    }
+
+    const user = await NGOUser.getById(req.params.id);
+    res.json({ success: true, data: NGOUser.toSafe(user) });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(error.statusCode || 500).json({ success: false, error: error.message });
   }
 };
 
 export const suspendUser = async (req, res) => {
   try {
+    const existing = await NGOUser.getById(req.params.id);
+    if (denyForeignNgoResource(req, res, existing)) return;
     const user = await NGOUser.suspend(req.params.id, req.body?.suspendedBy || '', req.body?.reason || '');
-    res.json({ success: true, data: user });
+    res.json({ success: true, data: NGOUser.toSafe(user) });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -77,8 +108,10 @@ export const suspendUser = async (req, res) => {
 
 export const updateUserPermissions = async (req, res) => {
   try {
+    const existing = await NGOUser.getById(req.params.id);
+    if (denyForeignNgoResource(req, res, existing)) return;
     const user = await NGOUser.updatePermissions(req.params.id, req.body?.permissions || []);
-    res.json({ success: true, data: user });
+    res.json({ success: true, data: NGOUser.toSafe(user) });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

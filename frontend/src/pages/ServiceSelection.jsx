@@ -283,7 +283,7 @@ export default function ServiceSelection() {
                 }
               }}
             >
-              Get Started Free
+              Get Started
             </Button>
             <Button
               variant="outlined"

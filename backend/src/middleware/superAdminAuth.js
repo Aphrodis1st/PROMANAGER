@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { db } from '../../utils/firebase.js';
+import { isSuperAdminUser } from '../services/platformRoleSeed.service.js';
 
 export const superAdminAuth = async (req, res, next) => {
   try {
@@ -19,27 +20,21 @@ export const superAdminAuth = async (req, res, next) => {
       return res.status(401).json({ success: false, error: 'Access denied. No token provided.' });
     }
 
-    // Validate token format (JWT should have 3 parts separated by dots)
     const tokenParts = token.split('.');
     if (tokenParts.length !== 3) {
-      console.error('Invalid token format. Token parts:', tokenParts.length, 'Token:', token.substring(0, 20) + '...');
       return res.status(400).json({ success: false, error: 'Invalid token format.' });
     }
 
-    // Check if JWT_ACCESS_SECRET is available
     if (!process.env.JWT_ACCESS_SECRET) {
-      console.error('JWT_ACCESS_SECRET not found in environment variables');
       return res.status(500).json({ success: false, error: 'Server configuration error.' });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
     
-    // Check if decoded token has required fields
     if (!decoded.id) {
       return res.status(400).json({ success: false, error: 'Invalid token payload.' });
     }
     
-    // Check if user is super admin
     const userDoc = await db().collection('users').doc(decoded.id).get();
     
     if (!userDoc.exists) {
@@ -47,8 +42,8 @@ export const superAdminAuth = async (req, res, next) => {
     }
     
     const user = userDoc.data();
-    
-    if (!user || user.role !== 'super_admin') {
+
+    if (!isSuperAdminUser({ ...user, id: decoded.id })) {
       return res.status(403).json({ success: false, error: 'Access denied. Super admin role required.' });
     }
 
@@ -56,7 +51,6 @@ export const superAdminAuth = async (req, res, next) => {
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
-      console.error('JWT Error:', error.message, 'Token received:', req.header('Authorization')?.substring(0, 30) + '...');
       return res.status(400).json({ success: false, error: 'Invalid or malformed token.' });
     }
     if (error.name === 'TokenExpiredError') {

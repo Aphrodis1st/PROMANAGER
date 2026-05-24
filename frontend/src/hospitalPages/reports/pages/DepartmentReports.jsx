@@ -1,81 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card } from '../../../components/hospital/card';
 import { Button } from '../../../components/hospital/Button';
 import { LoadingSpinner } from '../../../components/hospital/LoadingSpinner';
+import {
+  useGetHospitalReportDepartmentsQuery,
+  useLazyGetDepartmentReportQuery,
+} from '../../../store/actions/hospitalReports.js';
+
+const getErrorMessage = (error, fallback) =>
+  error?.data?.message || error?.message || fallback;
 
 const DepartmentReports = () => {
-  const [reportData, setReportData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [departments, setDepartments] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [dateRange, setDateRange] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0]
+    endDate: new Date().toISOString().split('T')[0],
   });
 
-  useEffect(() => {
-    fetchDepartments();
-  }, []);
+  const { data: departments = [] } = useGetHospitalReportDepartmentsQuery();
+  const [trigger, { data: reportData, isFetching: loading, error, isError }] =
+    useLazyGetDepartmentReportQuery();
 
-  const fetchDepartments = async () => {
-    try {
-      const token = localStorage.getItem('hospitalToken') || localStorage.getItem('token');
-      if (!token) return;
-      
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/hospital/departments`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setDepartments(data.departments || []);
-      }
-    } catch (err) {
-      console.error('Failed to fetch departments:', err);
-    }
+  const generateReport = () => {
+    trigger({
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate,
+      departmentId: selectedDepartment || undefined,
+    });
   };
 
-  const generateReport = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const token = localStorage.getItem('hospitalToken') || localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Authentication token not found. Please login again.');
-      }
-      
-      const params = new URLSearchParams({
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
-        ...(selectedDepartment && { departmentId: selectedDepartment })
-      });
-      
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/hospital/reports/departments?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: Failed to generate department report`);
-      }
-      
-      const data = await response.json();
-      if (data.success && data.report) {
-        setReportData(data.report);
-      } else {
-        throw new Error('Invalid report data received');
-      }
-    } catch (err) {
-      console.error('Report generation error:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const errorMessage = isError
+    ? getErrorMessage(error, 'Failed to generate department report')
+    : null;
 
   const downloadReport = () => {
     if (!reportData) return;
@@ -230,7 +186,11 @@ const DepartmentReports = () => {
       </div>
 
       {loading && <div className="flex justify-center"><LoadingSpinner /></div>}
-      {error && <Card className="p-4 border-red-200 bg-red-50"><p className="text-red-600">Error: {error}</p></Card>}
+      {errorMessage && (
+        <Card className="p-4 border-red-200 bg-red-50">
+          <p className="text-red-600">Error: {errorMessage}</p>
+        </Card>
+      )}
 
       {reportData && (
         <div className="space-y-6">

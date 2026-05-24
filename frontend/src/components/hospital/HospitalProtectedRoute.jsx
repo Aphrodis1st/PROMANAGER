@@ -1,44 +1,42 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useHospitalAuth } from '../../context/HospitalAuthContext';
-import { ProtectedRoute } from './RBAC';
+import GlobalProtectedRoute from '../ProtectedRoute.jsx';
+import { ProtectedRoute as RBACProtectedRoute } from './RBAC';
 
-// Legacy protected route for backward compatibility
-export default function HospitalProtectedRoute({ children, roles, departments, permissions, requireAll = false }) {
-  const { isAuthenticated } = useHospitalAuth();
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/hospital/login" replace />;
-  }
-  
-  // If no RBAC rules specified, just check authentication
+export default function HospitalProtectedRoute({
+  children,
+  roles,
+  departments,
+  permissions,
+  requireAll = false,
+}) {
   if (!roles && !departments && !permissions) {
-    return children;
+    return <GlobalProtectedRoute service="hospital">{children}</GlobalProtectedRoute>;
   }
-  
-  // Use new RBAC system for access control
+
   return (
-    <ProtectedRoute 
-      roles={roles} 
-      departments={departments} 
-      permissions={permissions} 
-      requireAll={requireAll}
-      fallback={
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="text-6xl mb-4">🚫</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h2>
-            <p className="text-gray-600">You don't have permission to access this page.</p>
-            <p className="text-sm text-gray-500 mt-2">
-              Required: {roles && `Role: ${Array.isArray(roles) ? roles.join(', ') : roles}`}
-              {departments && ` | Department: ${Array.isArray(departments) ? departments.join(', ') : departments}`}
-              {permissions && ` | Permission: ${Array.isArray(permissions) ? permissions.join(', ') : permissions}`}
-            </p>
+    <GlobalProtectedRoute service="hospital">
+      <RBACProtectedRoute
+        roles={roles}
+        departments={departments}
+        permissions={permissions}
+        requireAll={requireAll}
+        fallback={
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="text-6xl mb-4">🚫</div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h2>
+              <p className="text-gray-600">You don&apos;t have permission to access this page.</p>
+              <p className="text-sm text-gray-500 mt-2">
+                Required: {roles && `Role: ${Array.isArray(roles) ? roles.join(', ') : roles}`}
+                {departments && ` | Department: ${Array.isArray(departments) ? departments.join(', ') : departments}`}
+                {permissions && ` | Permission: ${Array.isArray(permissions) ? permissions.join(', ') : permissions}`}
+              </p>
+            </div>
           </div>
-        </div>
-      }
-    >
-      {children}
-    </ProtectedRoute>
+        }
+      >
+        {children}
+      </RBACProtectedRoute>
+    </GlobalProtectedRoute>
   );
 }

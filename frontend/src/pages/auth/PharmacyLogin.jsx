@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Pill, Mail, Lock, ArrowLeft, AlertCircle } from 'lucide-react';
+import { setServiceAuth } from '../../utils/authCookies.js';
 
 export default function PharmacyLogin() {
   const navigate = useNavigate();
@@ -19,9 +20,13 @@ export default function PharmacyLogin() {
     try {
       // Add authentication logic here
       if (formData.email && formData.password) {
-        // Simulate API call
+        // Simulate API call — replace with real auth when pharmacy API is wired
         await new Promise(resolve => setTimeout(resolve, 1000));
-        navigate('/pharmacy/dashboard');
+        setServiceAuth('pharmacy', {
+          token: `pharmacy-session-${Date.now()}`,
+          user: { email: formData.email },
+        });
+        navigate('/pharmacy/doctors');
       } else {
         setError('Please enter both email and password');
       }
@@ -118,7 +123,7 @@ export default function PharmacyLogin() {
                 </Link>
               </p>
               <Link 
-                to="/" 
+                to="/get-started" 
                 className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-orange-600 transition-colors font-medium"
               >
                 <ArrowLeft className="w-4 h-4" />

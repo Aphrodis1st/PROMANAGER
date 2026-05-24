@@ -1,15 +1,10 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useHRAuth } from '../../context/HRAuthContext';
+import ProtectedRoute, { HRProtectedContent } from '../ProtectedRoute.jsx';
 
-const HRProtectedRoute = ({ children }) => {
-  const { isAuthenticated, token } = useHRAuth();
-
-  if (!isAuthenticated || !token) {
-    return <Navigate to="/hr/login" replace />;
-  }
-
-  return children;
-};
+const HRProtectedRoute = ({ children }) => (
+  <ProtectedRoute service="hr">
+    <HRProtectedContent>{children}</HRProtectedContent>
+  </ProtectedRoute>
+);
 
 export default HRProtectedRoute;

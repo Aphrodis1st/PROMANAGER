@@ -1,9 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useCurrency } from '../../context/CurrencyContext';
-import axios from 'axios';
+import {
+  useCreateCurrencyMutation,
+  useUpdateCurrencyMutation,
+  useInitializeCurrenciesMutation,
+} from '../../store/actions/currency.js';
 
 const CurrencyManagement = () => {
-  const { currencies, fetchCurrencies, initializeDefaultCurrencies } = useCurrency();
+  const { currencies, fetchCurrencies } = useCurrency();
+  const [createCurrency] = useCreateCurrencyMutation();
+  const [updateCurrency] = useUpdateCurrencyMutation();
+  const [initializeCurrencies] = useInitializeCurrenciesMutation();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     code: '',
@@ -13,12 +20,10 @@ const CurrencyManagement = () => {
   });
   const [message, setMessage] = useState('');
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API_URL}/currency`, formData);
+      await createCurrency(formData).unwrap();
       setMessage('Currency added successfully');
       setFormData({ code: '', name: '', symbol: '', decimalPlaces: 2 });
       setShowForm(false);
@@ -31,7 +36,8 @@ const CurrencyManagement = () => {
 
   const handleInitialize = async () => {
     try {
-      await initializeDefaultCurrencies();
+      await initializeCurrencies().unwrap();
+      await fetchCurrencies();
       setMessage('Default currencies initialized successfully');
     } catch (error) {
       setMessage('Failed to initialize currencies');
@@ -41,7 +47,7 @@ const CurrencyManagement = () => {
 
   const handleToggleActive = async (id, isActive) => {
     try {
-      await axios.put(`${API_URL}/currency/${id}`, { isActive: !isActive });
+      await updateCurrency({ id, isActive: !isActive }).unwrap();
       fetchCurrencies();
       setMessage('Currency status updated');
     } catch (error) {

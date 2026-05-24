@@ -1,44 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card } from '../../../components/hospital/card';
 import { Button } from '../../../components/hospital/Button';
 import { LoadingSpinner } from '../../../components/hospital/LoadingSpinner';
+import { useLazyGetFinancialReportQuery } from '../../../store/actions/hospitalReports.js';
+
+const getErrorMessage = (error, fallback) =>
+  error?.data?.message || error?.message || fallback;
 
 const FinancialReports = () => {
-  const [reportData, setReportData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [dateRange, setDateRange] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0]
+    endDate: new Date().toISOString().split('T')[0],
   });
 
-  const generateReport = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const token = localStorage.getItem('hospitalToken');
-      const params = new URLSearchParams({
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate
-      });
-      
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/hospital/reports/financial?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+  const [trigger, { data: reportData, isFetching: loading, error, isError }] =
+    useLazyGetFinancialReportQuery();
 
-      if (!response.ok) throw new Error('Failed to generate financial report');
-      const data = await response.json();
-      setReportData(data.report);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+  const generateReport = () => {
+    trigger({
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate,
+    });
   };
+
+  const errorMessage = isError
+    ? getErrorMessage(error, 'Failed to generate financial report')
+    : null;
 
   const downloadReport = () => {
     if (!reportData) return;
@@ -78,7 +65,11 @@ const FinancialReports = () => {
       </div>
 
       {loading && <div className="flex justify-center"><LoadingSpinner /></div>}
-      {error && <Card className="p-4 border-red-200 bg-red-50"><p className="text-red-600">Error: {error}</p></Card>}
+      {errorMessage && (
+        <Card className="p-4 border-red-200 bg-red-50">
+          <p className="text-red-600">Error: {errorMessage}</p>
+        </Card>
+      )}
 
       {reportData && (
         <div className="space-y-6">
