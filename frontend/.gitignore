@@ -8,3 +8,5 @@
 .env.test.test.development
 .env.test.test.production
 .env.test.test.test
+
+node_modules

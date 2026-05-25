@@ -2,7 +2,7 @@
 class EnvironmentConfig {
   constructor() {
     this.environment = import.meta.env.VITE_ENVIRONMENT || 'development';
-    this.apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1';
+    this.apiUrl = import.meta.env.VITE_API_BASE_URL || 'https://monkfish-app-zg4hx.ondigitalocean.app/api/v1';
   }
 
   get isDevelopment() {

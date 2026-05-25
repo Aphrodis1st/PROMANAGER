@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getServiceToken } from '../utils/authCookies.js';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://monkfish-app-zg4hx.ondigitalocean.app/api/v1';
 
 const ngoApi = axios.create({
   baseURL: API_BASE_URL,
