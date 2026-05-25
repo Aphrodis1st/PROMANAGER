@@ -1,10 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import SuperAdminLayout from '../../components/superAdmin/SuperAdminLayout';
-import { superAdminService } from '../../services/hospitalService';
+import {
+  useGetSuperAdminStocksQuery,
+  useCreateSuperAdminStockMutation,
+  useUpdateSuperAdminStockStatusMutation,
+  useUpdateSuperAdminStockFeaturesMutation,
+  useSoftDeleteSuperAdminStockMutation,
+  useDeleteSuperAdminStockMutation,
+  getSuperAdminErrorMessage,
+} from '../../store/actions/superAdmin.js';
 
 const StockManagement = () => {
-  const [stocks, setStocks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: stocks = [], isLoading: loading } = useGetSuperAdminStocksQuery();
+  const [createStock] = useCreateSuperAdminStockMutation();
+  const [updateStockStatus] = useUpdateSuperAdminStockStatusMutation();
+  const [updateStockFeatures] = useUpdateSuperAdminStockFeaturesMutation();
+  const [softDeleteStock] = useSoftDeleteSuperAdminStockMutation();
+  const [deleteStock] = useDeleteSuperAdminStockMutation();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedStock, setSelectedStock] = useState(null);
   const [showFeaturesModal, setShowFeaturesModal] = useState(false);
@@ -59,79 +71,46 @@ const StockManagement = () => {
     { value: 'enterprise', label: 'Enterprise', color: 'bg-purple-100 text-purple-800' }
   ];
 
-  useEffect(() => {
-    fetchStocks();
-  }, []);
-
-  const fetchStocks = async () => {
-    try {
-      const response = await superAdminService.getAllStocks();
-      console.log('📦 Fetched stocks response:', response);
-      if (response.success) {
-        console.log('✅ Stocks data:', response.data);
-        setStocks(response.data);
-      }
-    } catch (error) {
-      console.error('❌ Error fetching stocks:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleCreateStock = async (e) => {
     e.preventDefault();
     try {
-      const response = await superAdminService.createStock(newStock);
-      if (response.success) {
-        setStocks([...stocks, response.data]);
-        setShowCreateModal(false);
-        setNewStock({
-          name: '',
-          location: '',
-          contactInfo: { phone: '', email: '' },
-          subscriptionPlan: 'basic',
-          featuresEnabled: []
-        });
-      }
+      await createStock(newStock).unwrap();
+      setShowCreateModal(false);
+      setNewStock({
+        name: '',
+        location: '',
+        contactInfo: { phone: '', email: '' },
+        subscriptionPlan: 'basic',
+        featuresEnabled: []
+      });
     } catch (error) {
-      console.error('Error creating stock:', error);
+      console.error('Error creating stock:', getSuperAdminErrorMessage(error, 'Unknown error'));
     }
   };
 
   const handleStatusChange = async (stockId, newStatus) => {
     try {
-      const response = await superAdminService.updateStockStatus(stockId, newStatus);
-      if (response.success) {
-        setStocks(stocks.map(s => 
-          s.id === stockId ? { ...s, status: newStatus } : s
-        ));
-      }
+      await updateStockStatus({ id: stockId, status: newStatus }).unwrap();
     } catch (error) {
-      console.error('Error updating stock status:', error);
+      console.error('Error updating stock status:', getSuperAdminErrorMessage(error, 'Unknown error'));
     }
   };
 
   const handleUpdateFeatures = async (stockId, features) => {
     try {
-      const response = await superAdminService.updateStockFeatures(stockId, features);
-      if (response.success) {
-        setStocks(stocks.map(s => 
-          s.id === stockId ? { ...s, featuresEnabled: features } : s
-        ));
-        setShowFeaturesModal(false);
-      }
+      await updateStockFeatures({ id: stockId, features }).unwrap();
+      setShowFeaturesModal(false);
     } catch (error) {
-      console.error('Error updating stock features:', error);
+      console.error('Error updating stock features:', getSuperAdminErrorMessage(error, 'Unknown error'));
     }
   };
 
   const handleSoftDelete = async (stockId) => {
     if (window.confirm('Are you sure you want to soft delete this stock? It can be recovered later.')) {
       try {
-        await superAdminService.softDeleteStock(stockId);
-        fetchStocks();
+        await softDeleteStock(stockId).unwrap();
       } catch (error) {
-        console.error('Error soft deleting stock:', error);
+        console.error('Error soft deleting stock:', getSuperAdminErrorMessage(error, 'Unknown error'));
       }
     }
   };
@@ -139,10 +118,9 @@ const StockManagement = () => {
   const handleHardDelete = async (stockId) => {
     if (window.confirm('Are you sure you want to permanently delete this stock? This action cannot be undone.')) {
       try {
-        await superAdminService.hardDeleteStock(stockId);
-        setStocks(stocks.filter(s => s.id !== stockId));
+        await deleteStock(stockId).unwrap();
       } catch (error) {
-        console.error('Error hard deleting stock:', error);
+        console.error('Error hard deleting stock:', getSuperAdminErrorMessage(error, 'Unknown error'));
       }
     }
   };

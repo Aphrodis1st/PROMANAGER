@@ -125,11 +125,11 @@ const styles = {
     alignItems: 'center',
     minHeight: 'calc(100vh - 128px)',
     backgroundColor: '#f5f5f5',
-    padding: '20px',
+    padding: '16px',
   },
   form: {
     backgroundColor: 'rgb(44,145,145)',
-    padding: '32px',
+    padding: '24px',
     borderRadius: '12px',
     maxWidth: '400px',
     width: '100%',
@@ -138,8 +138,8 @@ const styles = {
     boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
     color: '#fff',
   },
-  heading: { textAlign: 'center', marginBottom: '16px', fontSize: '24px' },
-  label: { marginTop: '8px', marginBottom: '4px', fontWeight: '600' },
+  heading: { textAlign: 'center', marginBottom: '16px', fontSize: '20px' },
+  label: { marginTop: '8px', marginBottom: '4px', fontWeight: '600', fontSize: '14px' },
   input: { padding: '10px', borderRadius: '6px', border: 'none', width: '100%', fontSize: '14px' },
   button: {
     marginTop: '16px',
@@ -151,5 +151,6 @@ const styles = {
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.3s',
+    fontSize: '14px',
   },
 };

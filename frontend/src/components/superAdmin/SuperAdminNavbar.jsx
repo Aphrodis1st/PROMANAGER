@@ -1,16 +1,16 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { clearServiceAuth, getServiceUser } from '../../utils/authCookies.js';
 
 const SuperAdminNavbar = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
+    clearServiceAuth('superAdmin');
+    navigate('/super-admin/login');
   };
 
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const user = getServiceUser('superAdmin') || {};
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">

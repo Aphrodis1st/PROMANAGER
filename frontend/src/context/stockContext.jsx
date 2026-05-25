@@ -11,6 +11,7 @@ import { ReportProvider } from "./ReportContext";
 import { PaymentProvider, usePayment } from "./PaymentContext";
 import { useCurrency } from "./CurrencyContext";
 import axios from 'axios';
+import { API_BASE_URL } from '../constants/api.js';
 
 const StockContext = createContext();
 const StockCurrencyContext = createContext();
@@ -22,7 +23,7 @@ const StockProviderCore = ({ children }) => {
   const [productSettings, setProductSettings] = useState([]);
   const [accountSettings, setAccountSettings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+  const API_URL = API_BASE_URL;
 
   const purchaseContext = usePurchase();
   const salesContext = useSales();

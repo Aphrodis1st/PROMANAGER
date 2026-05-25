@@ -1,13 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import SuperAdminLayout from '../../components/superAdmin/SuperAdminLayout';
-import { superAdminService } from '../../services/hospitalService';
+import {
+  useGetSuperAdminHospitalAdminsQuery,
+  useGetSuperAdminHospitalsQuery,
+  useGetSuperAdminStocksQuery,
+  useGetSuperAdminPharmaciesQuery,
+  useGetSuperAdminNGOsQuery,
+  useGetSuperAdminHROrganizationsQuery,
+  useGetSuperAdminPropertyOrganizationsQuery,
+  useCreateSuperAdminHospitalAdminMutation,
+  useUpdateSuperAdminHospitalAdminStatusMutation,
+  useReassignSuperAdminHospitalAdminMutation,
+  useResetSuperAdminHospitalAdminPasswordMutation,
+  useDeleteSuperAdminHospitalAdminMutation,
+  getSuperAdminErrorMessage,
+} from '../../store/actions/superAdmin.js';
+
+const ENTITY_TYPES = [
+  { value: 'hospital', label: 'Hospital' },
+  { value: 'stock', label: 'Stock' },
+  { value: 'pharmacy', label: 'Pharmacy' },
+  { value: 'ngo', label: 'NGO' },
+  { value: 'hr', label: 'HR Organization' },
+  { value: 'property', label: 'Property Organization' },
+];
 
 const HospitalAdminManagement = () => {
-  const [admins, setAdmins] = useState([]);
-  const [hospitals, setHospitals] = useState([]);
-  const [stocks, setStocks] = useState([]);
-  const [pharmacies, setPharmacies] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: admins = [], isLoading: adminsLoading } = useGetSuperAdminHospitalAdminsQuery();
+  const { data: hospitals = [], isLoading: hospitalsLoading } = useGetSuperAdminHospitalsQuery();
+  const { data: stocks = [], isLoading: stocksLoading } = useGetSuperAdminStocksQuery();
+  const { data: pharmacies = [], isLoading: pharmaciesLoading } = useGetSuperAdminPharmaciesQuery();
+  const { data: ngos = [], isLoading: ngosLoading } = useGetSuperAdminNGOsQuery();
+  const { data: hrOrganizations = [], isLoading: hrLoading } = useGetSuperAdminHROrganizationsQuery();
+  const { data: propertyOrganizations = [], isLoading: propertyLoading } = useGetSuperAdminPropertyOrganizationsQuery();
+  const [createHospitalAdmin] = useCreateSuperAdminHospitalAdminMutation();
+  const [updateHospitalAdminStatus] = useUpdateSuperAdminHospitalAdminStatusMutation();
+  const [reassignHospitalAdmin] = useReassignSuperAdminHospitalAdminMutation();
+  const [resetHospitalAdminPassword] = useResetSuperAdminHospitalAdminPasswordMutation();
+  const [deleteHospitalAdmin] = useDeleteSuperAdminHospitalAdminMutation();
+
+  const loading = adminsLoading || hospitalsLoading || stocksLoading || pharmaciesLoading || ngosLoading || hrLoading || propertyLoading;
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showReassignModal, setShowReassignModal] = useState(false);
@@ -23,108 +55,103 @@ const HospitalAdminManagement = () => {
     entityType: 'hospital'
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      const [adminsRes, hospitalsRes, stocksRes, pharmaciesRes] = await Promise.all([
-        superAdminService.getAllHospitalAdmins(),
-        superAdminService.getAllHospitals(),
-        superAdminService.getAllStocks(),
-        superAdminService.getAllPharmacies()
-      ]);
-      
-      if (adminsRes.success) setAdmins(adminsRes.data);
-      if (hospitalsRes.success) setHospitals(hospitalsRes.data);
-      if (stocksRes.success) setStocks(stocksRes.data);
-      if (pharmaciesRes.success) setPharmacies(pharmaciesRes.data);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleCreateAdmin = async (e) => {
     e.preventDefault();
     try {
-      const response = await superAdminService.createHospitalAdmin(newAdmin);
-      if (response.success) {
-        setAdmins([...admins, response.data]);
-        setShowCreateModal(false);
-        setNewAdmin({ email: '', password: '', hospitalId: '', entityType: 'hospital' });
-      }
+      await createHospitalAdmin(newAdmin).unwrap();
+      setShowCreateModal(false);
+      setNewAdmin({ email: '', password: '', hospitalId: '', entityType: 'hospital' });
     } catch (error) {
-      console.error('Error creating admin:', error);
+      console.error('Error creating admin:', getSuperAdminErrorMessage(error, 'Unknown error'));
     }
   };
 
   const handleStatusChange = async (adminId, newStatus) => {
     try {
-      const response = await superAdminService.updateHospitalAdminStatus(adminId, newStatus);
-      if (response.success) {
-        setAdmins(admins.map(a => 
-          a.id === adminId ? { ...a, status: newStatus } : a
-        ));
-      }
+      await updateHospitalAdminStatus({ id: adminId, status: newStatus }).unwrap();
     } catch (error) {
-      console.error('Error updating admin status:', error);
+      console.error('Error updating admin status:', getSuperAdminErrorMessage(error, 'Unknown error'));
     }
   };
 
   const handleReassignHospital = async () => {
     if (!reassignHospitalId) return;
-    // Use docId which is guaranteed to be the real Firestore document ID
     const adminDocId = selectedAdmin.docId || selectedAdmin.id;
     if (!adminDocId || adminDocId === 'null') {
       alert('Cannot reassign: admin document ID is missing. Please delete and recreate this admin.');
       return;
     }
     try {
-      const response = await superAdminService.reassignHospital(adminDocId, reassignHospitalId);
-      if (response.success) {
-        setAdmins(admins.map(a =>
-          (a.docId || a.id) === adminDocId ? { ...a, hospitalId: reassignHospitalId } : a
-        ));
-        setShowReassignModal(false);
-        setReassignHospitalId('');
-        setSelectedAdmin(null);
-      }
+      await reassignHospitalAdmin({
+        adminId: adminDocId,
+        hospitalId: reassignHospitalId,
+      }).unwrap();
+      setShowReassignModal(false);
+      setReassignHospitalId('');
+      setSelectedAdmin(null);
     } catch (error) {
-      console.error('Error reassigning hospital:', error);
+      console.error('Error reassigning hospital:', getSuperAdminErrorMessage(error, 'Unknown error'));
     }
   };
 
   const handleResetPassword = async () => {
     try {
-      await superAdminService.resetHospitalAdminPassword(selectedAdmin.id, newPassword);
+      await resetHospitalAdminPassword({
+        id: selectedAdmin.id,
+        newPassword,
+      }).unwrap();
       setShowPasswordModal(false);
       setNewPassword('');
       setSelectedAdmin(null);
       alert('Password reset successfully');
     } catch (error) {
-      console.error('Error resetting password:', error);
+      console.error('Error resetting password:', getSuperAdminErrorMessage(error, 'Unknown error'));
     }
   };
 
   const handleDeleteAdmin = async (adminId) => {
     if (window.confirm('Are you sure you want to delete this admin?')) {
       try {
-        await superAdminService.deleteHospitalAdmin(adminId);
-        setAdmins(admins.filter(a => a.id !== adminId));
+        await deleteHospitalAdmin(adminId).unwrap();
       } catch (error) {
-        console.error('Error deleting admin:', error);
+        console.error('Error deleting admin:', getSuperAdminErrorMessage(error, 'Unknown error'));
       }
     }
   };
 
-  const getHospitalName = (hospitalId) => {
-    const hospital = hospitals.find(h => h.id === hospitalId);
-    const stock = stocks.find(s => s.id === hospitalId);
-    const pharmacy = pharmacies.find(p => p.id === hospitalId);
-    return hospital ? hospital.name : stock ? stock.name : pharmacy ? pharmacy.name : 'Unknown Entity';
+  const entityLists = {
+    hospital: hospitals,
+    stock: stocks,
+    pharmacy: pharmacies,
+    ngo: ngos,
+    hr: hrOrganizations,
+    property: propertyOrganizations,
+  };
+
+  const getEntityLabel = (type) =>
+    ENTITY_TYPES.find((e) => e.value === type)?.label || 'Entity';
+
+  const getEntitiesForType = (type) =>
+    (entityLists[type] || []).filter((e) => e.status !== 'deleted');
+
+  const getEntityName = (entityId, entityType) => {
+    const list = entityLists[entityType];
+    if (list) {
+      const entity = list.find((e) => e.id === entityId);
+      return entity ? entity.name : null;
+    }
+    return null;
+  };
+
+  const getHospitalName = (hospitalId, adminEntityType) => {
+    if (adminEntityType) {
+      return getEntityName(hospitalId, adminEntityType) || 'Unknown Entity';
+    }
+    for (const type of ENTITY_TYPES.map((t) => t.value)) {
+      const name = getEntityName(hospitalId, type);
+      if (name) return name;
+    }
+    return 'Unknown Entity';
   };
 
   if (loading) {
@@ -143,7 +170,7 @@ const HospitalAdminManagement = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-800">Admin Management</h1>
-            <p className="text-gray-600 mt-1">Manage hospital, stock, and pharmacy administrators</p>
+            <p className="text-gray-600 mt-1">Manage administrators across hospitals, stock, pharmacy, NGO, HR, and property</p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
@@ -239,7 +266,10 @@ const HospitalAdminManagement = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{getHospitalName(admin.hospitalId)}</div>
+                      <div className="text-sm text-gray-900">{getHospitalName(admin.hospitalId, admin.entityType)}</div>
+                      {admin.entityType && (
+                        <div className="text-xs text-gray-500">{getEntityLabel(admin.entityType)}</div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -284,6 +314,7 @@ const HospitalAdminManagement = () => {
                       <button
                         onClick={() => {
                           setSelectedAdmin(admin);
+                          setEntityType(admin.entityType || 'hospital');
                           setReassignHospitalId(admin.hospitalId || '');
                           setShowReassignModal(true);
                         }}
@@ -351,15 +382,15 @@ const HospitalAdminManagement = () => {
                   onChange={(e) => setNewAdmin({...newAdmin, entityType: e.target.value, hospitalId: ''})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="hospital">Hospital</option>
-                  <option value="stock">Stock</option>
-                  <option value="pharmacy">Pharmacy</option>
+                  {ENTITY_TYPES.map((type) => (
+                    <option key={type.value} value={type.value}>{type.label}</option>
+                  ))}
                 </select>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {newAdmin.entityType === 'hospital' ? 'Hospital' : newAdmin.entityType === 'stock' ? 'Stock' : 'Pharmacy'}
+                  Select {getEntityLabel(newAdmin.entityType)}
                 </label>
                 <select
                   required
@@ -367,14 +398,12 @@ const HospitalAdminManagement = () => {
                   onChange={(e) => setNewAdmin({...newAdmin, hospitalId: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">Select {newAdmin.entityType === 'hospital' ? 'Hospital' : newAdmin.entityType === 'stock' ? 'Stock' : 'Pharmacy'}</option>
-                  {(newAdmin.entityType === 'hospital' ? hospitals : newAdmin.entityType === 'stock' ? stocks : pharmacies)
-                    .filter(e => e.status !== 'deleted')
-                    .map(entity => (
-                      <option key={entity.id} value={entity.id}>
-                        {entity.name} {entity.status && entity.status !== 'active' ? `(${entity.status})` : ''}
-                      </option>
-                    ))}
+                  <option value="">Select {getEntityLabel(newAdmin.entityType)}</option>
+                  {getEntitiesForType(newAdmin.entityType).map(entity => (
+                    <option key={entity.id} value={entity.id}>
+                      {entity.name} {entity.status && entity.status !== 'active' ? `(${entity.status})` : ''}
+                    </option>
+                  ))}
                 </select>
               </div>
               
@@ -414,24 +443,22 @@ const HospitalAdminManagement = () => {
                   onChange={(e) => { setEntityType(e.target.value); setReassignHospitalId(''); }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="hospital">Hospital</option>
-                  <option value="stock">Stock</option>
-                  <option value="pharmacy">Pharmacy</option>
+                  {ENTITY_TYPES.map((type) => (
+                    <option key={type.value} value={type.value}>{type.label}</option>
+                  ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Select {entityType === 'hospital' ? 'Hospital' : entityType === 'stock' ? 'Stock' : 'Pharmacy'}</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select {getEntityLabel(entityType)}</label>
                 <select
                   value={reassignHospitalId}
                   onChange={(e) => setReassignHospitalId(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Select {entityType === 'hospital' ? 'Hospital' : entityType === 'stock' ? 'Stock' : 'Pharmacy'}</option>
-                  {(entityType === 'hospital' ? hospitals : entityType === 'stock' ? stocks : pharmacies)
-                    .filter(e => e.status !== 'deleted')
-                    .map(entity => (
-                      <option key={entity.id} value={entity.id}>{entity.name}</option>
-                    ))}
+                  <option value="">Select {getEntityLabel(entityType)}</option>
+                  {getEntitiesForType(entityType).map(entity => (
+                    <option key={entity.id} value={entity.id}>{entity.name}</option>
+                  ))}
                 </select>
               </div>
               <div className="flex space-x-3 pt-2">

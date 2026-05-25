@@ -49,9 +49,11 @@ export default function LeaseForm() {
     if (formData.propertyId) {
       const filtered = units.filter(u => u.propertyId === formData.propertyId);
       setFilteredUnits(filtered);
-      setFormData(prev => ({ ...prev, unitId: '' }));
+      if (formData.unitId && !filtered.some(u => u.id === formData.unitId)) {
+        setFormData(prev => ({ ...prev, unitId: '' }));
+      }
     }
-  }, [formData.propertyId, units]);
+  }, [formData.propertyId, formData.unitId, units]);
 
   useEffect(() => {
     if (formData.startDate && formData.leaseTerm) {
@@ -136,7 +138,14 @@ export default function LeaseForm() {
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          tenantName: tenants.find(t => t.id === formData.tenantId)
+            ? `${tenants.find(t => t.id === formData.tenantId).firstName} ${tenants.find(t => t.id === formData.tenantId).lastName}`
+            : '',
+          propertyName: properties.find(p => p.id === formData.propertyId)?.name || '',
+          unitNumber: units.find(u => u.id === formData.unitId)?.unitNumber || ''
+        })
       });
 
       if (!response.ok) {

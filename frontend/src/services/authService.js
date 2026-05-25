@@ -1,13 +1,14 @@
 // src/services/authService.js
 import axios from "axios";
 
-// Use environment variable or fallback to localhost
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+import { API_BASE_URL } from '../constants/api.js';
+import { getServiceToken, setServiceAuth, clearServiceAuth } from '../utils/authCookies.js';
+
 const API_URL = `${API_BASE_URL}/stock/auth`;
 
 const getAuthHeader = () => ({
     headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        Authorization: `Bearer ${getServiceToken('stock') || localStorage.getItem('token')}`,
     },
 });
 
@@ -16,7 +17,7 @@ export const authService = {
     register: async (data) => {
         const res = await axios.post(`${API_URL}/register`, data);
         if (res.data?.token) {
-            localStorage.setItem("token", res.data.token);
+            setServiceAuth('stock', { token: res.data.token, user: res.data.user });
         }
         return res.data;
     },
@@ -25,7 +26,7 @@ export const authService = {
     login: async (data) => {
         const res = await axios.post(`${API_URL}/login`, data);
         if (res.data?.token) {
-            localStorage.setItem("token", res.data.token);
+            setServiceAuth('stock', { token: res.data.token, user: res.data.user });
         }
         return res.data;
     },
@@ -39,19 +40,19 @@ export const authService = {
     /** LOGOUT */
     logout: async () => {
         const res = await axios.post(`${API_URL}/logout`, {}, getAuthHeader());
-        localStorage.removeItem("token");
+        clearServiceAuth('stock');
         return res.data;
     },
 
     /** REFRESH TOKEN */
     refresh: async () => {
-        const oldToken = localStorage.getItem("token");
+        const oldToken = getServiceToken('stock');
         if (!oldToken) return null;
 
         const res = await axios.post(`${API_URL}/refresh`, { token: oldToken });
 
         if (res.data?.token) {
-            localStorage.setItem("token", res.data.token);
+            setServiceAuth('stock', { token: res.data.token, user: res.data.user });
         }
 
         return res.data;

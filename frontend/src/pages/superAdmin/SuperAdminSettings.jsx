@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import SuperAdminLayout from '../../components/superAdmin/SuperAdminLayout';
-import axios from 'axios';
+import { useGetHrPayrollQuery } from '../../store/actions/hr.js';
 
 const SuperAdminSettings = () => {
   const [systemName, setSystemName] = useState('PROMANAGER');
@@ -10,25 +10,14 @@ const SuperAdminSettings = () => {
   const [pharmacyFeatures, setPharmacyFeatures] = useState(true);
   const [hrPayrollFeatures, setHrPayrollFeatures] = useState(true);
   const [saved, setSaved] = useState(false);
-  const [payrolls, setPayrolls] = useState([]);
   const [showPayroll, setShowPayroll] = useState(false);
 
-  useEffect(() => {
-    if (showPayroll) {
-      fetchPayrolls();
-    }
-  }, [showPayroll]);
+  const payrollParams = useMemo(() => ({
+    month: new Date().getMonth() + 1,
+    year: new Date().getFullYear(),
+  }), []);
 
-  const fetchPayrolls = async () => {
-    try {
-      const month = new Date().getMonth() + 1;
-      const year = new Date().getFullYear();
-      const response = await axios.get(`/api/v1/hr/payroll/organization?month=${month}&year=${year}`);
-      setPayrolls(response.data || []);
-    } catch (error) {
-      console.error('Error fetching payrolls:', error);
-    }
-  };
+  const { data: payrolls = [] } = useGetHrPayrollQuery(payrollParams, { skip: !showPayroll });
 
   const handleSave = (e) => {
     e.preventDefault();
@@ -39,9 +28,9 @@ const SuperAdminSettings = () => {
   return (
     <SuperAdminLayout>
       <div className="space-y-6">
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
-          <h1 className="text-3xl font-bold mb-2">System Settings</h1>
-          <p className="text-blue-100">Configure global system preferences</p>
+        <div className="rounded-xl border border-gray-200 bg-white p-6">
+          <h1 className="text-3xl font-bold mb-2 text-gray-900">System Settings</h1>
+          <p className="text-gray-600">Configure global system preferences</p>
         </div>
 
         <form onSubmit={handleSave} className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 space-y-6">

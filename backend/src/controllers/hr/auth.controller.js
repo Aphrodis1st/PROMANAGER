@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { db } from '../../../utils/firebase.js';
 import { HROrganization } from '../../models/superAdmin/hrOrganization.model.js';
 import { HRAdmin } from '../../models/superAdmin/hrAdmin.model.js';
+import { isCredentialExpired, credentialExpiryMessage } from '../../utils/credentialExpiry.js';
 
 export const hrLogin = async (req, res) => {
   try {
@@ -84,6 +85,10 @@ export const hrLogin = async (req, res) => {
     if (user.status !== 'active' && user.isActive !== true) {
       console.log('User account is not active:', user.status || user.isActive);
       return res.status(403).json({ success: false, error: 'Account is inactive' });
+    }
+
+    if (isCredentialExpired(user)) {
+      return res.status(403).json({ success: false, error: credentialExpiryMessage() });
     }
 
     // Check if this is a partial password

@@ -29,6 +29,7 @@ import {
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, AttachMoney as CurrencyIcon, AddCircle as AddCurrencyIcon, ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
 import { useStockAuth } from "../../context/StockAuthContext.jsx";
 import { useCurrency } from "../../context/CurrencyContext.jsx";
+import { API_BASE_URL } from "../../constants/api.js";
 
 const ALL_ROLES = [
   "ADMIN",
@@ -97,7 +98,7 @@ export default function UserSettingsPage() {
 
   const fetchAllCurrencies = async () => {
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+      const API_URL = API_BASE_URL;
       const response = await fetch(`${API_URL}/currency`);
       if (response.ok) {
         const data = await response.json();
@@ -112,7 +113,7 @@ export default function UserSettingsPage() {
     try {
       setInitializingCurrencies(true);
       setCurrencyMessage("");
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+      const API_URL = API_BASE_URL;
       const response = await fetch(`${API_URL}/currency/initialize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
@@ -157,7 +158,7 @@ export default function UserSettingsPage() {
   const handleAddCurrency = async (e) => {
     e.preventDefault();
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+      const API_URL = API_BASE_URL;
       const response = await fetch(`${API_URL}/currency`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -181,7 +182,7 @@ export default function UserSettingsPage() {
     if (!confirm('Are you sure you want to delete this currency?')) return;
     
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+      const API_URL = API_BASE_URL;
       const response = await fetch(`${API_URL}/currency/${id}`, {
         method: 'DELETE'
       });

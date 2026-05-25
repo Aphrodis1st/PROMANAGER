@@ -1,48 +1,21 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card } from '../../../components/hospital/card';
 import { Button } from '../../../components/hospital/Button';
 import { LoadingSpinner } from '../../../components/hospital/LoadingSpinner';
+import { useLazyGetMedicalRecordReportQuery } from '../../../store/actions/hospitalReports.js';
+
+const getErrorMessage = (error, fallback) =>
+  error?.data?.message || error?.message || fallback;
 
 const MedicalRecordReports = () => {
-  const [reportData, setReportData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [trigger, { data: reportData, isFetching: loading, error, isError }] =
+    useLazyGetMedicalRecordReportQuery();
 
-  const generateReport = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const token = localStorage.getItem('hospitalToken') || localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Authentication token not found. Please login again.');
-      }
-      
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/hospital/reports/medical-records`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+  const generateReport = () => trigger();
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: Failed to generate medical record report`);
-      }
-      
-      const data = await response.json();
-      if (data.success && data.report) {
-        setReportData(data.report);
-      } else {
-        throw new Error('Invalid report data received');
-      }
-    } catch (err) {
-      console.error('Report generation error:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const errorMessage = isError
+    ? getErrorMessage(error, 'Failed to generate medical record report')
+    : null;
 
   return (
     <div className="p-6 space-y-6">
@@ -54,7 +27,11 @@ const MedicalRecordReports = () => {
       </div>
 
       {loading && <div className="flex justify-center"><LoadingSpinner /></div>}
-      {error && <Card className="p-4 border-red-200 bg-red-50"><p className="text-red-600">Error: {error}</p></Card>}
+      {errorMessage && (
+        <Card className="p-4 border-red-200 bg-red-50">
+          <p className="text-red-600">Error: {errorMessage}</p>
+        </Card>
+      )}
 
       {reportData && (
         <div className="space-y-6">

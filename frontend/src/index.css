@@ -1,6 +1,41 @@
 /* Tailwind Directives */
 @import "tailwindcss";
 
+/* Tailwind v4 Theme Configuration */
+@theme {
+  --animate-slideIn: slideIn 0.3s ease-out forwards;
+  --animate-slideOut: slideOut 0.3s ease-in forwards;
+  --animate-fadeIn: fadeIn 0.3s ease-in-out forwards;
+}
+
+@keyframes slideIn {
+  0% { transform: translateX(100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+  0% { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(-4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Custom animation classes for modals */
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
 /* Sidebar base styling - Pharmacy Theme */
 .sidebar {
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.2);
@@ -32,12 +67,7 @@
 
 /* Smooth opening animation for nested menus */
 .sidebar ul li ul {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  animation: var(--animate-fadeIn);
 }
 
 /* Scrollbar styling - Pharmacy theme */
@@ -70,4 +100,190 @@
 @media print {
   .no-print { display: none; }
   #invoice { width: 58mm; }
+}
+
+/* Grid System Utilities */
+/* Responsive Grid Layouts */
+.grid-auto-fit {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.grid-auto-fill {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+/* Card Grid Layouts */
+.grid-cards-sm {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.grid-cards-md {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.grid-cards-lg {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+}
+
+/* Dashboard Grid Layouts */
+.grid-dashboard {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1.5rem;
+}
+
+.grid-dashboard > .span-1 { grid-column: span 1; }
+.grid-dashboard > .span-2 { grid-column: span 2; }
+.grid-dashboard > .span-3 { grid-column: span 3; }
+.grid-dashboard > .span-4 { grid-column: span 4; }
+.grid-dashboard > .span-5 { grid-column: span 5; }
+.grid-dashboard > .span-6 { grid-column: span 6; }
+.grid-dashboard > .span-7 { grid-column: span 7; }
+.grid-dashboard > .span-8 { grid-column: span 8; }
+.grid-dashboard > .span-9 { grid-column: span 9; }
+.grid-dashboard > .span-10 { grid-column: span 10; }
+.grid-dashboard > .span-11 { grid-column: span 11; }
+.grid-dashboard > .span-12 { grid-column: span 12; }
+
+/* Responsive Dashboard Grid */
+@media (max-width: 1024px) {
+  .grid-dashboard {
+    grid-template-columns: repeat(6, 1fr);
+  }
+  .grid-dashboard > .span-7,
+  .grid-dashboard > .span-8,
+  .grid-dashboard > .span-9,
+  .grid-dashboard > .span-10,
+  .grid-dashboard > .span-11,
+  .grid-dashboard > .span-12 {
+    grid-column: span 6;
+  }
+}
+
+@media (max-width: 768px) {
+  .grid-dashboard {
+    grid-template-columns: 1fr;
+  }
+  .grid-dashboard > [class*="span-"] {
+    grid-column: span 1;
+  }
+}
+
+/* Table Grid Layout */
+.grid-table {
+  display: grid;
+  gap: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.grid-table-header {
+  display: contents;
+}
+
+.grid-table-header > * {
+  background: #f9fafb;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.grid-table-row {
+  display: contents;
+}
+
+.grid-table-row > * {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.grid-table-row:last-child > * {
+  border-bottom: none;
+}
+
+/* Form Grid Layouts */
+.grid-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.grid-form-2col {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.grid-form-3col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .grid-form-2col,
+  .grid-form-3col {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Stats Grid */
+.grid-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Gallery Grid */
+.grid-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+/* Masonry-like Grid */
+.grid-masonry {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-auto-rows: 10px;
+  gap: 1rem;
+}
+
+/* Sidebar + Content Grid */
+.grid-layout-sidebar {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 1.5rem;
+  min-height: 100vh;
+}
+
+@media (max-width: 1024px) {
+  .grid-layout-sidebar {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Header + Content + Footer Grid */
+.grid-layout-full {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+}
+
+/* Equal Height Columns */
+.grid-equal-height {
+  display: grid;
+  grid-auto-rows: 1fr;
+  gap: 1rem;
 }

@@ -1,12 +1,13 @@
 import axios from "axios";
+import { getServiceToken, setServiceAuth, clearServiceAuth } from '../utils/authCookies.js';
 
 // Use environment variable or fallback to localhost
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+import { API_BASE_URL } from '../constants/api.js';
 const API_URL = `${API_BASE_URL}/stock`;
 const PRODUCTION_API_URL = `${API_BASE_URL}/production`;
 
 const getAuthHeader = () => ({
-  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+  headers: { Authorization: `Bearer ${getServiceToken('stock') || localStorage.getItem('token')}` },
 });
 
 // ✅ AUTHENTICATION SERVICE
@@ -23,8 +24,8 @@ export const authService = {
     console.log("📥 Logging in user:", data);
     const res = await axios.post(`${API_URL}/login`, data);
     if (res.data?.token) {
-      localStorage.setItem("token", res.data.token);
-      console.log("✅ Token saved to localStorage");
+      setServiceAuth('stock', { token: res.data.token, user: res.data.user });
+      console.log("✅ Token saved to session cookie");
     }
     console.log("✅ Login success:", res.data);
     return res.data;
@@ -54,8 +55,8 @@ export const authService = {
   logout: async () => {
     console.log("📥 Logging out user...");
     const res = await axios.post(`${API_URL}/logout`, {}, getAuthHeader());
-    localStorage.removeItem("token");
-    console.log("✅ Logged out & token removed:", res.data);
+    clearServiceAuth('stock');
+    console.log("✅ Logged out & session cleared:", res.data);
     return res.data;
   },
 };

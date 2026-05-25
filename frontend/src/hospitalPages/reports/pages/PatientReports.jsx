@@ -1,56 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card } from '../../../components/hospital/card';
 import { Button } from '../../../components/hospital/Button';
 import { LoadingSpinner } from '../../../components/hospital/LoadingSpinner';
+import { useLazyGetPatientReportQuery } from '../../../store/actions/hospitalReports.js';
+
+const getErrorMessage = (error, fallback) =>
+  error?.data?.message || error?.message || fallback;
 
 const PatientReports = () => {
-  const [reportData, setReportData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [dateRange, setDateRange] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0]
+    endDate: new Date().toISOString().split('T')[0],
   });
 
-  const generateReport = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const token = localStorage.getItem('hospitalToken') || localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Authentication token not found. Please login again.');
-      }
-      
-      const params = new URLSearchParams({
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate
-      });
-      
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/hospital/reports/patients?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+  const [trigger, { data: reportData, isFetching: loading, error, isError }] =
+    useLazyGetPatientReportQuery();
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: Failed to generate patient report`);
-      }
-      
-      const data = await response.json();
-      if (data.success && data.report) {
-        setReportData(data.report);
-      } else {
-        throw new Error('Invalid report data received');
-      }
-    } catch (err) {
-      console.error('Report generation error:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+  const generateReport = () => {
+    const token = localStorage.getItem('hospitalToken') || localStorage.getItem('token');
+    if (!token) return;
+    trigger({
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate,
+    });
   };
 
   const downloadReport = () => {
@@ -64,6 +36,10 @@ const PatientReports = () => {
     link.click();
   };
 
+  const errorMessage = isError
+    ? getErrorMessage(error, 'Failed to generate patient report')
+    : null;
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -72,13 +48,13 @@ const PatientReports = () => {
           <input
             type="date"
             value={dateRange.startDate}
-            onChange={(e) => setDateRange({...dateRange, startDate: e.target.value})}
+            onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
             className="border rounded px-3 py-2"
           />
           <input
             type="date"
             value={dateRange.endDate}
-            onChange={(e) => setDateRange({...dateRange, endDate: e.target.value})}
+            onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
             className="border rounded px-3 py-2"
           />
           <Button onClick={generateReport} disabled={loading}>
@@ -91,7 +67,11 @@ const PatientReports = () => {
       </div>
 
       {loading && <div className="flex justify-center"><LoadingSpinner /></div>}
-      {error && <Card className="p-4 border-red-200 bg-red-50"><p className="text-red-600">Error: {error}</p></Card>}
+      {errorMessage && (
+        <Card className="p-4 border-red-200 bg-red-50">
+          <p className="text-red-600">Error: {errorMessage}</p>
+        </Card>
+      )}
 
       {reportData && (
         <div className="space-y-6">

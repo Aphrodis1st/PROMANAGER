@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import {authService} from "../services/authService";
 import axios from "axios";
+import { setServiceAuth, clearServiceAuth, getServiceToken } from "../utils/authCookies.js";
 
 const StockAuthContext = createContext();
 
@@ -10,7 +11,9 @@ export function useStockAuth() {
 
 export function StockAuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [accessToken, setAccessToken] = useState(localStorage.getItem("token") || null);
+  const [accessToken, setAccessToken] = useState(
+    () => getServiceToken("stock") || localStorage.getItem("token") || null
+  );
   const [loading, setLoading] = useState(true);
   const isRefreshingRef = useRef(false);
 
@@ -29,7 +32,7 @@ export function StockAuthProvider({ children }) {
             isRefreshingRef.current = false;
             setUser(null);
             setAccessToken(null);
-            localStorage.removeItem("token");
+            clearServiceAuth("stock");
           }
           return Promise.reject(error);
         }
@@ -47,7 +50,7 @@ export function StockAuthProvider({ children }) {
             if (data && data.token) {
               setAccessToken(data.token);
               if (data.user) setUser(data.user);
-              localStorage.setItem("token", data.token);
+              setServiceAuth("stock", { token: data.token, user: data.user });
               originalRequest.headers["Authorization"] = `Bearer ${data.token}`;
               isRefreshingRef.current = false;
               return axios(originalRequest);
@@ -58,7 +61,7 @@ export function StockAuthProvider({ children }) {
             isRefreshingRef.current = false;
             setUser(null);
             setAccessToken(null);
-            localStorage.removeItem("token");
+            clearServiceAuth("stock");
             return Promise.reject(err);
           }
         }
@@ -91,8 +94,7 @@ export function StockAuthProvider({ children }) {
         } catch {
           setUser(null);
           setAccessToken(null);
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
+          clearServiceAuth("stock");
         }
       }
       setLoading(false);
@@ -104,7 +106,7 @@ export function StockAuthProvider({ children }) {
     const data = await authService.register(formData);
     setAccessToken(data.token);
     setUser(data.user);
-    localStorage.setItem("token", data.token);
+    setServiceAuth("stock", { token: data.token, user: data.user });
     return data.user;
   };
 
@@ -112,13 +114,13 @@ export function StockAuthProvider({ children }) {
     const data = await authService.login({ email, password });
     setAccessToken(data.token);
     setUser(data.user);
-    localStorage.setItem("token", data.token);
+    setServiceAuth("stock", { token: data.token, user: data.user });
     return data.user;
   };
 
   const logout = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getServiceToken("stock");
       if (token && user?.role !== 'SUPER_ADMIN') {
         await authService.logout();
       }
@@ -126,8 +128,7 @@ export function StockAuthProvider({ children }) {
     isRefreshingRef.current = false;
     setUser(null);
     setAccessToken(null);
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    clearServiceAuth("stock");
   };
 
   const hasRole = (roles) => {

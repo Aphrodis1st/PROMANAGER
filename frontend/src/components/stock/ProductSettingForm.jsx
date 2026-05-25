@@ -15,7 +15,7 @@ import {
 } from "@mui/icons-material";
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+import { API_BASE_URL as API_URL } from '../../constants/api.js';
 
 const ProductSettingForm = ({ initialData, onSave, onCancel, saving }) => {
   const [formData, setFormData] = useState({

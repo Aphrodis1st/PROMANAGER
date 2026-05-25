@@ -1,5 +1,14 @@
-node_modules/
+frontend/node_modules
 backend/node_modules/
-.env
-backend/firebase-service-account.json
 package-lock.json
+*dist
+node_modules/
+
+# Environment files (never commit secrets)
+.env
+.env.*
+**/.env
+**/.env.development
+**/.env.production
+
+backend/firebase-service-account.json

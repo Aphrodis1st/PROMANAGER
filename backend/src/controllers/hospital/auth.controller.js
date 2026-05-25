@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { db } from '../../../utils/firebase.js';
 import { Hospital } from '../../models/superAdmin/hospital.model.js';
 import { HospitalAdmin } from '../../models/superAdmin/hospitalAdmin.model.js';
+import { isCredentialExpired, credentialExpiryMessage } from '../../utils/credentialExpiry.js';
 
 export const hospitalLogin = async (req, res) => {
   try {
@@ -95,6 +96,10 @@ export const hospitalLogin = async (req, res) => {
     }
     
     console.log('Status check passed for user:', userId);
+
+    if (isCredentialExpired(user)) {
+      return res.status(403).json({ success: false, error: credentialExpiryMessage() });
+    }
 
     // Check if this is a partial password
     if (user.isPartialPassword) {

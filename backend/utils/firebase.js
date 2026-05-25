@@ -1,7 +1,15 @@
-console.log('Loading backend/src/utils/firebase.js');
+console.log('Loading backend/utils/firebase.js');
 import admin from 'firebase-admin';
 import dotenv from 'dotenv';
-dotenv.config();
+import { existsSync } from 'fs';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+
+const backendRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
+const envPath = join(backendRoot, '.env');
+if (existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+}
 
 // Clean environment variables (remove quotes if present)
 const cleanEnvVar = (value) => {

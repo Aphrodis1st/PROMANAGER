@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { isCredentialExpired, credentialExpiryMessage } from "../utils/credentialExpiry.js";
 import {
   getUserById,
   getUserByEmail,
@@ -103,13 +104,17 @@ export const login = async (req, res) => {
     if (email === 'superadmin@madsmart.com' && password === 'SuperAdmin123!') {
       const user = await getUserByEmail(email);
       if (user) {
-        const token = jwt.sign({ id: user.id, role: 'super_admin' }, process.env.JWT_ACCESS_SECRET, { expiresIn: "8h" });
+        const roleName = user.role?.role_name || 'SUPER_ADMIN';
+        const token = jwt.sign({ id: user.id, role: 'super_admin', role_name: roleName }, process.env.JWT_ACCESS_SECRET, { expiresIn: "8h" });
         await setUserStatus(user.id, 'super_admin', true);
-        console.log('Superadmin login successful for pharmacy service');
         return res.json({
           success: true,
           token,
-          user: { ...user, role: 'super_admin' },
+          user: {
+            ...user,
+            role: user.role?.role_name ? user.role : { role_name: 'SUPER_ADMIN', role_id: user.role?.role_id || null, sub_roles: [] },
+            legacyRole: 'super_admin',
+          },
         });
       }
     }
@@ -119,6 +124,14 @@ export const login = async (req, res) => {
     if (!user){
       console.log("No user found with this email");
       return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    if (user.isActive === false || user.status === 'inactive') {
+      return res.status(403).json({ message: "Account is inactive" });
+    }
+
+    if (isCredentialExpired(user)) {
+      return res.status(403).json({ message: credentialExpiryMessage() });
     }
 
     const match = await comparePassword(password, user.passwordHash);

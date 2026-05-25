@@ -1,112 +1,154 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+
+const API = 'http://localhost:3001/api/v1/property';
+const toNumber = (value) => Number.parseFloat(value) || 0;
+const formatMoney = (value) => `$${toNumber(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export default function TenantPortal() {
-  const [tenant] = useState({
-    name: 'John Doe',
-    unit: 'A-101',
-    rentDue: 1200,
-    dueDate: '2024-01-05'
-  });
+  const [data, setData] = useState({ tenants: [], units: [], properties: [], invoices: [], tickets: [], leases: [] });
+  const [tenantId, setTenantId] = useState('');
+
+  useEffect(() => {
+    fetchPortal();
+  }, []);
+
+  const fetchJson = async (path) => {
+    const response = await fetch(`${API}${path}`);
+    if (!response.ok) throw new Error(`Failed to load ${path}`);
+    return response.json();
+  };
+
+  const fetchPortal = async () => {
+    try {
+      const [tenants, units, properties, invoices, tickets, leases] = await Promise.all([
+        fetchJson('/tenants'),
+        fetchJson('/units'),
+        fetchJson('/properties'),
+        fetchJson('/billing'),
+        fetchJson('/maintenance'),
+        fetchJson('/leases')
+      ]);
+      setData({ tenants, units, properties, invoices, tickets, leases });
+      setTenantId(tenants[0]?.id || '');
+    } catch (error) {
+      console.error('Error loading tenant portal:', error);
+    }
+  };
+
+  const tenant = data.tenants.find(item => item.id === tenantId);
+  const unit = data.units.find(item => item.id === tenant?.unitId);
+  const property = data.properties.find(item => item.id === (tenant?.propertyId || unit?.propertyId));
+  const tenantInvoices = data.invoices.filter(invoice => invoice.tenantId === tenantId);
+  const tenantTickets = data.tickets.filter(ticket => ticket.tenantId === tenantId || ticket.unitId === tenant?.unitId);
+  const tenantLease = data.leases.find(lease => lease.tenantId === tenantId && lease.status === 'active');
+
+  const stats = useMemo(() => ({
+    due: tenantInvoices.filter(invoice => invoice.status !== 'paid').reduce((sum, invoice) => sum + toNumber(invoice.amount), 0),
+    paid: tenantInvoices.filter(invoice => invoice.status === 'paid').reduce((sum, invoice) => sum + toNumber(invoice.amount), 0),
+    openTickets: tenantTickets.filter(ticket => ticket.status !== 'completed').length
+  }), [tenantInvoices, tenantTickets]);
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Tenant Portal</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-gray-500 text-sm">Current Rent</h3>
-          <p className="text-3xl font-bold">${tenant.rentDue}</p>
-          <p className="text-sm text-gray-600 mt-2">Due: {tenant.dueDate}</p>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-4xl font-bold text-gray-900">Tenant Portal</h1>
+          <p className="mt-2 text-gray-600">Tenant-facing rent, invoices, lease, and maintenance information from live property records.</p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-gray-500 text-sm">Unit</h3>
-          <p className="text-3xl font-bold">{tenant.unit}</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-gray-500 text-sm">Lease Status</h3>
-          <p className="text-xl font-bold text-green-600">Active</p>
-        </div>
+        <select value={tenantId} onChange={(e) => setTenantId(e.target.value)} className="rounded-lg border border-gray-200 bg-white px-4 py-3">
+          {data.tenants.map(item => <option key={item.id} value={item.id}>{item.firstName} {item.lastName}</option>)}
+        </select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-bold mb-4">Quick Actions</h2>
-          <div className="space-y-3">
-            <button className="w-full bg-blue-500 text-white px-4 py-3 rounded hover:bg-blue-600 text-left">
-              💳 Pay Rent
-            </button>
-            <button className="w-full bg-green-500 text-white px-4 py-3 rounded hover:bg-green-600 text-left">
-              🔧 Submit Maintenance Request
-            </button>
-            <button className="w-full bg-purple-500 text-white px-4 py-3 rounded hover:bg-purple-600 text-left">
-              📄 View Lease Agreement
-            </button>
-            <button className="w-full bg-yellow-500 text-white px-4 py-3 rounded hover:bg-yellow-600 text-left">
-              📊 Upload Meter Readings
-            </button>
-            <button className="w-full bg-red-500 text-white px-4 py-3 rounded hover:bg-red-600 text-left">
-              🧾 Download Receipts
-            </button>
+      {!tenant ? (
+        <div className="rounded-xl border border-gray-100 bg-white p-12 text-center text-gray-500">No tenants available.</div>
+      ) : (
+        <>
+          <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-4">
+            <Metric label="Current Balance" value={formatMoney(stats.due)} tone="text-amber-700" />
+            <Metric label="Paid History" value={formatMoney(stats.paid)} tone="text-green-700" />
+            <Metric label="Unit" value={unit?.unitNumber || '-'} tone="text-blue-700" />
+            <Metric label="Open Requests" value={stats.openTickets} tone="text-orange-700" />
           </div>
-        </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-bold mb-4">Payment History</h2>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center p-3 border rounded">
-              <div>
-                <p className="font-medium">December 2024</p>
-                <p className="text-sm text-gray-600">Paid on Dec 1, 2024</p>
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <section className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+              <h2 className="mb-4 text-xl font-bold text-gray-900">Lease & Residence</h2>
+              <div className="space-y-3 text-sm">
+                <Row label="Tenant" value={`${tenant.firstName} ${tenant.lastName}`} />
+                <Row label="Property" value={property?.name || '-'} />
+                <Row label="Unit" value={unit?.unitNumber || '-'} />
+                <Row label="Lease End" value={tenantLease?.endDate ? new Date(tenantLease.endDate).toLocaleDateString() : '-'} />
+                <Row label="Monthly Rent" value={formatMoney(tenantLease?.rentAmount || tenant.rentAmount)} />
               </div>
-              <span className="text-green-600 font-bold">$1,200</span>
-            </div>
-            <div className="flex justify-between items-center p-3 border rounded">
-              <div>
-                <p className="font-medium">November 2024</p>
-                <p className="text-sm text-gray-600">Paid on Nov 1, 2024</p>
-              </div>
-              <span className="text-green-600 font-bold">$1,200</span>
-            </div>
-            <div className="flex justify-between items-center p-3 border rounded">
-              <div>
-                <p className="font-medium">October 2024</p>
-                <p className="text-sm text-gray-600">Paid on Oct 1, 2024</p>
-              </div>
-              <span className="text-green-600 font-bold">$1,200</span>
-            </div>
-          </div>
-        </div>
+            </section>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-bold mb-4">Maintenance Requests</h2>
-          <div className="space-y-3">
-            <div className="p-3 border-l-4 border-yellow-500 bg-yellow-50">
-              <p className="font-medium">Leaking Faucet</p>
-              <p className="text-sm text-gray-600">Status: In Progress</p>
-              <p className="text-sm text-gray-600">Submitted: 2 days ago</p>
-            </div>
-            <div className="p-3 border-l-4 border-green-500 bg-green-50">
-              <p className="font-medium">AC Maintenance</p>
-              <p className="text-sm text-gray-600">Status: Completed</p>
-              <p className="text-sm text-gray-600">Completed: 1 week ago</p>
-            </div>
-          </div>
-        </div>
+            <section className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">Quick Actions</h2>
+                <Link to={`/property/billing/create?tenantId=${tenant.id}`} className="text-sm font-medium text-blue-600">New invoice</Link>
+              </div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <Link to="/property/billing" className="rounded-lg bg-blue-600 px-4 py-3 font-medium text-white">Pay Rent</Link>
+                <Link to="/property/maintenance/create" className="rounded-lg bg-green-600 px-4 py-3 font-medium text-white">Submit Maintenance</Link>
+                <Link to={tenantLease?.id ? `/property/leases/${tenantLease.id}` : '/property/leases'} className="rounded-lg bg-purple-600 px-4 py-3 font-medium text-white">View Lease</Link>
+                <Link to="/property/communication" className="rounded-lg bg-amber-600 px-4 py-3 font-medium text-white">Contact Office</Link>
+              </div>
+            </section>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-bold mb-4">Announcements</h2>
-          <div className="space-y-3">
-            <div className="p-3 border rounded">
-              <p className="font-medium">Building Maintenance</p>
-              <p className="text-sm text-gray-600">Scheduled for Jan 15, 2024</p>
-            </div>
-            <div className="p-3 border rounded">
-              <p className="font-medium">Holiday Hours</p>
-              <p className="text-sm text-gray-600">Office closed Dec 25-26</p>
-            </div>
+            <section className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+              <h2 className="mb-4 text-xl font-bold text-gray-900">Invoices</h2>
+              <div className="space-y-3">
+                {tenantInvoices.slice(0, 5).map(invoice => (
+                  <Link key={invoice.id} to={`/property/billing/${invoice.id}`} className="flex items-center justify-between rounded-lg border border-gray-100 p-3 hover:bg-gray-50">
+                    <div>
+                      <p className="font-medium text-gray-900">{invoice.invoiceNumber}</p>
+                      <p className="text-sm text-gray-500">{invoice.status}</p>
+                    </div>
+                    <span className="font-semibold text-gray-900">{formatMoney(invoice.amount)}</span>
+                  </Link>
+                ))}
+                {!tenantInvoices.length && <p className="text-sm text-gray-500">No invoices for this tenant.</p>}
+              </div>
+            </section>
+
+            <section className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+              <h2 className="mb-4 text-xl font-bold text-gray-900">Maintenance Requests</h2>
+              <div className="space-y-3">
+                {tenantTickets.slice(0, 5).map(ticket => (
+                  <Link key={ticket.id} to={`/property/maintenance/${ticket.id}`} className="flex items-center justify-between rounded-lg border border-gray-100 p-3 hover:bg-gray-50">
+                    <div>
+                      <p className="font-medium text-gray-900">{ticket.issue || ticket.category}</p>
+                      <p className="text-sm text-gray-500">{ticket.status}</p>
+                    </div>
+                    <span className="rounded-full bg-orange-50 px-2 py-1 text-xs font-semibold text-orange-700">{ticket.priority || 'medium'}</span>
+                  </Link>
+                ))}
+                {!tenantTickets.length && <p className="text-sm text-gray-500">No maintenance requests for this tenant.</p>}
+              </div>
+            </section>
           </div>
-        </div>
-      </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Metric({ label, value, tone }) {
+  return (
+    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+      <p className="text-sm font-medium text-gray-500">{label}</p>
+      <p className={`mt-2 text-3xl font-bold ${tone}`}>{value}</p>
+    </div>
+  );
+}
+
+function Row({ label, value }) {
+  return (
+    <div className="flex justify-between border-b border-gray-100 py-2">
+      <span className="text-gray-500">{label}</span>
+      <span className="font-medium text-gray-900">{value}</span>
     </div>
   );
 }

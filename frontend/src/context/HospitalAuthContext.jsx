@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
+import { setServiceAuth, clearServiceAuth, getServiceToken } from '../utils/authCookies.js';
 
 const HospitalAuthContext = createContext(null);
 
@@ -11,14 +12,13 @@ export const HospitalAuthProvider = ({ children }) => {
     const stored = localStorage.getItem('hospitalAdmin');
     return stored ? JSON.parse(stored) : null;
   });
-  const [token, setToken] = useState(() => localStorage.getItem('hospitalToken') || null);
+  const [token, setToken] = useState(() => getServiceToken('hospital') || null);
 
   const login = (data) => {
     setToken(data.token);
     setAdmin(data.admin);
     setHospital(data.hospital);
-    localStorage.setItem('hospitalToken', data.token);
-    localStorage.setItem('hospitalAdmin', JSON.stringify(data.admin));
+    setServiceAuth('hospital', { token: data.token, user: data.admin });
     localStorage.setItem('hospital', JSON.stringify(data.hospital));
   };
 
@@ -26,8 +26,7 @@ export const HospitalAuthProvider = ({ children }) => {
     setToken(null);
     setAdmin(null);
     setHospital(null);
-    localStorage.removeItem('hospitalToken');
-    localStorage.removeItem('hospitalAdmin');
+    clearServiceAuth('hospital');
     localStorage.removeItem('hospital');
   };
 

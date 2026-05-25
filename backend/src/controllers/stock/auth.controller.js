@@ -14,6 +14,7 @@ import {
   ALLOWED_ROLES,
 } from "../../models/stock/user.model.js";
 import { logAudit } from "../../models/stock/audit.model.js";
+import { isCredentialExpired, credentialExpiryMessage } from "../../utils/credentialExpiry.js";
 
 /**
  * Helper to sign tokens
@@ -86,6 +87,14 @@ export const login = async (req, res) => {
     if (!user) {
       console.log('User not found:', email);
       return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    if (user.accountDisabled === true || user.isActive === false) {
+      return res.status(403).json({ message: "Account is inactive" });
+    }
+
+    if (isCredentialExpired(user)) {
+      return res.status(403).json({ message: credentialExpiryMessage() });
     }
 
     const match = await comparePassword(password, user.passwordHash);

@@ -1,15 +1,12 @@
+import './loadEnv.js';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import dotenv from 'dotenv';
 import { initFirebase } from '../utils/firebase.js';
+import { getMailConfigStatus, isMailConfigured } from './utils/mailer.js';
 
-// Load environment variables based on NODE_ENV (set before importing)
 const NODE_ENV_RAW = process.env.NODE_ENV || 'development';
-const envFile = NODE_ENV_RAW === 'production' ? '.env.production' : '.env.development';
-console.log(`📄 Loading environment from: ${envFile}`);
-dotenv.config({ path: envFile });
 
 // Clean environment variables (remove quotes if present)
 const cleanEnvVar = (value) => {
@@ -29,15 +26,29 @@ console.log(`🔌 Port will be: ${PORT}`);
 console.log(`🔌 PORT from env: ${process.env.PORT}`);
 console.log(`🔌 NODE_ENV from env: ${process.env.NODE_ENV}`);
 
+const mailStatus = getMailConfigStatus();
+if (isMailConfigured()) {
+  console.log('📧 Mail: configured (Mailtrap)');
+} else {
+  console.warn('📧 Mail: NOT configured —', mailStatus.reason);
+  console.warn('📧 Put MAILTRAP_TOKEN and MAILTRAP_FROM_EMAIL in backend/.env, then restart.');
+}
+
 const app = express();
 
 // Initialize Firebase asynchronously (non-blocking)
 let firebaseReady = false;
 console.log(`🔥 Firebase initialization starting...`);
 initFirebase()
-  .then(() => {
+  .then(async () => {
     firebaseReady = true;
     console.log('✅ Firebase initialized successfully');
+    try {
+      await seedSuperAdminRoleAndUser();
+      console.log('✅ Platform SUPER_ADMIN role seeded');
+    } catch (error) {
+      console.error('⚠️ Platform role seed skipped:', error.message);
+    }
   })
   .catch((error) => {
     console.error('❌ Firebase initialization failed:', error);
@@ -104,6 +115,29 @@ import superAdminStockRoutes from './routes/superAdmin/stock.routes.js';
 import superAdminPharmacyRoutes from './routes/superAdmin/pharmacy.routes.js';
 import superAdminHROrganizationRoutes from './routes/superAdmin/hrOrganization.routes.js';
 import superAdminPayrollRoutes from './routes/superAdmin/payroll.routes.js';
+import superAdminNGORoutes from './routes/superAdmin/ngo.routes.js';
+import superAdminPropertyOrganizationRoutes from './routes/superAdmin/propertyOrganization.routes.js';
+import superAdminRoleRoutes from './routes/superAdmin/role.routes.js';
+import superAdminPlatformUserRoutes from './routes/superAdmin/platformUser.routes.js';
+import superAdminServiceRegistrationRoutes from './routes/superAdmin/serviceRegistration.routes.js';
+import { seedSuperAdminRoleAndUser } from './services/platformRoleSeed.service.js';
+import ngoOperationsRoutes from './routes/ngo/operations.routes.js';
+import ngoProjectRoutes from './routes/ngo/project.routes.js';
+import ngoTenderRoutes from './routes/ngo/tender.routes.js';
+import ngoContractRoutes from './routes/ngo/contract.routes.js';
+import ngoImpactRoutes from './routes/ngo/impact.routes.js';
+import ngoEvaluationRoutes from './routes/ngo/evaluation.routes.js';
+import ngoIntegrationRoutes from './routes/ngo/integration.routes.js';
+import ngoOrganizationRoutes from './routes/ngo/organization.routes.js';
+import ngoBranchRoutes from './routes/ngo/branch.routes.js';
+import ngoDepartmentRoutes from './routes/ngo/department.routes.js';
+import ngoOrgChartRoutes from './routes/ngo/orgChart.routes.js';
+import ngoRoleRoutes from './routes/ngo/role.routes.js';
+import ngoFinanceRoutes from './routes/ngo/finance.routes.js';
+import ngoAuditRoutes from './routes/ngo/audit.routes.js';
+import ngoBeneficialOwnerRoutes from './routes/ngo/beneficialOwner.routes.js';
+import ngoUserRoutes from './routes/ngo/user.routes.js';
+import ngoDashboardRoutes from './routes/ngo/dashboard.routes.js';
 
 // HR Routes
 import hrOrganizationRoutes from './routes/hr/organization.routes.js';
@@ -118,6 +152,7 @@ import hrPerformanceRoutes from './routes/hr/performance.routes.js';
 import hrDashboardRoutes from './routes/hr/dashboard.routes.js';
 import hrAuthRoutes from './routes/hr/auth.routes.js';
 import currencyRoutes from './routes/currency.routes.js';
+import serviceRegistrationRoutes from './routes/serviceRegistration.routes.js';
 
 // Property Routes
 import propertyRoutes from './routes/property/property.routes.js';
@@ -178,6 +213,7 @@ app.get('/api/v1/health', (_req, res) => res.json({
 
 // API routes
 app.use('/api/v1/auth', authRoutes); // auth (register/login)
+app.use('/api/v1/service-registration', requireFirebase, serviceRegistrationRoutes);
 app.use('/api/v1/prescriptions', rxRoutes); // prescriptions (doctor/pharmacy)
 app.use('/api/v1/pharmacies', pharmacyRoutes); // pharmacies CRUD
 app.use('/api/v1/callcenter', callcenterRoutes),
@@ -241,6 +277,28 @@ app.use('/api/v1/super-admin/stocks', superAdminStockRoutes);
 app.use('/api/v1/super-admin/pharmacies', superAdminPharmacyRoutes);
 app.use('/api/v1/super-admin/hr-organizations', superAdminHROrganizationRoutes);
 app.use('/api/v1/super-admin/payroll', superAdminPayrollRoutes);
+app.use('/api/v1/super-admin/ngos', superAdminNGORoutes);
+app.use('/api/v1/super-admin/property-organizations', superAdminPropertyOrganizationRoutes);
+app.use('/api/v1/super-admin/roles', superAdminRoleRoutes);
+app.use('/api/v1/super-admin/platform-users', superAdminPlatformUserRoutes);
+app.use('/api/v1/super-admin/service-registrations', superAdminServiceRegistrationRoutes);
+app.use('/api/v1/ngo/dashboard', requireFirebase, ngoDashboardRoutes);
+app.use('/api/v1/ngo/users', requireFirebase, ngoUserRoutes);
+app.use('/api/v1/ngo', requireFirebase, ngoOperationsRoutes);
+app.use('/api/v1/ngo/projects', requireFirebase, ngoProjectRoutes);
+app.use('/api/v1/ngo/tenders', requireFirebase, ngoTenderRoutes);
+app.use('/api/v1/ngo/contracts', requireFirebase, ngoContractRoutes);
+app.use('/api/v1/ngo/impacts', requireFirebase, ngoImpactRoutes);
+app.use('/api/v1/ngo/evaluations', requireFirebase, ngoEvaluationRoutes);
+app.use('/api/v1/ngo/integration', requireFirebase, ngoIntegrationRoutes);
+app.use('/api/v1/ngo/organizations', requireFirebase, ngoOrganizationRoutes);
+app.use('/api/v1/ngo/branches', requireFirebase, ngoBranchRoutes);
+app.use('/api/v1/ngo/departments', requireFirebase, ngoDepartmentRoutes);
+app.use('/api/v1/ngo/org-charts', requireFirebase, ngoOrgChartRoutes);
+app.use('/api/v1/ngo/roles', requireFirebase, ngoRoleRoutes);
+app.use('/api/v1/ngo/finances', requireFirebase, ngoFinanceRoutes);
+app.use('/api/v1/ngo/audits', requireFirebase, ngoAuditRoutes);
+app.use('/api/v1/ngo/beneficial-owners', requireFirebase, ngoBeneficialOwnerRoutes);
 
 // Currency routes
 app.use('/api/v1/currency', currencyRoutes);

@@ -1,108 +1,108 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  Building2,
+  Users,
+  Package,
+  HeartHandshake,
+  Pill,
+  Briefcase,
+  DollarSign,
+  Home,
+  Activity,
+  Settings,
+  Coins,
+  Shield,
+} from 'lucide-react';
 
 const SuperAdminSidebar = () => {
   const location = useLocation();
 
-  const menuItems = [
+  const isActive = (path, exact = false) =>
+    exact ? location.pathname === path : location.pathname.includes(path);
+
+  const sections = [
     {
-      title: 'Dashboard',
-      icon: 'D',
-      path: '/super-admin/dashboard',
-      active: location.pathname === '/super-admin/dashboard'
+      title: 'Overview',
+      items: [
+        { title: 'Dashboard', icon: LayoutDashboard, path: '/super-admin/dashboard', exact: true },
+      ],
     },
     {
-      title: 'Hospital Management',
-      icon: 'H',
-      path: '/super-admin/hospitals',
-      active: location.pathname.includes('/super-admin/hospitals')
+      title: 'Platform Services',
+      items: [
+        { title: 'Hospital Management', icon: Building2, path: '/super-admin/hospitals' },
+        { title: 'Stock Management', icon: Package, path: '/super-admin/stocks' },
+        { title: 'Pharmacy Management', icon: Pill, path: '/super-admin/pharmacies' },
+        { title: 'NGO Management', icon: HeartHandshake, path: '/super-admin/ngos' },
+        { title: 'HR Management', icon: Briefcase, path: '/super-admin/hr' },
+        { title: 'Property Management', icon: Home, path: '/super-admin/properties' },
+        { title: 'Payroll Management', icon: DollarSign, path: '/super-admin/payroll' },
+      ],
     },
     {
-      title: 'Hospital Admins',
-      icon: 'A',
-      path: '/super-admin/hospital-admins',
-      active: location.pathname.includes('/super-admin/hospital-admins')
+      title: 'Administration',
+      items: [
+        { title: 'Hospital Admins', icon: Users, path: '/super-admin/hospital-admins' },
+        { title: 'Role Management', icon: Shield, path: '/super-admin/roles' },
+        { title: 'User Management', icon: Users, path: '/super-admin/users' },
+        { title: 'Currency Management', icon: Coins, path: '/super-admin/currency' },
+        { title: 'System Activity', icon: Activity, path: '/super-admin/activity', exact: true },
+        { title: 'Settings', icon: Settings, path: '/super-admin/settings', exact: true },
+      ],
     },
-    {
-      title: 'Stock Management',
-      icon: 'S',
-      path: '/super-admin/stocks',
-      active: location.pathname.includes('/super-admin/stocks')
-    },
-    {
-      title: 'Pharmacy Management',
-      icon: 'P',
-      path: '/super-admin/pharmacies',
-      active: location.pathname.includes('/super-admin/pharmacies')
-    },
-    {
-      title: 'HR Management',
-      icon: 'HR',
-      path: '/super-admin/hr',
-      active: location.pathname.includes('/super-admin/hr')
-    },
-    {
-      title: 'Payroll Management',
-      icon: '$',
-      path: '/super-admin/payroll',
-      active: location.pathname.includes('/super-admin/payroll')
-    },
-    {
-      title: 'System Activity',
-      icon: 'Y',
-      path: '/super-admin/activity',
-      active: location.pathname === '/super-admin/activity'
-    },
-    {
-      title: 'Settings',
-      icon: 'C',
-      path: '/super-admin/settings',
-      active: location.pathname === '/super-admin/settings'
-    }
   ];
 
   return (
-    <div className="w-64 bg-gradient-to-b from-blue-900 to-blue-800 text-white h-screen fixed left-0 top-0 overflow-y-auto shadow-2xl">
-      {/* Header */}
-      <div className="p-6 border-b border-blue-700">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-            <span className="text-2xl font-bold text-blue-600">H</span>
+    <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-gray-200 bg-slate-50 text-gray-900">
+      <div className="border-b border-gray-200 px-5 py-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 shadow-sm">
+            <Shield className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold">Super Admin</h1>
-            <p className="text-blue-200 text-sm">Hospital Management</p>
+            <h1 className="text-lg font-bold tracking-tight text-gray-900">Super Admin</h1>
+            <p className="text-xs text-gray-500">Service Management</p>
           </div>
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="mt-6">
-        <ul className="space-y-2 px-4">
-          {menuItems.map((item, index) => (
-            <li key={index}>
-              <Link
-                to={item.path}
-                className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-blue-700 ${
-                  item.active ? 'bg-blue-700 border-r-4 border-white' : ''
-                }`}
-              >
-                <span className="text-xl font-bold">{item.icon}</span>
-                <span className="font-medium">{item.title}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+      <nav className="flex-1 overflow-y-auto px-3 py-4">
+        {sections.map((section) => (
+          <div key={section.title} className="mb-6">
+            <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500">
+              {section.title}
+            </p>
+            <ul className="space-y-1">
+              {section.items.map((item) => {
+                const active = isActive(item.path, item.exact);
+                const Icon = item.icon;
+                return (
+                  <li key={item.path}>
+                    <Link
+                      to={item.path}
+                      className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                        active
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      }`}
+                    >
+                      <Icon className={`h-4 w-4 flex-shrink-0 ${active ? 'text-white' : 'text-gray-500 group-hover:text-indigo-600'}`} />
+                      <span className="truncate">{item.title}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
       </nav>
 
-      {/* Footer */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-blue-700">
-        <div className="text-center text-blue-200 text-sm">
-          <p>© 2024 PROMANAGER</p>
-          <p>Super Admin Panel</p>
-        </div>
+      <div className="border-t border-gray-200 px-5 py-4">
+        <p className="text-center text-xs text-gray-500">© 2026 PROMANAGER</p>
       </div>
-    </div>
+    </aside>
   );
 };
 
