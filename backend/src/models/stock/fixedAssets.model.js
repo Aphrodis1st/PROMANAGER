@@ -5,6 +5,7 @@ const getFixedAssetsCollection = () => db().collection("fixedAssets");
 
 export const FixedAssetModel = {
   async create(data) {
+    const fixedAssetsCollection = getFixedAssetsCollection();
     // Create a shallow copy to avoid mutating caller object
     const sanitizedData = { ...data };
 
@@ -51,6 +52,7 @@ export const FixedAssetModel = {
   },
 
   async update(id, data) {
+    const fixedAssetsCollection = getFixedAssetsCollection();
     const sanitizedData = { ...data };
     // Remove undefined keys to prevent firestore errors
     Object.keys(sanitizedData).forEach((key) => sanitizedData[key] === undefined && delete sanitizedData[key]);

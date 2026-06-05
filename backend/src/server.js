@@ -3,13 +3,15 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
 import { initFirebase } from '../utils/firebase.js';
 
 // Load environment variables based on NODE_ENV (set before importing)
 const NODE_ENV_RAW = process.env.NODE_ENV || 'development';
 const envFile = NODE_ENV_RAW === 'production' ? '.env.production' : '.env.development';
-console.log(`📄 Loading environment from: ${envFile}`);
-dotenv.config({ path: envFile });
+const envPath = fileURLToPath(new URL(`../${envFile}`, import.meta.url));
+console.log(`📄 Loading environment from: ${envPath}`);
+dotenv.config({ path: envPath });
 
 // Clean environment variables (remove quotes if present)
 const cleanEnvVar = (value) => {
@@ -20,8 +22,21 @@ const cleanEnvVar = (value) => {
 // Environment configuration - NOW read from loaded .env file
 const NODE_ENV = cleanEnvVar(process.env.NODE_ENV) || 'development';
 const PORT = parseInt(cleanEnvVar(process.env.PORT)) || 3001; // Default to 3001
-const CORS_ORIGIN = cleanEnvVar(process.env.CORS_ORIGIN) || 'http://localhost:5173';
-const allowed = CORS_ORIGIN ? CORS_ORIGIN.split(',') : false;
+const CORS_ORIGIN = cleanEnvVar(process.env.CORS_ORIGIN) || 'http://localhost:5173,http://localhost:3000';
+const allowedOrigins = CORS_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean);
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(null, false);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  preflightContinue: false,
+  optionsSuccessStatus: 200
+};
 
 console.log(`🚀 Starting server in ${NODE_ENV} mode`);
 console.log(`📡 CORS Origin: ${CORS_ORIGIN}`);
@@ -65,6 +80,7 @@ import incomestaatementRouter from './routes/stock/incomeStatement.routes.js';
 import balanceSheetRouter from './routes/stock/balanceSheet.routes.js';
 import cashFlowRouter from './routes/stock/cashFlow.routes.js';
 import fixedAssetRouter from './routes/stock/fixedAssets.routes.js';
+import assetManagementRouter from './routes/assetManagement/assetManagement.routes.js';
 import productionRouter from './routes/production/production.routes.js';
 import authRouters from './routes/stock/auths.routes.js';
 import purchaseRoutes from './routes/stock/purchase.routes.js';
@@ -133,14 +149,7 @@ app.use(
   helmet(),
   express.json(),
   express.urlencoded({ extended: true }),
-  cors({ 
-    origin: allowed,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    preflightContinue: false,
-    optionsSuccessStatus: 200
-  }),
+  cors(corsOptions),
   morgan(NODE_ENV === 'production' ? 'combined' : 'dev')
 );
 
@@ -199,6 +208,9 @@ app.use('/api/v1/stock/income-statement', incomestaatementRouter);
 app.use('/api/v1/stock/balance-sheet', balanceSheetRouter);
 app.use('/api/v1/stock/cash-flow', cashFlowRouter);
 app.use('/api/v1/stock/fixed-assets', fixedAssetRouter);
+app.use('/api/v1/stock/assets-management', assetManagementRouter);
+app.use('/api/v1/stock/asset-management', assetManagementRouter);
+app.use('/api/v1/assets-management', assetManagementRouter);
 app.use('/api/v1/production', productionRouter);
 app.use('/api/v1/stock/auth', authRouters);
 // app.use("/api/v1/stock/admin", stockAdminRoutes)

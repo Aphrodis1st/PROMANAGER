@@ -21,6 +21,7 @@ import CustomerPage from './pages/stock/CustomerPage.jsx';
 import ExpensesPage from './pages/stock/ExpensesPage.jsx';
 import ReportsDashboard from './pages/stock/ReportsDashboard.jsx';
 import FixedAssetsPage from './pages/stock/FixedAssetsPage.jsx';
+import AssetManagementAssetsPage from './pages/stock/AssetManagementAssetsPage.jsx';
 import ProductionPlanPage from './pages/production/ProductionPlanPage.jsx';
 import ProductionCostPage from './pages/production/ProductionCostPage.jsx';
 import ProductionPlanningPage from './pages/production/ProductionPlanningPage.jsx';
@@ -259,6 +260,7 @@ function AppContent() {
         <Route path='expenses' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance"]}><ExpensesPage /></StockProtectedRoute>} />
         <Route path='reports-dashboard' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]}><ReportsDashboard /></StockProtectedRoute>} />
         <Route path='fixed-assets' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT"]} departments={["Finance"]}><FixedAssetsPage /></StockProtectedRoute>} />
+        <Route path='assets-management/assets' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","FINANCE_MANAGER","ACCOUNTANT","STOCK_KEEPER","STOREKEEPER","MANAGER"]}><AssetManagementAssetsPage /></StockProtectedRoute>} />
         <Route path='production-plan' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER"]} departments={["Production"]}><ProductionPlanPage /></StockProtectedRoute>} />
         <Route path='production-cost' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER","ACCOUNTANT"]} departments={["Production","Finance"]}><ProductionCostPage /></StockProtectedRoute>} />
         <Route path='production-planning' element={<StockProtectedRoute roles={["SUPER_ADMIN","ADMIN","DIRECTOR_MANAGER","PRODUCTION_MANAGER"]} departments={["Production"]}><ProductionPlanningPage /></StockProtectedRoute>} />

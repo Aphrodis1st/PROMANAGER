@@ -30,6 +30,7 @@ const iconMap = {
   Journals: JournalIcon,
   Expenses: ExpenseIcon,
   Reports: ReportsIcon,
+  "Asset Management": InventoryIcon,
 };
 
 export default function StockLinks({ theme, themeColors }) {
@@ -44,6 +45,7 @@ export default function StockLinks({ theme, themeColors }) {
     { to: "/stock/dispense", label: "Dispense", roles: ["ADMIN", "STOREKEEPER", "MANAGER"], icon: "Dispense" },
     { to: "/stock/general-journal", label: "Journals", roles: ["ADMIN", "ACCOUNTANT", "MANAGER"], icon: "Journals" },
     { to: "/stock/expenses", label: "Expenses", roles: ["ADMIN", "ACCOUNTANT", "MANAGER"], icon: "Expenses" },
+    { to: "/stock/assets-management/assets", label: "Asset Management", roles: ["ADMIN", "MANAGER", "ACCOUNTANT", "STOCK_KEEPER", "STOREKEEPER"], icon: "Asset Management" },
     { to: "/stock/reports-dashboard", label: "Reports", roles: ["ADMIN", "MANAGER", "ACCOUNTANT"], icon: "Reports" },
   ];
 

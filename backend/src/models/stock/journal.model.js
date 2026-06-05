@@ -43,6 +43,31 @@ const JournalModel = {
       .orderBy("date", "desc")
       .get();
     return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  },
+
+  // Get entries created by a source record, e.g. fixedAsset/expense.
+  async findBySource(type, id) {
+    const journalCollection = getJournalCollection();
+    const snapshot = await journalCollection
+      .where("source.type", "==", type)
+      .where("source.id", "==", id)
+      .get();
+
+    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  },
+
+  // Remove all journal entries created by a source record.
+  async removeBySource(type, id) {
+    const journalCollection = getJournalCollection();
+    const snapshot = await journalCollection
+      .where("source.type", "==", type)
+      .where("source.id", "==", id)
+      .get();
+
+    const batch = db().batch();
+    snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+    return snapshot.size;
   }
 };
 
