@@ -3,17 +3,27 @@ import admin from "firebase-admin";
 
 const getJournalCollection = () => db().collection("journalEntries");
 const getAccountSettingsCollection = () => db().collection("accountSettings");
+const getAccountsCollection = () => db().collection("accounts");
 const getBsCollection = () => db().collection("balanceSheets");
+
+const loadAccounts = async () => {
+  const [settingsSnap, accountsSnap] = await Promise.all([
+    getAccountSettingsCollection().get(),
+    getAccountsCollection().get(),
+  ]);
+  const byId = new Map();
+  settingsSnap.docs.forEach(d => byId.set(d.id, { id: d.id, ...d.data() }));
+  accountsSnap.docs.forEach(d => byId.set(d.id, { id: d.id, ...d.data() }));
+  return Array.from(byId.values());
+};
 
 const BalanceSheetModel = {
   async generate({ asOf = null, runId = `run-${Date.now()}` } = {}) {
-    const accountSettingsCollection = getAccountSettingsCollection();
     const journalCollection = getJournalCollection();
     const bsCollection = getBsCollection();
     
     // load accounts
-    const acctSnap = await accountSettingsCollection.get();
-    const accounts = acctSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const accounts = await loadAccounts();
 
     // fetch journal entries up to asOf if provided
     let q = journalCollection;

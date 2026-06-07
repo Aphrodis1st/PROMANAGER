@@ -21,11 +21,12 @@ const JournalModel = {
     return { id: newDoc.id, ...data };
   },
 
-  // Get all journal entries, sorted by date
+  // Get all journal entries
   async findAll() {
     const journalCollection = getJournalCollection();
-    const snapshot = await journalCollection.orderBy("date", "desc").get();
-    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snapshot = await journalCollection.get();
+    const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    return docs.sort((a, b) => new Date(b.date) - new Date(a.date));
   },
 
   // Remove a journal entry by ID
@@ -38,11 +39,12 @@ const JournalModel = {
   // Optional: get entries by account
   async findByAccount(accountId) {
     const journalCollection = getJournalCollection();
-    const snapshot = await journalCollection
-      .where("lines.accountId", "array-contains", accountId)
-      .orderBy("date", "desc")
-      .get();
-    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snapshot = await journalCollection.get();
+    const allDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    const filtered = allDocs.filter(doc => 
+      doc.lines && doc.lines.some(line => line.accountId === accountId)
+    );
+    return filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
   },
 
   // Get entries created by a source record, e.g. fixedAsset/expense.

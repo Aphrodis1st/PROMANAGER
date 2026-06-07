@@ -2,6 +2,12 @@ import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
 
 const MODULES = {
+  settings: {
+    collection: "assetSettings",
+    codePrefix: "SET",
+    defaults: { status: "Active", section: "Asset Type Setup", type: "Asset Types" },
+    numericFields: ["usefulLife"],
+  },
   assets: {
     collection: "assetMasterRecords",
     codePrefix: "AST",
@@ -41,6 +47,12 @@ const MODULES = {
     codePrefix: "TRF",
     defaults: { status: "requested", priority: "normal", approvalStatus: "pending" },
     numericFields: ["assetCount"],
+  },
+  lending: {
+    collection: "assetLendingRecords",
+    codePrefix: "LND",
+    defaults: { status: "pending request", approvalStatus: "pending request", returnStatus: "pending return", priority: "normal" },
+    numericFields: ["assetCount", "loanValue", "damageCost", "estimatedCost"],
   },
   maintenance: {
     collection: "assetMaintenanceJobs",

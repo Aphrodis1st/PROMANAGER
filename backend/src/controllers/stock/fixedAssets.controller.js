@@ -23,8 +23,8 @@ export const FixedAssetController = {
 
       const assetDate = date || acquisitionDate || purchaseDate || new Date().toISOString();
 
-      if (!assetName || !assetDate || !cost || !purchaseAccountId || !paymentAccountId) {
-        return res.status(400).json({ success: false, error: "Missing required fields." });
+      if (!assetName || !assetDate || !cost) {
+        return res.status(400).json({ success: false, error: "Asset name, date, and cost are required." });
       }
 
       const numericCost = Number(cost);
@@ -36,32 +36,35 @@ export const FixedAssetController = {
       const purchaseAcc = accounts.find((a) => a.id === purchaseAccountId);
       const paymentAcc = accounts.find((a) => a.id === paymentAccountId);
 
-      if (!purchaseAcc || !paymentAcc) {
+      if ((purchaseAccountId && !purchaseAcc) || (paymentAccountId && !paymentAcc)) {
         return res.status(400).json({ success: false, error: "Invalid account selection." });
       }
 
-      const lines = [
-        {
-          accountId: purchaseAccountId,
-          accountName: purchaseAcc.name,
-          type: "debit",
-          amount: numericCost,
-        },
-        {
-          accountId: paymentAccountId,
-          accountName: paymentAcc.name,
-          type: "credit",
-          amount: numericCost,
-        },
-      ];
+      const lines = purchaseAcc && paymentAcc
+        ? [
+            {
+              accountId: purchaseAccountId,
+              accountName: purchaseAcc.name,
+              type: "debit",
+              amount: numericCost,
+            },
+            {
+              accountId: paymentAccountId,
+              accountName: paymentAcc.name,
+              type: "credit",
+              amount: numericCost,
+            },
+          ]
+        : [];
 
       const totalDebit = lines.reduce((s, l) => s + (l.type === "debit" ? Number(l.amount) : 0), 0);
       const totalCredit = lines.reduce((s, l) => s + (l.type === "credit" ? Number(l.amount) : 0), 0);
-      if (Math.round(totalDebit * 100) !== Math.round(totalCredit * 100)) {
+      if (lines.length > 0 && Math.round(totalDebit * 100) !== Math.round(totalCredit * 100)) {
         return res.status(400).json({ success: false, error: "Unbalanced entry (debit ≠ credit)." });
       }
 
       const assetPayload = {
+        ...req.body,
         assetName,
         date: assetDate,
         acquisitionDate: assetDate,
@@ -69,23 +72,25 @@ export const FixedAssetController = {
         usefulLife: Number(usefulLife) || 5,
         accumulatedDepreciation: 0,
         lastDepreciationDate: null,
-        purchaseAccountId,
-        purchaseAccountName: purchaseAcc.name,
-        paymentAccountId,
-        paymentAccountName: paymentAcc.name,
+        purchaseAccountId: purchaseAccountId || "",
+        purchaseAccountName: purchaseAcc?.name || "",
+        paymentAccountId: paymentAccountId || "",
+        paymentAccountName: paymentAcc?.name || "",
         currency: currency || "RWF",
         depreciationStartDate: assetDate,
       };
 
       const createdAsset = await FixedAssetModel.create(assetPayload);
 
-      await JournalModel.create({
-        date: assetDate,
-        description: `Fixed asset purchase: ${assetName}`,
-        lines,
-        reference: createdAsset.id || null,
-        source: { type: "fixedAsset", id: createdAsset.id || null },
-      });
+      if (lines.length > 0) {
+        await JournalModel.create({
+          date: assetDate,
+          description: `Fixed asset purchase: ${assetName}`,
+          lines,
+          reference: createdAsset.id || null,
+          source: { type: "fixedAsset", id: createdAsset.id || null },
+        });
+      }
 
       return res.status(201).json({
         success: true,
@@ -106,6 +111,7 @@ export const FixedAssetController = {
       const rawAssets = await FixedAssetModel.findAll();
 
       const assets = rawAssets.map((a) => ({
+        ...a,
         id: a.id || a._id || "",
         assetName: a.assetName || "-",
         cost: Number(a.cost) || 0,

@@ -3,18 +3,28 @@ import admin from "firebase-admin";
 
 const getJournalCollection = () => db().collection("journalEntries");
 const getAccountSettingsCollection = () => db().collection("accountSettings");
+const getAccountsCollection = () => db().collection("accounts");
 const getIncomeCollection = () => db().collection("incomeStatements");
+
+const loadAccounts = async () => {
+  const [settingsSnap, accountsSnap] = await Promise.all([
+    getAccountSettingsCollection().get(),
+    getAccountsCollection().get(),
+  ]);
+  const byId = new Map();
+  settingsSnap.docs.forEach(d => byId.set(d.id, { id: d.id, ...d.data() }));
+  accountsSnap.docs.forEach(d => byId.set(d.id, { id: d.id, ...d.data() }));
+  return Array.from(byId.values());
+};
 
 const IncomeStatementModel = {
   // Build income statement for given date range (inclusive)
   async generate({ from = null, to = null, runId = `run-${Date.now()}` } = {}) {
-    const accountSettingsCollection = getAccountSettingsCollection();
     const journalCollection = getJournalCollection();
     const incomeCollection = getIncomeCollection();
     
     // load accounts metadata
-    const acctSnap = await accountSettingsCollection.get();
-    const accounts = acctSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const accounts = await loadAccounts();
 
     // Revenue & Expenses lists
     const revenueAccounts = accounts.filter(a => (a.category || a.type || "").toLowerCase() === "revenue");

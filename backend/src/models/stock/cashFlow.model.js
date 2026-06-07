@@ -3,19 +3,31 @@ import admin from "firebase-admin";
 
 const getJournalCollection = () => db().collection("journalEntries");
 const getAccountSettingsCollection = () => db().collection("accountSettings");
+const getAccountsCollection = () => db().collection("accounts");
 const getCfCollection = () => db().collection("cashFlows");
+
+const loadAccounts = async () => {
+  const [settingsSnap, accountsSnap] = await Promise.all([
+    getAccountSettingsCollection().get(),
+    getAccountsCollection().get(),
+  ]);
+  const byId = new Map();
+  settingsSnap.docs.forEach(d => byId.set(d.id, { id: d.id, ...d.data() }));
+  accountsSnap.docs.forEach(d => byId.set(d.id, { id: d.id, ...d.data() }));
+  return Array.from(byId.values());
+};
 
 const CashFlowModel = {
   // generate cashflow for period
   async generate({ from = null, to = null, runId = `run-${Date.now()}` } = {}) {
-    const acctSnap = await accountSettingsCollection.get();
-    const accounts = acctSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const accounts = await loadAccounts();
+    const cfCollection = getCfCollection();
 
     // identify cash accounts (flag "isCash" true or category contains 'cash' or 'bank')
     const cashAccountIds = accounts.filter(a => a.isCash || (a.category || "").toLowerCase().includes("cash") || (a.name || "").toLowerCase().includes("cash") || (a.name || "").toLowerCase().includes("bank")).map(a => a.id);
 
     // fetch journal entries in date range
-    let q = journalCollection;
+    let q = getJournalCollection();
     if (from) q = q.where("date", ">=", from);
     if (to) q = q.where("date", "<=", to);
     const jSnap = await q.get();
@@ -80,9 +92,9 @@ const CashFlowModel = {
   },
 
   async getSnapshot(runId = null) {
+    const cfCollection = getCfCollection();
     if (runId) {
-      const cfCollection = getCfCollection();
-    const doc = await cfCollection.doc(runId).get();
+      const doc = await cfCollection.doc(runId).get();
       if (!doc.exists) return null;
       return { id: doc.id, ...doc.data() };
     }
