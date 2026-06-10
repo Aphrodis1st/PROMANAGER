@@ -91,6 +91,7 @@ import customerInvoiceRoutes from './routes/stock/customerInvoice.routes.js';
 import paymentRoutes from './routes/stock/payment.routes.js';
 import taxRoutes from './routes/stock/tax.routes.js';
 import glAccountRoutes from './routes/stock/glAccount.routes.js';
+import cashierRoutes from './routes/stock/cashier.routes.js';
 
 // Hospital Routes
 import hospitalAuthRoutes from './routes/hospital/auth.routes.js';
@@ -222,6 +223,7 @@ app.use('/api/v1/stock/invoice', customerInvoiceRoutes);
 app.use('/api/v1/stock/payment', paymentRoutes);
 app.use('/api/v1/stock/taxes', taxRoutes);
 app.use('/api/v1/stock/gl-accounts', glAccountRoutes);
+app.use('/api/v1/stock/cashier', cashierRoutes);
 
 // Hospital routes
 console.log('Registering hospital auth routes...');
