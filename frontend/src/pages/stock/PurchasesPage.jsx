@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useStock, useStockCurrency } from '../../context/stockContext';
 import { usePurchase } from '../../context/PurchaseContext';
 import { usePayment } from '../../context/PaymentContext';
+import { supplierInvoiceService } from '../../services/stock.service';
 import StockTable from '../../components/stock/StockTable';
-import AddPurchaseModal from '../../components/modals/AddPurchaseModal';
-import SinglePurchaseHistory from '../../components/modals/SinglePurchaseHistory';
-import { Button, Card, CardContent, Typography, Box, Grid, Paper, Chip, IconButton, Tooltip } from '@mui/material';
+
+import { Button, Typography, Box, Grid, Paper, Chip, IconButton, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { Add as AddIcon, TrendingUp, ShoppingCart, Receipt, Payment, Visibility, CheckCircle, Cancel, MonetizationOn } from '@mui/icons-material';
 import CurrencyDisplay from '../../components/stock/CurrencyDisplay';
+import AddPurchaseModal from '../../components/modals/AddPurchaseModal';
 
 function AddSupplierForm({ onAdd }) {
   const [supplierForm, setSupplierForm] = useState({
@@ -135,7 +136,7 @@ export default function PurchasesPage() {
 
   const { addPayment } = usePayment();
 
-  const [formVisible, setFormVisible] = useState(false);
+  const [formVisible, setFormVisible] = useState(true);
   const [formWidth, setFormWidth] = useState(45);
   const [formHeight, setFormHeight] = useState(65);
 
@@ -172,12 +173,41 @@ export default function PurchasesPage() {
   const [localInvoices, setLocalInvoices] = useState([]);
   const [showAddPurchaseModal, setShowAddPurchaseModal] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
+  const [actionDialog, setActionDialog] = useState({ open: false, invoice: null, action: 'view' });
 
   // Calculate KPI metrics
   const totalPurchases = purchases?.length || 0;
   const totalPurchaseValue = purchases?.reduce((sum, p) => sum + (Number(p.totalPrice) || 0), 0) || 0;
   const pendingInvoices = invoices?.filter(inv => inv.status === 'pending')?.length || 0;
   const paidInvoices = invoices?.filter(inv => inv.status === 'paid')?.length || 0;
+  const paymentAccounts = (accountSettings || []).filter((account) => {
+    const name = String(account.name || account.accountName || '').toLowerCase();
+    const category = String(account.category || account.accountType || account.type || '').toLowerCase();
+    const subCategory = String(account.subCategory || account.subType || '').toLowerCase();
+    const statement = String(account.statement || '').toLowerCase();
+    const status = String(account.status || 'active').toLowerCase();
+    const code = Number(account.code);
+    const searchable = [name, category, subCategory, statement, String(account.code || '').toLowerCase()].join(' ');
+    const isCurrentAssetCashCode = Number.isFinite(code) && code >= 1000 && code < 1010;
+    const hasPaymentName = /(cash|bank|petty|checking|savings|mobile money|wallet|cash equivalent|transit)/i.test(searchable);
+    const hasBlockedName = /(inventory|stock|receivable|payable|loan|liabilit|tax|vat|revenue|income|expense|cogs|equity|depreciation|prepaid|fixed asset|property|plant|equipment)/i.test(searchable);
+
+    if (status === 'inactive' || status === 'disabled') return false;
+    if (hasBlockedName) return false;
+    if (!category.includes('asset')) return false;
+    if (statement && !statement.includes('balance sheet')) return false;
+    if (!subCategory.includes('current') && !isCurrentAssetCashCode) return false;
+    if (!hasPaymentName && !account.isCash && !account.isPaymentAccount && !account.isBankAccount && !isCurrentAssetCashCode) return false;
+
+    return true;
+  });
+
+  const getPaymentMethodFromAccount = (accountId) => {
+    const account = paymentAccounts.find((item) => String(item.id) === String(accountId));
+    const name = String(account?.name || account?.accountName || '').toLowerCase();
+    if (name.includes('bank') || name.includes('checking') || name.includes('savings')) return 'bank';
+    return 'cash';
+  };
 
   const calculateTotalPrice = ({ quantity, unitPrice, discount, tax }) => {
     const q = Number(quantity) || 0;
@@ -195,6 +225,14 @@ export default function PurchasesPage() {
   useEffect(() => {
     setLocalInvoices(invoices);
   }, [invoices]);
+
+  useEffect(() => {
+    if (!selectedPaymentAccount) return;
+    const stillValidPaymentAccount = paymentAccounts.some((account) => String(account.id) === String(selectedPaymentAccount));
+    if (!stillValidPaymentAccount) {
+      setSelectedPaymentAccount('');
+    }
+  }, [paymentAccounts, selectedPaymentAccount]);
 
   const resetForm = () => {
     setForm({
@@ -358,18 +396,31 @@ export default function PurchasesPage() {
 
 
 
- const confirmPayment = async () => {
+ const confirmPayment = async (invoiceOverride = null) => {
   console.log("➡️ [confirmPayment] Payment confirmation started...");
 
-  if (!selectedPaymentAccount || !invoiceToPay) {
+  const activeInvoice = invoiceOverride || invoiceToPay;
+
+  if (!selectedPaymentAccount || !activeInvoice) {
     alert("Select payment account first.");
     return;
   }
 
+  if (!paymentAccounts.some((account) => String(account.id) === String(selectedPaymentAccount))) {
+    alert("Select a valid cash or bank payment account from Chart of Accounts.");
+    return;
+  }
+
   try {
-    // Fetch latest invoice data
-    const invoiceRes = await getById("invoice", invoiceToPay.id);
-    const invoiceData = invoiceRes?.data || invoiceRes;
+    const existingInvoice = activeInvoice?.id
+      ? localInvoices.find((invoice) => String(invoice.id) === String(activeInvoice.id))
+      : null;
+    let invoiceData = existingInvoice || activeInvoice;
+
+    if (!Array.isArray(invoiceData?.items) || invoiceData.items.length === 0) {
+      const invoiceRes = await supplierInvoiceService.getById(activeInvoice.id);
+      invoiceData = invoiceRes?.data || invoiceRes;
+    }
 
     if (!invoiceData || !Array.isArray(invoiceData.items) || invoiceData.items.length === 0) {
       alert("Invoice has no items to process.");
@@ -421,7 +472,7 @@ export default function PurchasesPage() {
       paymentType: "supplier",
       relatedId: invoiceData.supplierId,
       invoiceId: invoiceData.id,
-      method: "cash",
+      method: getPaymentMethodFromAccount(selectedPaymentAccount),
       cashOrBankAccountId: selectedPaymentAccount,
       description: `Payment for Invoice #${invoiceData.number || invoiceData.id}`,
       inventoryLines,
@@ -457,6 +508,7 @@ export default function PurchasesPage() {
     setInvoiceToPay(null);
     setSelectedPaymentAccount("");
     setPayModalOpen(false);
+    setActionDialog({ open: false, invoice: null, action: 'view' });
 
     console.log("✅ Payment + Purchases + Journal processed successfully");
   } catch (err) {
@@ -497,96 +549,17 @@ export default function PurchasesPage() {
 
   return (
     <Box sx={{ p: 3, bgcolor: '#f8fafc', minHeight: '100vh' }}>
-      {/* Professional Dashboard Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 600, color: '#1e293b', mb: 1 }}>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, color: '#0f172a', mb: 1 }}>
           Purchase Management
-        </Typography>
-        <Typography variant="body1" sx={{ color: '#64748b' }}>
-          Manage purchases, suppliers, and invoices
         </Typography>
       </Box>
 
-      {/* KPI Dashboard Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                    {totalPurchases}
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Total Purchases
-                  </Typography>
-                </Box>
-                <ShoppingCart sx={{ fontSize: 40, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                    <CurrencyDisplay amount={totalPurchaseValue} />
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Total Value
-                  </Typography>
-                </Box>
-                <MonetizationOn sx={{ fontSize: 40, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white' }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                    {pendingInvoices}
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Pending Invoices
-                  </Typography>
-                </Box>
-                <Receipt sx={{ fontSize: 40, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', color: 'white' }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                    {paidInvoices}
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Paid Invoices
-                  </Typography>
-                </Box>
-                <Payment sx={{ fontSize: 40, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
       <Grid container spacing={3}>
         {/* Left: Invoice Details & List */}
-        <Grid item xs={12} lg={formVisible ? 6 : 12}>
+        <Grid item xs={12} lg={12} sx={{ order: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {selectedInvoice && (
+            {false && selectedInvoice && (
               <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 3 }}>
                   <Box>
@@ -637,22 +610,34 @@ export default function PurchasesPage() {
               </Paper>
             )}
 
-            {localInvoices.length > 0 && (
-              <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
-                <Typography variant="h5" sx={{ fontWeight: 600, mb: 3 }}>Invoices</Typography>
-                <Box sx={{ overflowX: 'auto' }}>
-                  <table className='w-full text-sm border min-w-[600px] table-auto bg-white rounded-lg overflow-hidden'>
-                    <thead className='bg-gray-100'>
+            {true && (
+              <Paper elevation={3} sx={{ p: 3, borderRadius: 2, border: '1px solid #e5e7eb' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 3 }}>
+                  <Box>
+                    <Typography variant="h5" sx={{ fontWeight: 700, color: '#0f172a' }}>Purchases History</Typography>
+                    <Typography variant="body2" sx={{ color: '#64748b', mt: 0.5 }}>All supplier purchases and invoice payment status.</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    <Chip label={`${localInvoices.length} Invoices`} size="small" />
+                    <Chip label={`${pendingInvoices} Pending`} color="warning" size="small" />
+                    <Chip label={`${paidInvoices} Paid`} color="success" size="small" />
+                  </Box>
+                </Box>
+                <Box sx={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: 2 }}>
+                  <table className='w-full text-sm min-w-[980px] table-auto bg-white'>
+                    <thead>
                       <tr>
-                        <th className='border px-3 py-2 text-left font-semibold text-gray-700'>ID</th>
-                        <th className='border px-3 py-2 text-left font-semibold text-gray-700'>Total</th>
-                        <th className='border px-3 py-2 text-left font-semibold text-gray-700'>Payment Type</th>
-                        <th className='border px-3 py-2 text-left font-semibold text-gray-700'>Status</th>
-                        <th className='border px-3 py-2 text-left font-semibold text-gray-700'>Actions</th>
+                        <th className='px-4 py-3 text-left font-semibold text-slate-600 bg-slate-50 border-b'>Purchase / Invoice</th>
+                        <th className='px-4 py-3 text-left font-semibold text-slate-600 bg-slate-50 border-b'>Supplier</th>
+                        <th className='px-4 py-3 text-left font-semibold text-slate-600 bg-slate-50 border-b'>Products</th>
+                        <th className='px-4 py-3 text-right font-semibold text-slate-600 bg-slate-50 border-b'>Total</th>
+                        <th className='px-4 py-3 text-left font-semibold text-slate-600 bg-slate-50 border-b'>Payment Type</th>
+                        <th className='px-4 py-3 text-left font-semibold text-slate-600 bg-slate-50 border-b'>Status</th>
+                        <th className='px-4 py-3 text-left font-semibold text-slate-600 bg-slate-50 border-b'>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {localInvoices?.map((inv, idx) => {
+                      {localInvoices?.length ? localInvoices.map((inv, idx) => {
                         const total =
                           inv.total ??
                           (inv.items?.reduce(
@@ -660,28 +645,43 @@ export default function PurchasesPage() {
                             0
                           ) ||
                             0);
+                        const supplier = suppliers.find((sup) => sup.id === inv.supplierId) || inv.supplier || {};
+                        const products = (inv.items || []).map((item) => item.productName || item.name).filter(Boolean);
                         return (
-                          <tr key={inv.id} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                            <td className='border px-3 py-2 text-gray-800 font-medium'>{inv.id}</td>
-                            <td className='border px-3 py-2 text-gray-800 font-semibold'>
+                          <tr key={inv.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/60'}>
+                            <td className='px-4 py-3 border-b border-slate-100'>
+                              <button type="button" onClick={() => setActionDialog({ open: true, invoice: inv, action: 'view' })} className='font-semibold text-slate-900 hover:text-teal-700'>
+                                #{inv.invoiceNumber || inv.number || inv.id}
+                              </button>
+                              <div className='text-xs text-slate-500'>{inv.invoiceDate || inv.date || inv.createdAt || ''}</div>
+                            </td>
+                            <td className='px-4 py-3 border-b border-slate-100'>
+                              <div className='font-medium text-slate-900'>{supplier.name || 'N/A'}</div>
+                              <div className='text-xs text-slate-500'>{supplier.company || supplier.email || supplier.contact || ''}</div>
+                            </td>
+                            <td className='px-4 py-3 border-b border-slate-100 text-slate-700'>
+                              {products[0] || 'No products'}
+                              {products.length > 1 ? ` +${products.length - 1}` : ''}
+                            </td>
+                            <td className='px-4 py-3 border-b border-slate-100 text-right font-bold text-slate-900'>
                               <CurrencyDisplay amount={total} />
                             </td>
-                            <td className='border px-3 py-2'>
+                            <td className='px-4 py-3 border-b border-slate-100'>
                               <Chip label={inv.paymentType} size="small" variant="outlined" />
                             </td>
-                            <td className='border px-3 py-2'>
+                            <td className='px-4 py-3 border-b border-slate-100'>
                               <Chip 
                                 label={inv.status} 
                                 size="small"
                                 color={inv.status === 'paid' ? 'success' : inv.status === 'approved' ? 'primary' : 'warning'}
                               />
                             </td>
-                            <td className='border px-3 py-2'>
+                            <td className='px-4 py-3 border-b border-slate-100'>
                               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                                 <Tooltip title="View Details">
                                   <IconButton
                                     size="small"
-                                    onClick={() => setSelectedInvoice(inv)}
+                                    onClick={() => setActionDialog({ open: true, invoice: inv, action: 'view' })}
                                     sx={{ color: 'primary.main' }}
                                   >
                                     <Visibility fontSize="small" />
@@ -692,7 +692,7 @@ export default function PurchasesPage() {
                                     <Tooltip title="Approve">
                                       <IconButton
                                         size="small"
-                                        onClick={() => handleInvoiceAction(inv.id, 'approved')}
+                                        onClick={() => setActionDialog({ open: true, invoice: inv, action: 'approved' })}
                                         sx={{ color: 'success.main' }}
                                       >
                                         <CheckCircle fontSize="small" />
@@ -701,7 +701,7 @@ export default function PurchasesPage() {
                                     <Tooltip title="Reject">
                                       <IconButton
                                         size="small"
-                                        onClick={() => handleInvoiceAction(inv.id, 'rejected')}
+                                        onClick={() => setActionDialog({ open: true, invoice: inv, action: 'rejected' })}
                                         sx={{ color: 'error.main' }}
                                       >
                                         <Cancel fontSize="small" />
@@ -713,10 +713,7 @@ export default function PurchasesPage() {
                                   <Tooltip title="Pay Invoice">
                                     <IconButton
                                       size="small"
-                                      onClick={() => {
-                                        setPayModalOpen(true);
-                                        setInvoiceToPay(inv);
-                                      }}
+                                      onClick={() => setActionDialog({ open: true, invoice: inv, action: 'pay' })}
                                       sx={{ color: 'success.main' }}
                                     >
                                       <Payment fontSize="small" />
@@ -727,11 +724,17 @@ export default function PurchasesPage() {
                             </td>
                           </tr>
                         );
-                      })}
+                      }) : (
+                        <tr>
+                          <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
+                            No purchase history found. Add purchase items above and submit the invoice.
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
 
-                  {payModalOpen && invoiceToPay && (
+                  {false && payModalOpen && invoiceToPay && (
                     <Paper elevation={2} sx={{ mt: 3, p: 3, bgcolor: '#f8fafc' }}>
                       <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
                         Pay Invoice #{invoiceToPay.id}
@@ -746,12 +749,17 @@ export default function PurchasesPage() {
                           className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all'
                         >
                           <option value=''>-- Select Account --</option>
-                          {accountSettings.map((acc) => (
+                          {paymentAccounts.map((acc) => (
                             <option key={acc.id} value={acc.id}>
-                              {acc.name}
+                              {acc.code ? `${acc.code} - ${acc.name}` : acc.name}
                             </option>
                           ))}
                         </select>
+                        {paymentAccounts.length === 0 && (
+                          <Typography variant="caption" sx={{ display: 'block', color: '#b45309', mt: 1 }}>
+                            No payment accounts found. Add an active cash or bank account in Chart of Accounts.
+                          </Typography>
+                        )}
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
                         <Button
@@ -782,7 +790,7 @@ export default function PurchasesPage() {
 
         {/* Right: Purchase Form */}
         {formVisible && (
-          <Grid item xs={12} lg={6}>
+          <Grid item xs={12} lg={12} sx={{ order: 1 }}>
             <Paper elevation={3} sx={{ p: 3, borderRadius: 2, maxHeight: '80vh', overflowY: 'auto' }}>
               <Typography variant="h5" sx={{ fontWeight: 600, mb: 3 }}>
                 Add Purchase / Invoice
@@ -937,10 +945,13 @@ export default function PurchasesPage() {
                       </Button>
                       <Button
                         variant="outlined"
-                        onClick={() => setFormVisible(false)}
+                        onClick={() => {
+                          resetForm();
+                          setInvoiceItems([]);
+                        }}
                         sx={{ borderRadius: 2 }}
                       >
-                        Cancel
+                        Clear Form
                       </Button>
                     </Box>
                   </Grid>
@@ -1000,56 +1011,95 @@ export default function PurchasesPage() {
         )}
       </Grid>
 
-      {/* Professional Purchases History Table */}
-      <Paper elevation={3} sx={{ mt: 4, p: 3, borderRadius: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h5" sx={{ fontWeight: 600 }}>Purchases History</Typography>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setFormVisible(true)}
-              sx={{ borderRadius: 2 }}
-            >
-              Create Invoice
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<AddIcon />}
-              onClick={() => setShowAddPurchaseModal(true)}
-              sx={{ borderRadius: 2 }}
-            >
-              Add Purchase
-            </Button>
-          </Box>
-        </Box>
-        <StockTable
-          title=''
-          data={purchases}
-          fields={[
-            { name: 'productName', label: 'Product' },
-            { name: 'quantity', label: 'Qty' },
-            { name: 'unitPrice', label: 'Unit Price' },
-            { name: 'totalPrice', label: 'Total' },
-            { name: 'storeCategory', label: 'Category' },
-          ]}
-          updateItem={(id, data) => updateItem('purchase', id, data)}
-          deleteItem={(id) => deleteItem('purchase', id)}
-          onEdit={(item) => setSelectedPurchase(item)}
-          loading={loading}
-        />
-      </Paper>
+      <Dialog
+        open={actionDialog.open}
+        onClose={() => {
+          setActionDialog({ open: false, invoice: null, action: 'view' });
+          setSelectedPaymentAccount('');
+        }}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 800, bgcolor: '#0f766e', color: 'white' }}>
+          {actionDialog.action === 'pay' ? 'Confirm Payment' : actionDialog.action === 'approved' ? 'Approve Purchase' : actionDialog.action === 'rejected' ? 'Reject Purchase' : 'Purchase Details'}
+        </DialogTitle>
+        <DialogContent sx={{ p: 3 }}>
+          {actionDialog.invoice && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 2 }}>
+                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>Invoice</Typography>
+                  <Typography sx={{ fontWeight: 800 }}>#{actionDialog.invoice.invoiceNumber || actionDialog.invoice.number || actionDialog.invoice.id}</Typography>
+                </Paper>
+                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>Status</Typography>
+                  <Box sx={{ mt: 0.5 }}>
+                    <Chip label={actionDialog.invoice.status || 'pending'} size="small" color={actionDialog.invoice.status === 'paid' ? 'success' : actionDialog.invoice.status === 'approved' ? 'primary' : 'warning'} />
+                  </Box>
+                </Paper>
+                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>Total</Typography>
+                  <Typography sx={{ fontWeight: 900 }}>
+                    <CurrencyDisplay amount={Number(actionDialog.invoice.totalAmount || actionDialog.invoice.total || (actionDialog.invoice.items || []).reduce((sum, item) => sum + Number(item.totalPrice || 0), 0))} />
+                  </Typography>
+                </Paper>
+              </Box>
 
-      <AddPurchaseModal
-        isOpen={showAddPurchaseModal}
-        onClose={() => setShowAddPurchaseModal(false)}
-      />
-      
-      <SinglePurchaseHistory
-        isOpen={!!selectedPurchase}
-        onClose={() => setSelectedPurchase(null)}
-        purchase={selectedPurchase}
-      />
+              <Box sx={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: 2 }}>
+                <table className="w-full text-sm min-w-[760px] bg-white">
+                  <thead>
+                    <tr>
+                      <th className="px-4 py-3 text-left font-semibold text-slate-600 bg-slate-50 border-b">Product</th>
+                      <th className="px-4 py-3 text-right font-semibold text-slate-600 bg-slate-50 border-b">Qty</th>
+                      <th className="px-4 py-3 text-right font-semibold text-slate-600 bg-slate-50 border-b">Unit Price</th>
+                      <th className="px-4 py-3 text-right font-semibold text-slate-600 bg-slate-50 border-b">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(actionDialog.invoice.items || []).map((item, index) => (
+                      <tr key={`${item.productId || item.productName || 'item'}-${index}`}>
+                        <td className="px-4 py-3 border-b border-slate-100 font-semibold">{item.productName || item.name || '-'}</td>
+                        <td className="px-4 py-3 border-b border-slate-100 text-right">{item.quantity || 0}</td>
+                        <td className="px-4 py-3 border-b border-slate-100 text-right"><CurrencyDisplay amount={Number(item.unitPrice || 0)} /></td>
+                        <td className="px-4 py-3 border-b border-slate-100 text-right font-bold"><CurrencyDisplay amount={Number(item.totalPrice || 0)} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Box>
+
+              {actionDialog.action === 'pay' && (
+                <Box>
+                  <Typography variant="body2" sx={{ mb: 1, fontWeight: 700, color: '#374151' }}>Payment Account</Typography>
+                  <select
+                    value={selectedPaymentAccount}
+                    onChange={(event) => setSelectedPaymentAccount(event.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                  >
+                    <option value="">Select cash or bank account</option>
+                    {paymentAccounts.map((account) => (
+                      <option key={account.id} value={account.id}>{account.code ? `${account.code} - ${account.name}` : account.name}</option>
+                    ))}
+                  </select>
+                </Box>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, bgcolor: '#f8fafc' }}>
+          <Button
+            onClick={() => {
+              setActionDialog({ open: false, invoice: null, action: 'view' });
+              setSelectedPaymentAccount('');
+            }}
+          >
+            Close
+          </Button>
+          {actionDialog.action === 'approved' && <Button variant="contained" onClick={() => handleInvoiceAction(actionDialog.invoice.id, 'approved')} sx={{ bgcolor: '#0d9488', '&:hover': { bgcolor: '#0f766e' } }}>Approve</Button>}
+          {actionDialog.action === 'rejected' && <Button variant="contained" color="error" onClick={() => handleInvoiceAction(actionDialog.invoice.id, 'rejected')}>Reject</Button>}
+          {actionDialog.action === 'pay' && <Button variant="contained" onClick={() => confirmPayment(actionDialog.invoice)} sx={{ bgcolor: '#16a34a', '&:hover': { bgcolor: '#15803d' } }}>Confirm Payment</Button>}
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

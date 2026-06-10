@@ -53,19 +53,26 @@ export const SupplierInvoiceController = {
     }
   },
 
-  async update(id, data) {
-  const ref = supplierInvoiceCollection.doc(id);
-  await ref.update({
-    ...data,
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-  });
-  
-  // Fetch the full updated document
-  const updatedSnap = await ref.get();
-  if (!updatedSnap.exists) throw new Error("Invoice not found after update");
-  
-  return { id: updatedSnap.id, ...updatedSnap.data() };
-},
+  async update(req, res) {
+    try {
+      console.log("[UPDATE] Invoice ID:", req.params.id, "Update body:", req.body);
+      const existing = await SupplierInvoiceModel.findById(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ message: "Invoice not found" });
+      }
+
+      const updatedInvoice = await SupplierInvoiceModel.update(req.params.id, {
+        ...existing,
+        ...req.body,
+      });
+
+      console.log("[UPDATE] Updated invoice:", updatedInvoice);
+      res.json(updatedInvoice);
+    } catch (err) {
+      console.error("[UPDATE] Error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  },
 
 
   async remove(req, res) {

@@ -29,6 +29,9 @@ export const ProductSettingModel = {
       reorderLevel: Number(data.reorderLevel) || 0,
       unit: data.unit || "pcs",
       status: data.status || "Active",
+      // Barcode & SKU
+      barcode: data.barcode || "",
+      sku: data.sku || "",
       // Pricing & Defaults
       defaultSellingPrice: Number(data.defaultSellingPrice) || 0,
       defaultBuyingPrice: Number(data.defaultBuyingPrice) || 0,

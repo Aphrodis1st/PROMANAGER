@@ -58,7 +58,10 @@ export const SupplierInvoiceModel = {
       ...data,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
-    return { id, ...data };
+
+    const updatedSnap = await ref.get();
+    if (!updatedSnap.exists) return null;
+    return { id: updatedSnap.id, ...updatedSnap.data() };
   },
 
   async remove(id) {

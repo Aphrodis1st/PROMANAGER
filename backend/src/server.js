@@ -216,7 +216,7 @@ app.use('/api/v1/stock/auth', authRouters);
 // app.use("/api/v1/stock/admin", stockAdminRoutes)
 app.use('/api/v1/stock/purchases', purchaseRoutes);
 app.use('/api/v1/stock/supplier', supplierRoutes);
-app.use('/api/V1/stock/supplier-invoices', supplierInvoiceRoutes);
+app.use('/api/v1/stock/supplier-invoices', supplierInvoiceRoutes);
 app.use('/api/v1/stock/customer', customerRoutes);
 app.use('/api/v1/stock/invoice', customerInvoiceRoutes);
 app.use('/api/v1/stock/payment', paymentRoutes);

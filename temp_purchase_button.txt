@@ -1,0 +1,22 @@
+                  <Grid item xs={12}>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                      <Button 
+                        variant="contained" 
+                        color="error"
+                        onClick={() => {
+                          setFormVisible(false);
+                          setInvoiceItems([]);
+                          resetForm();
+                        }} 
+                        disabled={loading}
+                      >
+                        Cancel
+                      </Button>
+                      <Button variant="contained" color="success" onClick={addItemToInvoice} disabled={loading}>
+                        Add to Invoice
+                      </Button>
+                      <Button variant="contained" onClick={submitInvoice} sx={{ bgcolor: '#16a34a' }} disabled={loading || invoiceItems.length === 0}>
+                        {loading ? 'Submitting...' : 'Submit Invoice'}
+                      </Button>
+                    </Box>
+                  </Grid>
