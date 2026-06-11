@@ -1,5 +1,7 @@
+import crypto from "crypto";
 import { db } from "../../../utils/firebase.js";
 import admin from "firebase-admin";
+import { buildAssetVerifyUrl } from "../../utils/assetQr.js";
 
 const MODULES = {
   settings: {
@@ -166,6 +168,12 @@ export const AssetManagementModel = {
     payload.code = payload.code || payload.assetCode || buildCode(config, doc.id);
     payload.createdAt = timestamp;
     payload.updatedAt = timestamp;
+
+    if (moduleName === "assets" && !payload.qrPayload) {
+      payload.assetToken = payload.assetToken || crypto.randomUUID();
+      payload.qrPayload = buildAssetVerifyUrl(doc.id, payload.assetToken);
+      payload.qrCode = payload.qrCode || payload.qrPayload;
+    }
 
     await doc.set(payload);
     return { id: doc.id, ...payload };

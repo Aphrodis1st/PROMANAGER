@@ -24,11 +24,14 @@ const NODE_ENV = cleanEnvVar(process.env.NODE_ENV) || 'development';
 const PORT = parseInt(cleanEnvVar(process.env.PORT)) || 3001; // Default to 3001
 const CORS_ORIGIN = cleanEnvVar(process.env.CORS_ORIGIN) || 'http://localhost:5173,http://localhost:3000';
 const allowedOrigins = CORS_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean);
+const isOriginAllowed = (origin) =>
+  !origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin);
 const corsOptions = {
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+    if (isOriginAllowed(origin)) {
       return callback(null, true);
     }
+    console.warn(`CORS blocked origin: ${origin}`);
     return callback(null, false);
   },
   credentials: true,
@@ -154,12 +157,15 @@ app.use(
   morgan(NODE_ENV === 'production' ? 'combined' : 'dev')
 );
 
-// Additional CORS preflight handler
+// Additional CORS preflight handler (must match allowedOrigins)
 app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin);
+  const origin = req.headers.origin;
+  if (isOriginAllowed(origin)) {
+    res.header('Access-Control-Allow-Origin', origin || allowedOrigins[0]);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
   res.sendStatus(200);
 });
 
