@@ -1,9 +1,24 @@
 import { SalesModel } from '../../models/stock/sales.model.js';
+import { ProductSettingModel } from '../../models/stock/productSetting.model.js';
 
 export const CashierController = {
   completeSale: async (req, res) => {
+    const reducedItems = [];
+
     try {
-      const { items, totalPrice, customerName, paymentMethod, paidAmount, change } = req.body;
+      const {
+        items,
+        totalPrice,
+        customerName,
+        customerPhone,
+        customerTaxId,
+        customerId,
+        cashierName,
+        cashierId,
+        paymentMethod,
+        paidAmount,
+        change,
+      } = req.body;
       const userId = req.user?.id;
 
       if (!items || items.length === 0) {
@@ -12,6 +27,18 @@ export const CashierController = {
 
       if (paidAmount < totalPrice) {
         return res.status(400).json({ error: 'Insufficient payment' });
+      }
+
+      for (const item of items) {
+        const productId = item.productId;
+        const quantity = Number(item.quantity) || 0;
+
+        if (!productId || quantity <= 0) {
+          return res.status(400).json({ error: 'Invalid sale item' });
+        }
+
+        await ProductSettingModel.updateStock(productId, -quantity);
+        reducedItems.push({ productId, quantity });
       }
 
       const saleData = {
@@ -26,6 +53,11 @@ export const CashierController = {
         })),
         totalPrice,
         customerName,
+        customerPhone: customerPhone || '',
+        customerTaxId: customerTaxId || '',
+        customerId: customerId || null,
+        cashierName: cashierName || req.user?.name || req.user?.email || '',
+        cashierId: cashierId || userId || null,
         paymentMethod,
         paidAmount,
         change,
@@ -37,6 +69,14 @@ export const CashierController = {
       
       res.status(201).json(saved);
     } catch (error) {
+      for (const item of reducedItems.reverse()) {
+        try {
+          await ProductSettingModel.updateStock(item.productId, item.quantity);
+        } catch (rollbackError) {
+          console.error('Error rolling back cashier stock reduction:', rollbackError);
+        }
+      }
+
       console.error('Error completing sale:', error);
       res.status(500).json({ error: error.message });
     }
@@ -75,13 +115,16 @@ export const CashierController = {
 
   holdSale: async (req, res) => {
     try {
-      const { items, totalPrice, customerName } = req.body;
+      const { items, totalPrice, customerName, customerPhone, customerTaxId, customerId } = req.body;
       const userId = req.user?.id;
 
       const saleData = {
         items,
         totalPrice,
         customerName,
+        customerPhone: customerPhone || '',
+        customerTaxId: customerTaxId || '',
+        customerId: customerId || null,
         userId,
         status: 'held',
         heldAt: new Date().toISOString(),
@@ -160,6 +203,8 @@ Change:          ${sale.change.toFixed(2)}
 
 Payment Method:  ${sale.paymentMethod}
 Customer:        ${sale.customerName}
+${sale.customerPhone ? `Phone:           ${sale.customerPhone}` : ''}
+${sale.customerTaxId ? `TIN/Tax ID:      ${sale.customerTaxId}` : ''}
 ========================================
 Thank you for your purchase!
       `;

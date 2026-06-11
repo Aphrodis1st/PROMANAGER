@@ -18,7 +18,7 @@ import { logAudit } from "../../models/stock/audit.model.js";
 /**
  * Helper to sign tokens
  */
-const signToken = (payload, expiresIn = "1h") =>
+const signToken = (payload, expiresIn = "8h") =>
   jwt.sign(payload, process.env.JWT_ACCESS_SECRET, { expiresIn });
 
 /**
