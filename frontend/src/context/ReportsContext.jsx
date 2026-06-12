@@ -3,6 +3,46 @@ import { journalService } from "../services/stock.service";
 
 const ReportsContext = createContext();
 
+const isSalesRevenueLine = (entry, line, category) => {
+  if (category !== "revenue") return false;
+
+  const sourceType = String(entry?.source?.type || "").toLowerCase();
+  const text = [
+    line?.accountName,
+    line?.description,
+    entry?.description,
+    entry?.reference,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    ["sale", "sales", "cashier", "pos"].includes(sourceType) ||
+    /product sales|sales revenue|sale|sales|invoice|pos|cashier/.test(text)
+  );
+};
+
+const isPurchaseLine = (entry, line) => {
+  const sourceType = String(entry?.source?.type || entry?.type || "").toLowerCase();
+  const text = [
+    line?.accountName,
+    line?.description,
+    entry?.description,
+    entry?.reference,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    line?.type === "debit" &&
+    ["purchase", "supplierinvoice", "supplier_invoice"].includes(sourceType) &&
+    /(inventory|stock|finished goods|raw material|raw materials)/.test(text) &&
+    !/(vat|tax|receivable|payable)/.test(text)
+  );
+};
+
 export const ReportsProvider = ({ children }) => {
   const [journalEntries, setJournalEntries] = useState([]);
   const [ledger, setLedger] = useState([]);
@@ -110,14 +150,33 @@ export const ReportsProvider = ({ children }) => {
         else if (name.match(/expense|cost|supplies|rent|utilities|salary|wage|insurance|maintenance|tax/i))
           category = "expense";
 
-        if (category) {
-          const existing = statement.find((i) => i.accountId === line.accountId);
+        if (isPurchaseLine(entry, line)) {
+          const existing = statement.find((i) => i.accountId === "purchases");
           const amount = Number(line.amount);
           if (existing) existing.amount += amount;
           else
             statement.push({
-              accountId: line.accountId,
-              accountName: line.accountName,
+              accountId: "purchases",
+              accountName: "Purchases",
+              amount,
+              type: "expense",
+            });
+          return;
+        }
+
+        if (category) {
+          const productSales = isSalesRevenueLine(entry, line, category);
+          const accountId = productSales ? "product-sales-revenue" : line.accountId;
+          const accountName = productSales ? "Product Sales Revenue" : line.accountName;
+          const existing = statement.find((i) => i.accountId === accountId);
+          const amount = category === "revenue"
+            ? (line.type === "credit" ? Number(line.amount) : -Number(line.amount))
+            : (line.type === "debit" ? Number(line.amount) : -Number(line.amount));
+          if (existing) existing.amount += amount;
+          else
+            statement.push({
+              accountId,
+              accountName,
               amount,
               type: category,
             });

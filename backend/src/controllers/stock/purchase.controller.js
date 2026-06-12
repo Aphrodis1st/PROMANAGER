@@ -1,4 +1,7 @@
 import { PurchaseModel } from "../../models/stock/purchase.model.js";
+import { SupplierInvoiceModel } from "../../models/stock/supplierInvoice.model.js";
+import JournalModel from "../../models/stock/journal.model.js";
+import { postPurchaseJournal } from "../../services/stockPurchaseJournal.service.js";
 
 export const PurchaseController = {
   // CREATE PURCHASE (Increases Inventory - IAS 2 Compliant)
@@ -6,8 +9,17 @@ export const PurchaseController = {
     try {
       console.log('📥 [PURCHASE] Creating purchase with data:', JSON.stringify(req.body, null, 2));
       const purchase = await PurchaseModel.create(req.body);
+      const journalResult = await postPurchaseJournal({
+        purchase,
+        purchaseId: purchase.id,
+        sourceType: "purchase",
+        userId: req.user?.id || null,
+      });
       console.log('✅ [PURCHASE] Purchase created successfully with inventory increase');
-      res.status(201).json(purchase);
+      res.status(201).json({
+        ...purchase,
+        journalEntryId: journalResult.journalEntry?.id || null,
+      });
     } catch (err) {
       console.error('❌ [PURCHASE] Error creating purchase:', err);
       res.status(500).json({ error: err.message });
@@ -19,6 +31,69 @@ export const PurchaseController = {
       const purchases = await PurchaseModel.findAll();
       res.json(purchases);
     } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  async syncJournals(req, res) {
+    try {
+      const [supplierInvoices, purchases] = await Promise.all([
+        SupplierInvoiceModel.findAll(),
+        PurchaseModel.findAll(),
+      ]);
+      const results = [];
+
+      for (const invoice of supplierInvoices) {
+        if (!invoice?.id || invoice.status === "rejected") {
+          results.push({ sourceType: "supplierInvoice", id: invoice?.id || null, skipped: true, reason: "not postable" });
+          continue;
+        }
+
+        const result = await postPurchaseJournal({
+          purchase: invoice,
+          purchaseId: invoice.id,
+          sourceType: "supplierInvoice",
+          userId: invoice.userId || null,
+        });
+
+        results.push({
+          sourceType: "supplierInvoice",
+          id: invoice.id,
+          created: result.created,
+          journalEntryId: result.journalEntry?.id || null,
+        });
+      }
+
+      for (const purchase of purchases) {
+        if (!purchase?.id) {
+          results.push({ sourceType: "purchase", id: null, skipped: true, reason: "missing id" });
+          continue;
+        }
+
+        const result = await postPurchaseJournal({
+          purchase,
+          purchaseId: purchase.id,
+          sourceType: "purchase",
+          userId: purchase.userId || null,
+        });
+
+        results.push({
+          sourceType: "purchase",
+          id: purchase.id,
+          created: result.created,
+          journalEntryId: result.journalEntry?.id || null,
+        });
+      }
+
+      res.json({
+        message: "Purchase journals synchronized",
+        totalPurchases: supplierInvoices.length + purchases.length,
+        created: results.filter((item) => item.created).length,
+        skipped: results.filter((item) => !item.created).length,
+        results,
+      });
+    } catch (err) {
+      console.error("Purchase journal sync error:", err);
       res.status(500).json({ error: err.message });
     }
   },
@@ -71,6 +146,7 @@ export const PurchaseController = {
   async remove(req, res) {
     try {
       await PurchaseModel.remove(req.params.id);
+      await JournalModel.removeBySource("purchase", req.params.id);
       res.json({ message: "Purchase deleted" });
     } catch (err) {
       res.status(500).json({ error: err.message });

@@ -6,6 +6,7 @@ const router = express.Router();
 // CRUD routes for sales
 router.post("/", SalesController.create);
 router.get("/", SalesController.getAll);
+router.post("/sync-journals", SalesController.syncJournals);
 router.get("/:id", SalesController.getById);
 router.put("/:id", SalesController.update);
 router.delete("/:id", SalesController.remove);

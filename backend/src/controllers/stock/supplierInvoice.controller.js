@@ -1,12 +1,23 @@
 import { SupplierInvoiceModel } from "../../models/stock/supplierInvoice.model.js";
+import JournalModel from "../../models/stock/journal.model.js";
+import { postPurchaseJournal } from "../../services/stockPurchaseJournal.service.js";
 
 export const SupplierInvoiceController = {
   async create(req, res) {
     try {
       console.log("📥 [CREATE] Request body:", req.body);
       const invoice = await SupplierInvoiceModel.create(req.body);
+      const journalResult = await postPurchaseJournal({
+        purchase: invoice,
+        purchaseId: invoice.id,
+        sourceType: "supplierInvoice",
+        userId: req.user?.id || null,
+      });
       console.log("✅ [CREATE] Created invoice:", invoice);
-      res.status(201).json(invoice);
+      res.status(201).json({
+        ...invoice,
+        journalEntryId: journalResult.journalEntry?.id || null,
+      });
     } catch (err) {
       console.error("❌ [CREATE] Error:", err);
       res.status(500).json({ error: err.message });
@@ -79,6 +90,7 @@ export const SupplierInvoiceController = {
     try {
       console.log("[REMOVE] Invoice ID:", req.params.id);
       await SupplierInvoiceModel.remove(req.params.id);
+      await JournalModel.removeBySource("supplierInvoice", req.params.id);
       console.log("✅ [REMOVE] Invoice deleted:", req.params.id);
       res.json({ message: "Invoice deleted" });
     } catch (err) {

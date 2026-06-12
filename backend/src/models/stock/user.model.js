@@ -17,6 +17,7 @@ export const ALLOWED_ROLES = [
   "STOCK_KEEPER",
   "PROCUREMENT",
   "SALES",
+  "CASHIER",
   "GUEST",
 ];
 

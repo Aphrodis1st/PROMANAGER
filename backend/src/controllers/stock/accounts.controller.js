@@ -32,5 +32,47 @@ export const AccountController = {
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
+  },
+
+  async create(req, res) {
+    try {
+      const account = await AccountModel.create(req.body);
+      res.status(201).json(account);
+    } catch (err) {
+      console.error("Create account error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  async getById(req, res) {
+    try {
+      const account = await AccountModel.findById(req.params.id);
+      if (!account) return res.status(404).json({ error: "Account not found" });
+      res.json(account);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  async update(req, res) {
+    try {
+      const account = await AccountModel.update(req.params.id, req.body);
+      if (!account) return res.status(404).json({ error: "Account not found" });
+      res.json(account);
+    } catch (err) {
+      console.error("Update account error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  async remove(req, res) {
+    try {
+      const deleted = await AccountModel.remove(req.params.id);
+      if (!deleted) return res.status(404).json({ error: "Account not found" });
+      res.json({ message: "Account deleted successfully" });
+    } catch (err) {
+      console.error("Delete account error:", err);
+      res.status(500).json({ error: err.message });
+    }
   }
 };

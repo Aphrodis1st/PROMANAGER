@@ -5,6 +5,7 @@ const router = express.Router();
 
 router.post("/", PurchaseController.create);
 router.get("/", PurchaseController.getAll);
+router.post("/sync-journals", PurchaseController.syncJournals);
 router.get("/:id", PurchaseController.getById);
 router.put("/:id", PurchaseController.update);
 router.delete("/:id", PurchaseController.remove);

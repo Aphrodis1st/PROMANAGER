@@ -1,5 +1,6 @@
 import { SalesModel } from '../../models/stock/sales.model.js';
 import { ProductSettingModel } from '../../models/stock/productSetting.model.js';
+import { postSaleJournal } from '../../services/stockSaleJournal.service.js';
 
 export const CashierController = {
   completeSale: async (req, res) => {
@@ -66,8 +67,14 @@ export const CashierController = {
       };
 
       const saved = await SalesModel.create(saleData);
+      const journalEntry = await postSaleJournal({
+        sale: saleData,
+        saleId: saved.id,
+        sourceType: 'cashier',
+        userId,
+      });
       
-      res.status(201).json(saved);
+      res.status(201).json({ ...saved, journalEntryId: journalEntry?.id || null });
     } catch (error) {
       for (const item of reducedItems.reverse()) {
         try {

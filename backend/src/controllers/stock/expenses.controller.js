@@ -2,19 +2,34 @@ import { ExpenseModel } from "../../models/stock/expenses.model.js";
 import JournalModel from "../../models/stock/journal.model.js";
 import { AccountModel } from "../../models/stock/accounts.model.js";
 
+const accountCode = (account) => String(account?.code || account?.accountCode || account?.glCode || "");
+
+const findAccount = (accounts, value) => {
+  const id = String(value || "");
+  return accounts.find((account) => account.id === id || accountCode(account) === id);
+};
+
+const asMoney = (value) => Number(Number(value || 0).toFixed(2));
+
 export const ExpenseController = {
   // Create new expense + linked journal entry
   async create(req, res) {
     try {
       const {
         date,
+        expenseDate,
         description,
         expenseAccountId,
+        expenseAccount,
         paymentAccountId,
+        paymentAccount,
         amount,
         supplierName,
         supplierContact,
         supplierAddress,
+        supplierId,
+        paymentType,
+        status,
         currency,
         quantity,
         unit,
@@ -22,13 +37,18 @@ export const ExpenseController = {
         totalAmount,
       } = req.body;
 
-      if (!date || !expenseAccountId || !paymentAccountId || !amount) {
+      const expenseDateValue = date || expenseDate;
+      const expenseAccountValue = expenseAccountId || expenseAccount;
+      const paymentAccountValue = paymentAccountId || paymentAccount;
+      const expenseAmount = asMoney(amount || totalAmount || (Number(quantity || 0) * Number(unitPrice || 0)));
+
+      if (!expenseDateValue || !expenseAccountValue || !paymentAccountValue || !expenseAmount) {
         return res.status(400).json({ error: "Missing required fields." });
       }
 
       const accounts = await AccountModel.findAll();
-      const expenseAcc = accounts.find(a => a.id === expenseAccountId);
-      const paymentAcc = accounts.find(a => a.id === paymentAccountId);
+      const expenseAcc = findAccount(accounts, expenseAccountValue);
+      const paymentAcc = findAccount(accounts, paymentAccountValue);
 
       if (!expenseAcc || !paymentAcc) {
         return res.status(400).json({ error: "Invalid account selection." });
@@ -36,8 +56,22 @@ export const ExpenseController = {
 
       // Double-entry: Debit Expense, Credit Cash/Payable
       const lines = [
-        { accountId: expenseAccountId, debit: amount, credit: 0 },
-        { accountId: paymentAccountId, debit: 0, credit: amount }
+        {
+          accountId: expenseAcc.id,
+          accountName: expenseAcc.name,
+          type: "debit",
+          amount: expenseAmount,
+          debit: expenseAmount,
+          credit: 0,
+        },
+        {
+          accountId: paymentAcc.id,
+          accountName: paymentAcc.name,
+          type: "credit",
+          amount: expenseAmount,
+          debit: 0,
+          credit: expenseAmount,
+        },
       ];
 
       const totalDebit = lines.reduce((s, l) => s + l.debit, 0);
@@ -49,33 +83,40 @@ export const ExpenseController = {
 
       // Create expense record with all UI fields
       const expense = await ExpenseModel.create({
-        date,
+        date: expenseDateValue,
         description,
-        expenseAccountId,
+        expenseAccountId: expenseAcc.id,
         expenseAccountName: expenseAcc.name,
-        paymentAccountId,
+        paymentAccountId: paymentAcc.id,
         paymentAccountName: paymentAcc.name,
-        amount,
+        amount: expenseAmount,
         currency: currency || "RWF",
+        supplierId: supplierId || "",
         supplierName: supplierName || "-",
         supplierContact: supplierContact || "-",
         supplierAddress: supplierAddress || "-",
         quantity: quantity || 1,
         unit: unit || "pcs",
         unitPrice: unitPrice || 0,
-        totalAmount: totalAmount || amount,
-        status: "pending", // Default status
+        totalAmount: expenseAmount,
+        paymentType: paymentType || "accrual",
+        status: status || "pending",
       });
 
       // Create linked journal entry
-      await JournalModel.create({
-        date,
+      const journal = await JournalModel.create({
+        date: expenseDateValue,
+        reference: `EXP-${expense.id}`,
         description: description || `Expense: ${expenseAcc.name}`,
         lines,
+        totalDebit,
+        totalCredit,
+        module: "Expense",
+        linkedId: expense.id,
         source: { type: "expense", id: expense.id }
       });
 
-      res.status(201).json({ message: "Expense recorded successfully", expense });
+      res.status(201).json({ message: "Expense recorded successfully", expense, journal });
     } catch (err) {
       console.error("Expense create error:", err);
       res.status(500).json({ error: err.message });
